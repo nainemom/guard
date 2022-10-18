@@ -1,13 +1,14 @@
-import { CryptographyKey, CryptographyPairKeys } from '@/types';
+import { ENCRYPTION_MODULES_LENGTH, ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE } from '@/constants';
+import { CryptographyKey, CryptographyModulesLength, CryptographyPairKeys, CryptographyShaHashSize } from '@/types';
 
-const ab2str = (buf: ArrayBuffer): string => {
+export const ab2str = (buf: ArrayBuffer): string => {
   const bufView = new Uint8Array(buf);
   return [...Array(bufView.length)].map((_, index) => {
     return String.fromCharCode(bufView[index]);
   }).join('');
 }
 
-const str2ab = (str: string): ArrayBuffer => {
+export const str2ab = (str: string): ArrayBuffer => {
   const buf = new ArrayBuffer(str.length);
   const bufView = new Uint8Array(buf);
   [...Array(str.length)].forEach((_, index) => {
@@ -16,16 +17,18 @@ const str2ab = (str: string): ArrayBuffer => {
   return buf;
 }
 
-const algorithm: RsaHashedKeyGenParams = {
-  name: 'RSA-OAEP',
-  modulusLength: 2048,
-  publicExponent: new Uint8Array([1, 0, 1]),
-  hash: 'SHA-256',
-};
+export const getHashName = (hash: CryptographyShaHashSize): string => `SHA-${hash}`;
+
+export const getMaximumMessageSize = (modulusLength: CryptographyModulesLength, hash: CryptographyShaHashSize) => modulusLength / 8 - 2 * hash / 8 - 2 ;
 
 export const generatePairKeys = async () : Promise<CryptographyPairKeys> => {
   const keyPair = await crypto.subtle.generateKey(
-    algorithm,
+    {
+      name: ENCRYPTION_TYPE,
+      modulusLength: ENCRYPTION_MODULES_LENGTH,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
+    },
     true,
     ['encrypt', 'decrypt'],
   );
@@ -45,14 +48,17 @@ export const decrypt = async (message: string, privateKey: CryptographyKey): Pro
   const keyObject = await crypto.subtle.importKey(
     'pkcs8',
     str2ab(atob(privateKey)),
-    algorithm,
+    {
+      name: ENCRYPTION_TYPE,
+      hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
+    },
     false,
     ['decrypt']
   );
   return ab2str(
     await crypto.subtle.decrypt(
       {
-        name: 'RSA-OAEP',
+        name: ENCRYPTION_TYPE,
       },
       keyObject,
       str2ab(atob(message)),
@@ -61,18 +67,20 @@ export const decrypt = async (message: string, privateKey: CryptographyKey): Pro
 }
 
 export const encrypt = async (message: string, publicKey: CryptographyKey): Promise<string> => {
-  if (message.length > 190) throw new Error('Maximum length of encrypting message is 190');
   const keyObject = await crypto.subtle.importKey(
     'spki',
     str2ab(atob(publicKey)),
-    algorithm,
+    {
+      name: ENCRYPTION_TYPE,
+      hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
+    },
     false,
     ['encrypt']
   );
   return btoa(ab2str(
     await crypto.subtle.encrypt(
       {
-        name: 'RSA-OAEP',
+        name: ENCRYPTION_TYPE,
       },
       keyObject,
       str2ab(message),
