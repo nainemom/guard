@@ -1,0 +1,6 @@
+.list {
+  @apply h-auto flex flex-col gap-2;
+}
+.list-item {
+  @apply cursor-pointer px-2 border border-dashed h-16 flex flex-col items-start justify-center rounded-md border-ghost-normal hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
+}

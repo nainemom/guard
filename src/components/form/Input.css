@@ -1,0 +1,6 @@
+.input {
+  @apply block w-full shadow h-10 px-2 rounded-md text-sm bg-body-hover focus:bg-body-lighter transition-colors duration-100;
+}
+textarea.input {
+  @apply resize-y h-24 p-2;
+}

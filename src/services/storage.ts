@@ -10,15 +10,15 @@ export const get = (key: string) => {
   try {
     const rawValue = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
     if (rawValue === null) {
-      return undefined;
+      return null;
     }
     return JSON.parse(rawValue);
   } catch (_e) {
-    return undefined;
+    return null;
   }
 };
 
-export const set = (key: string, newValue: any, emit: boolean = true) => {
+export const set = (key: string, newValue: any) => {
   const newRawValue = JSON.stringify(newValue);
   localStorage.setItem(`${STORAGE_PREFIX}${key}`, newRawValue);
   eventTarget.emit(`update:${key}`, newValue);

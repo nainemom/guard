@@ -1,0 +1,16 @@
+@tailwind components;
+
+@layer components {
+  .tabs-container {
+    @apply h-auto flex shrink-0 basis-0 items-center justify-center p-2 gap-2 bg-section-normal;
+  }
+  .tab-button {
+    @apply flex-grow;
+  }
+  .tab-button:not(.tab-button-active) {
+    @apply hover:bg-section-hover focus:bg-section-normal active:bg-section-active;
+  }
+  .tab-button-active {
+    @apply bg-ghost-normal text-ghost-content shadow-inner cursor-default;
+  }
+}
