@@ -1,7 +1,5 @@
 import { ENCRYPTION_MODULES_LENGTH, ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE } from '@/constants';
 
-export type CryptographyKey = string;
-
 export enum CryptographyShaHashSize {
   sha1 = 1,
   sha256 = 256,
@@ -14,9 +12,11 @@ export enum CryptographyModulesLength {
   '4kb' = 4096,
 }
 
+export type CryptographyPublicKey = string;
+export type CryptographyPrivateKey = string;
 export interface CryptographyPairKeys {
-  publicKey: CryptographyKey,
-  privateKey: CryptographyKey,
+  public_key: CryptographyPublicKey,
+  private_key: CryptographyPrivateKey,
 }
 
 
@@ -55,15 +55,13 @@ export const generatePairKeys = async () : Promise<CryptographyPairKeys> => {
     crypto.subtle.exportKey('spki', keyPair.publicKey),
     crypto.subtle.exportKey('pkcs8', keyPair.privateKey),
   ]);
-  const publicKey = btoa(ab2str(publicBuffer));
-  const privateKey = btoa(ab2str(privateBuffer));
   return {
-    publicKey,
-    privateKey,
+    public_key: btoa(ab2str(publicBuffer)),
+    private_key: btoa(ab2str(privateBuffer)),
   };
 }
 
-export const decrypt = async (message: string, privateKey: CryptographyKey): Promise<string> => {
+export const decrypt = async (message: string, privateKey: CryptographyPrivateKey): Promise<string> => {
   const keyObject = await crypto.subtle.importKey(
     'pkcs8',
     str2ab(atob(privateKey)),
@@ -85,7 +83,7 @@ export const decrypt = async (message: string, privateKey: CryptographyKey): Pro
   );
 }
 
-export const encrypt = async (message: string, publicKey: CryptographyKey): Promise<string> => {
+export const encrypt = async (message: string, publicKey: CryptographyPublicKey): Promise<string> => {
   const keyObject = await crypto.subtle.importKey(
     'spki',
     str2ab(atob(publicKey)),

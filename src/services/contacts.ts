@@ -1,14 +1,14 @@
-import { CryptographyKey } from "@/services/cryptography";
+import { CryptographyPublicKey } from "@/services/cryptography";
 import { get, set } from "@/services/storage";
 
-const storageKey = 'contacts';
+export const storageKey = 'contacts';
 
 type ContactId = string;
 
 export type Contact = {
   id: ContactId,
   display_name: string,
-  public_key: CryptographyKey,
+  public_key: CryptographyPublicKey,
 };
 
 export type UnSavedContact = Omit<Contact, 'id'>

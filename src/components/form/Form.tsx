@@ -93,7 +93,7 @@ export default function Form({ children, className, value, onInput, onSubmit, va
 
 export function FormFieldLabel({ label }: FormFieldLabelProps) {
   return typeof label === 'string' ? (
-    <label className="block text-sm mb-2">{ label }</label>
+    <label className="block text-base mb-2">{ label }</label>
   ) : <></>;
 }
 export function FormFieldError({ error }: FormFieldErrorProps) {
@@ -106,33 +106,44 @@ export const useFormField = (formFieldProps: FormFieldProps, defaultValue: any) 
   const formProvidedValue = useContext<FormContext | null>(formContext);
 
   if (!formProvidedValue) {
-    throw new Error('useFormField is not in context!');
+    return useMemo(() => [
+      formFieldProps.value,
+      formFieldProps.onInput || (() => {}),
+      false,
+    ], [formFieldProps]);
   }
 
   const [formValue, updateFieldValue, formErrors] = formProvidedValue;
 
   const fieldValue = useMemo<any>(() => {
+    if (!formFieldProps.name) {
+      throw new Error('Form field must have name!');
+    }
     if (formValue) {
-      if (formFieldProps.name && Object.hasOwnProperty.call(formValue, formFieldProps.name)) {
+      if (Object.hasOwnProperty.call(formValue, formFieldProps.name)) {
         // @ts-ignore
-        return formValue[formFieldProps.name] || defaultValue;
+        return formValue[formFieldProps.name];
       }
-      return formFieldProps.value;
+      return defaultValue;
     }
     return defaultValue;
   }, [formValue, formFieldProps]);
 
   const fieldError = useMemo(() => {
-    if (formFieldProps.name && Object.hasOwnProperty.call(formErrors, formFieldProps.name)) {
+    if (!formFieldProps.name) {
+      throw new Error('Form field must have name!');
+    }
+    if (Object.hasOwnProperty.call(formErrors, formFieldProps.name)) {
       return formErrors?.[formFieldProps.name] || false;
     }
+    return false;
   }, [formErrors, formFieldProps]);
 
   const setFieldValue: StateUpdater<any> = useCallback((newValue: any) => {
-    if (formFieldProps.name) {
-      return updateFieldValue(formFieldProps.name, newValue);
+    if (!formFieldProps.name) {
+      throw new Error('Form field must have name!');
     }
-    return formFieldProps.onInput || (() => {});
+    return updateFieldValue(formFieldProps.name, newValue);
   }, [updateFieldValue]);
 
   return useMemo(() => [

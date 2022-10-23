@@ -16,7 +16,7 @@ type ListItemProps = {
 
 export function List({ children, className }: ListProps) {
   return (
-    <ul class={cx('list', className)}>
+    <ul class={cx('x-list', className)}>
       { children }
     </ul>
   )
@@ -31,7 +31,7 @@ export function ListItem({ children, className, onMenu }: ListItemProps) {
   }, [onMenu]);
 
   return (
-    <li class={cx('list-item', className)} tabIndex={1} onContextMenu={handleContextMenu}>
+    <li class={cx('x-list-item', className)} tabIndex={1} onContextMenu={handleContextMenu}>
       { children }
     </li>
   )

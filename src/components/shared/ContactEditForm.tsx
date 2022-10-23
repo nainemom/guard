@@ -23,7 +23,7 @@ export default function ContactEditForm({ contact, onSuccess, onClose }: Contact
       errors.display_name = 'You Should Enter a Name for This Recipient!';
     }
     if ((submittedFormData?.public_key?.length || 0) < 10) {
-      errors.public_key = 'Guard-ID is not correct!';
+      errors.public_key = 'Public Key is not Correct!';
     }
     return errors;
   }, []);
@@ -76,7 +76,7 @@ export default function ContactEditForm({ contact, onSuccess, onClose }: Contact
           <Input name="display_name" placeholder="e.g. John" label="Display Name:" />
         </div>
         <div className="py-2 px-4">
-          <Input name="public_key" multiLine placeholder="Ask Your Contact to Share His/Her Guard-ID with You." label="Guard ID:" />
+          <Input name="public_key" multiLine placeholder="Ask Your Contact to Share His/Her Public Key with You." label="Public Key:" />
         </div>
         <div className="p-4 flex flex-row items-center gap-2">
           <div className="flex-grow">

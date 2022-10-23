@@ -1,7 +1,11 @@
 @tailwind base;
-@tailwind components;
 @tailwind utilities;
 
+* {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
 
 *, *:focus {
   @apply outline-none;
@@ -17,6 +21,10 @@ html, body, #app {
 
 body {
   @apply w-full max-w-screen-sm bg-body-normal text-body-content m-auto shadow-lg rounded-none sm:rounded-lg contain-layout;
+}
+
+hr {
+  @apply border-ghost-normal;
 }
 
 @layer utilities {

@@ -1,53 +1,53 @@
-.button {
+.x-button {
   @apply inline-flex items-center justify-center h-10 text-sm transition-colors duration-100;
 }
 
-.button:not(.button-circle) {
+.x-button:not(.x-button-circle) {
   @apply rounded-md;
 }
-.button-circle {
+.x-button-circle {
   @apply rounded-full;
 }
 
-.button-default {
-  @apply bg-body-normal hover:bg-body-hover focus:bg-body-hover active:bg-body-active text-body-content;
+.x-button-default {
+  @apply shadow bg-body-lighter hover:bg-body-hover focus:bg-body-hover active:bg-body-active text-body-content;
 }
-.button-ghost {
+.x-button-ghost {
   @apply shadow bg-ghost-normal hover:bg-ghost-hover focus:bg-ghost-hover active:bg-ghost-active text-ghost-content;
 }
-.button-primary {
+.x-button-primary {
   @apply shadow bg-primary-normal hover:bg-primary-hover focus:bg-primary-hover active:bg-primary-active text-primary-content;
 }
-.button-danger {
-  @apply bg-body-normal hover:bg-body-hover focus:bg-body-hover active:bg-body-active text-danger-normal;
+.x-button-danger {
+  @apply shadow bg-body-lighter hover:bg-body-hover focus:bg-body-hover active:bg-body-active text-danger-normal;
 }
 
-.button-sm {
+.x-button-sm {
   @apply h-8;
 }
-.button-sm:not(.button-circle) {
+.x-button-sm:not(.x-button-circle) {
   @apply px-3;
 }
-.button-sm.button-circle {
+.x-button-sm.x-button-circle {
   @apply w-8;
 }
 
-.button-md {
+.x-button-md {
   @apply h-10;
 }
-.button-md:not(.button-circle) {
+.x-button-md:not(.x-button-circle) {
   @apply px-6;
 }
-.button-md.button-circle {
+.x-button-md.x-button-circle {
   @apply w-10;
 }
 
-.button-lg {
+.x-button-lg {
   @apply h-12;
 }
-.button-lg:not(.button-circle) {
+.x-button-lg:not(.x-button-circle) {
   @apply px-8;
 }
-.button-lg.button-circle {
+.x-button-lg.x-button-circle {
   @apply w-12;
 }

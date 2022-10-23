@@ -1,75 +1,72 @@
-import { List, ListItem } from '@/components/common/List';
-import Button from '@/components/form/Button';
 import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
 import Tabs from '@/components/layout/Tabs';
-import ContactEditForm from '@/components/shared/ContactEditForm';
-import { Contact, getContacts, UnSavedContact } from '@/services/contacts';
-import Dialog from '@/services/dialog';
 import { RouterProps } from 'preact-router';
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { CryptographyPublicKey, encrypt } from '@/services/cryptography';
+import Input from '@/components/form/Input';
+import Button from '@/components/form/Button';
 
-const UNSAVED_CONTACT_OBJECT: UnSavedContact = {
-  public_key: '',
-  display_name: '',
-};
+let decryptTimer: number = -1;
 
 export default function Encrypt(_props: RouterProps) {
-  const [contacts, setContacts] = useState<Contact[]>(getContacts());
+  const [publicKey, setPublicKey] = useState<CryptographyPublicKey>('');
+  const [decryptedMessage, setDecryptedMessage] = useState<string>('');
+  const [encryptedMessage, setEncryptedMessage] = useState<string>('');
 
-  const reloadContacts = useCallback(() => {
-    setContacts(getContacts());
-  }, []);
+  const doEncrypt = useCallback((message: string) => {
+    encrypt(message, publicKey).then(setEncryptedMessage);
+  }, [setDecryptedMessage, publicKey]);
 
-  const [activeContact, setActiveContact] = useState<Partial<Contact> | null>(null);
-  const setContactDialog = useCallback((open: boolean, data?: Partial<Contact>) => {
-    setActiveContact(open === false ? null : {
-      ...UNSAVED_CONTACT_OBJECT,
-      ...data,
-    });
-  }, [setActiveContact]);
+  useEffect(() => {
+    clearTimeout(decryptTimer);
+    if (decryptedMessage) {
+      decryptTimer = setTimeout(() => doEncrypt(decryptedMessage), 300);
+    } else {
+      setDecryptedMessage('');
+    }
+    return () => {
+      clearTimeout(decryptTimer);
+    }
+  }, [decryptedMessage, doEncrypt, setDecryptedMessage]);
+
+  const copyToClipboard = useCallback(() => {
+    navigator.clipboard.writeText(encryptedMessage);
+  }, [encryptedMessage]);
 
   return (
     <Layout>
       <Header title="Guard App" subtitle="Encrypt and Decrypt Messages" />
-      <Body
-        className="p-2"
-        stickyArea={
-          <Button theme="primary" size="lg" circle onClick={() => setContactDialog(true)}>+</Button>
-        }
-      >
-        { contacts.length > 0 ? (
-          <List>
-            { contacts.map((contact) => (
-              <ListItem
-                key={contact.id}
-                onMenu={() => setContactDialog(true, contact)}
-              >
-                <h2 className="text-base">{ contact.display_name }</h2>
-                <p className="text-xs font-light text-body-subtitle">{ contact.public_key }</p>
-              </ListItem>
-          )) }
-          </List>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center">
-            <p>You dont have any contacts yet.</p>
-            <p className="mb-4">Try Create one</p>
-            <Button theme="primary" size="md" onClick={() => setContactDialog(true)}>Create New Contact.</Button>
-          </div>
-        ) }
-
-        <Dialog
-          isOpen={activeContact !== null}
-        >
-          { activeContact && (
-            <ContactEditForm
-              contact={activeContact}
-              onClose={() => setContactDialog(false)}
-              onSuccess={() => reloadContacts()}
-            />
+      <Body className="flex flex-col">
+        <div className="p-4 shrink-0">
+          <Input
+            size="md"
+            value={publicKey}
+            onInput={setPublicKey}
+            placeholder="Receiver Public Key."
+            label="Receiver:"
+            className="mb-4"
+          />
+          <Input
+            size="md"
+            value={decryptedMessage}
+            onInput={setDecryptedMessage}
+            multiLine
+            placeholder="Enter Your Raw Message."
+            label="Message:"
+          />
+        </div>
+        <hr />
+        <div className="p-4 flex-grow overflow-hidden relative">
+          <h2 className="pb-2 text-base font-bold"> Output: </h2>
+          <p className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto select-text font-mono">
+            { encryptedMessage }
+          </p>
+          { encryptedMessage && (
+            <Button className="absolute bottom-4 right-4" size="sm" theme="primary" onClick={copyToClipboard}>Copy</Button>
           ) }
-        </Dialog>
+        </div>
       </Body>
       <Tabs />
     </Layout>

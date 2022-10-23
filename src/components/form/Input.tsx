@@ -5,12 +5,19 @@ import { FormFieldProps, FormFieldLabel, useFormField, FormFieldError } from './
 
 type InputProps = FormFieldProps & {
   className?: string,
+  size?: 'md' | 'manual',
   placeholder?: string,
   readOnly?: boolean,
   multiLine?: boolean,
 }
 
-export default function Input({ className, placeholder, readOnly, multiLine, ...formFieldProps }: InputProps) {
+const inputDefaultProps: InputProps = {
+  size: 'md',
+};
+
+export default function Input(props: InputProps) {
+  const { className, size, placeholder, readOnly, multiLine, ...formFieldProps } = { ...inputDefaultProps, ...props };
+
   const [value, setValue, fieldError] = useFormField(formFieldProps, '');
 
   const Tag = useMemo(() => multiLine ? 'textarea' : 'input', [multiLine]);
@@ -19,7 +26,7 @@ export default function Input({ className, placeholder, readOnly, multiLine, ...
     <div>
       <FormFieldLabel label={formFieldProps.label} />
       <Tag
-        class={cx('input', className)}
+        class={cx('x-input', `x-input-size-${size}`, className)}
         value={value}
         placeholder={placeholder}
         readOnly={readOnly}

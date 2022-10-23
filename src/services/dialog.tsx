@@ -40,7 +40,7 @@ export default function Dialog({ isOpen, className, children }: DialogProps) {
       isOpen,
       element: () => (
         <div
-          className={cx('dialog', className)}
+          className={cx('x-dialog', className)}
         >
           {children}
         </div>
@@ -124,7 +124,7 @@ export function Dialogs({ children }: DialogsProps) {
       { children }
       { opensDialog.length > 0 && (
         <div
-          className="dialog-container"
+          className="x-dialog-container"
           style={{ zIndex: 999 }}
         >
           {

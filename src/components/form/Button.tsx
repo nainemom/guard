@@ -22,7 +22,7 @@ export default function Button(props: ButtonProps) {
   const { children, className, type, theme, size, circle, onClick } = { ...buttonDefaultProps, ...props };
   return (
     <button
-      class={cx('button', `button-${theme}`, `button-${size}`, circle && 'button-circle', className)}
+      class={cx('x-button', `x-button-${theme}`, `x-button-${size}`, circle && 'x-button-circle', className)}
       type={type}
       {...(onClick && {
         onClick,
