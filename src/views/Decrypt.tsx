@@ -10,6 +10,7 @@ import Input from '@/components/form/Input';
 import { useStorage } from '@/services/storage';
 import Button from '@/components/form/Button';
 import { Resizable, ResizableSection } from '@/components/common/Resizable';
+import Icon from '@/components/shared/Icon';
 
 let decryptTimer: number = -1;
 
@@ -32,16 +33,12 @@ export default function Decrypt(_props: RouterProps) {
     decrypt(message, personalKeys.private_key).then(setDecryptedMessage);
   }, [setDecryptedMessage, personalKeys]);
 
-  const pasteFromClipboard = useCallback(() => {
-    navigator.clipboard.readText().then(setEncryptedMessage);
-  }, []);
-
   return (
     <Layout>
       <Header title="Guard App" subtitle="Encrypt and Decrypt Messages" />
-      <Body className="flex flex-col">
+      <Body>
         <Resizable>
-          <ResizableSection className="p-4 h-64 relative">
+          <ResizableSection className="p-4 h-64">
             <Input
               size="manual"
               className="h-full font-mono"
@@ -51,7 +48,6 @@ export default function Decrypt(_props: RouterProps) {
               placeholder="Enter Encrypted Message."
               label="Encrypted Message:"
             />
-            <Button className="absolute bottom-6 right-6" size="sm" theme="primary" onClick={pasteFromClipboard}>Paste</Button>
           </ResizableSection>
           <ResizableSection className="p-4">
             <h2 className="pb-2 text-base font-bold"> Output: </h2>

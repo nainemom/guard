@@ -5,14 +5,15 @@ import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
 import Tabs from '@/components/layout/Tabs';
 import ContactEditForm from '@/components/shared/ContactEditForm';
-import { Contact, getContacts, UnSavedContact, storageKey as contactsStorageKey } from '@/services/contacts';
+import { Contact, UnSavedContact, storageKey as contactsStorageKey } from '@/services/contacts';
 import { storageKey as authStorageKey } from '@/services/auth';
 import { CryptographyPairKeys } from '@/services/cryptography';
 import Dialog from '@/services/dialog';
 import { useStorage } from '@/services/storage';
 import { RouterProps } from 'preact-router';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import PersonalKeysEditForm from '@/components/shared/PersonalKeysEditForm';
+import Icon from '@/components/shared/Icon';
 
 const UNSAVED_CONTACT: UnSavedContact = {
   public_key: '',
@@ -20,11 +21,10 @@ const UNSAVED_CONTACT: UnSavedContact = {
 };
 
 type EditingContactDialog = Partial<Contact> | null;
-type PersonalKeysDialog = CryptographyPairKeys | null;
 
 
-export default function Keys(_props: RouterProps) {
-  const [contacts, setContacts] = useStorage<Contact[]>(contactsStorageKey);
+export default function Profile(_props: RouterProps) {
+  const [contacts] = useStorage<Contact[]>(contactsStorageKey);
   const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
 
   const [editingContact, setEditingContact] = useState<EditingContactDialog>(null);
@@ -34,22 +34,43 @@ export default function Keys(_props: RouterProps) {
     <Layout>
       <Header title="Guard App" subtitle="Encrypt and Decrypt Messages" />
       <Body
+        stickyPadding
         stickyArea={
-          <Button theme="primary" size="lg" circle onClick={() => setEditingContact(UNSAVED_CONTACT)}>+</Button>
+          <Button theme="primary" onClick={() => setEditingContact(UNSAVED_CONTACT)}>
+            <Icon name="add" className="w-5 h-5" />
+            Add New Contact
+          </Button>
         }
       >
         <div className="p-4">
-          <h2 className="mb-2 text-base"> My Key: </h2>
-          <ListItem className="flex flex-row items-center px-2 h-16">
-            <p className="text-base flex-grow font-mono">{ personalKeys.public_key }</p>
-            <div className="shrink-0 flex flex-row gap-2">
-              <Button size="sm" onClick={() => setPersonalKeysDialog(true)}>Change</Button>
+          <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto">
+            <Icon name="manage_accounts" className="w-20 h-20 border-2 rounded-full p-2" />
+            <p className="w-full overflow-hidden text-ellipsis font-mono">
+              { personalKeys.public_key }
+            </p>
+            <div className="w-full flex flex-row gap-2">
+              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)} disabled>
+                <Icon name="share" className="w-4 h-4" />
+                Share
+              </Button>
+              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)} disabled>
+                <Icon name="download" className="w-4 h-4" />
+                Import
+              </Button>
+              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)} disabled>
+                <Icon name="upload" className="w-4 h-4" />
+                Export
+              </Button>
+              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)}>
+                <Icon name="edit" className="w-4 h-4" />
+                Edit
+              </Button>
             </div>
-          </ListItem>
+          </div>
         </div>
         <hr className="my-2" />
         <div className="p-4">
-          <h2 className="text-base mb-2"> Contacts Keys: </h2>
+          <h2 className="text-base mb-2"> Contacts: </h2>
           <List>
             { (contacts || []).map((contact) => (
             <ListItem
@@ -61,7 +82,10 @@ export default function Keys(_props: RouterProps) {
                 <p className="text-sm font-mono text-body-subtitle">{ contact.public_key }</p>  
               </div>
               <div className="shrink-0 flex flex-row gap-2">
-                <Button size="sm" onClick={() => setEditingContact(contact)}>Edit</Button>
+                <Button size="sm" onClick={() => setEditingContact(contact)}>
+                  <Icon name="edit" className="w-4 h-4" />
+                  Edit
+                </Button>
               </div>
             </ListItem>
             )) }

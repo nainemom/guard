@@ -16,8 +16,7 @@ export default function Header({ title, subtitle, startButtons, endButtons }: He
         </div>
       ) }
       <div class="flex-grow">
-        { title && (<h2 class="text-xl font-semibold">{ title }</h2>) }
-        { subtitle && (<p class="text-xs font-light text-section-subtitle">{ subtitle }</p>) }
+        { title && (<h2 class="text-2xl font-semibold">{ title }</h2>) }
       </div>
       { endButtons && (
         <div>

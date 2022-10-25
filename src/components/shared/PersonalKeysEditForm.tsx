@@ -5,6 +5,7 @@ import { saveAuth, storageKey as authStorageKey } from '@/services/auth';
 import { CryptographyPairKeys, generatePairKeys } from '@/services/cryptography';
 import { useStorage } from '@/services/storage';
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import Icon from './Icon';
 
 export type PersonalKeysEditFormProps = {
   onSuccess?: () => void,
@@ -78,11 +79,20 @@ export default function PersonalKeysEditForm({ onSuccess, onClose }: PersonalKey
         </div>
         <div className="p-4 flex flex-row items-center gap-2">
           <div className="flex-grow flex flex-row items-center gap-2">
-            <Button type="button" onClick={regenerate}>Regenerate</Button>
+            <Button type="button" onClick={regenerate}>
+              <Icon name="magic_button" className="w-4 h-4" />
+              Regenerate
+            </Button>
           </div>
           <div className="contents">
-            <Button type="button" onClick={requestClose}>Close</Button>
-            <Button type="submit" theme="primary">Save</Button>
+            <Button type="button" onClick={requestClose}>
+              <Icon name="close" className="w-4 h-4" />
+              Close
+            </Button>
+            <Button type="submit" theme="primary">
+              <Icon name="save" className="w-4 h-4" />
+              Save
+            </Button>
           </div>
         </div>
       </Form>
