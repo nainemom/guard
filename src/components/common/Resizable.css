@@ -1,0 +1,15 @@
+.x-resizable {
+  @apply h-full flex flex-col flex-nowrap divide-y-2 divide-ghost-active;
+}
+
+.x-resizable-section {
+  @apply overflow-auto flex flex-col relative;
+}
+
+.x-resizable > .x-resizable-section:not(:last-child) {
+  @apply resize-y;
+}
+
+.x-resizable-section > *:last-child {
+  @apply flex-grow;
+}
