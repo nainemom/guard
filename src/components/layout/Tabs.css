@@ -5,10 +5,13 @@
     @apply h-auto flex items-center justify-center p-2 gap-2 bg-section-normal;
   }
   .x-tab-button {
-    @apply flex-grow basis-0;
+    @apply basis-0 shrink-0;
   }
   .x-tab-button:not(.x-tab-button-active) {
     @apply hover:bg-section-hover focus:bg-section-normal active:bg-section-active;
+  }
+  .x-tab-button > .x-tab-button-title {
+    @apply hidden;
   }
   .x-tab-button-active {
     @apply bg-ghost-normal text-ghost-content shadow-inner cursor-default;
