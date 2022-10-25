@@ -76,9 +76,14 @@ export default function Profile(_props: RouterProps) {
                   className="flex flex-row items-center h-16 w-full gap-3"
                 >
                   <Avatar publicKey={contact.public_key} className="w-12 h-12 border border-body-darker rounded-xl p-3 bg-body-active" />
-                  <h2 className="flex-grow text-sm font-semibold overflow-hidden text-ellipsis">
-                    <Username publicKey={contact.public_key} />
-                  </h2>
+                  <div className="flex-grow overflow-hidden text-ellipsis">
+                    <h2 className="text-sm font-semibold">
+                      <Username publicKey={contact.public_key} />
+                    </h2>
+                    { contact.note && (
+                      <p className="text-xs text-body-subtitle">{ contact.note }</p>
+                    ) }
+                  </div>
                   <div className="shrink-0">
                     <Button size="sm" onClick={() => setEditingContact(contact)}>
                       <Icon name="edit" className="w-4 h-4" />

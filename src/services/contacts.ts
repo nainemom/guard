@@ -8,6 +8,7 @@ type ContactId = string;
 export type Contact = {
   id: ContactId,
   public_key: CryptographyPublicKey,
+  note?: string,
 };
 
 export type UnSavedContact = Omit<Contact, 'id'>
