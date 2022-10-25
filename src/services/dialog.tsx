@@ -2,6 +2,8 @@ import './dialog.css';
 import { cx } from '@/utils/cx';
 import { ComponentChildren, createContext, VNode } from 'preact';
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+import Button from '@/components/form/Button';
+import Icon from '@/components/shared/Icon';
 
 type DialogId = number;
 
@@ -59,7 +61,58 @@ export default function Dialog({ isOpen, className, children }: DialogProps) {
     return dialogs?.[isOpen ? 'open' : 'close']?.(dialogId);
   }, [isOpen, dialogId]);
 
-  return <div></div>;
+  return <></>;
+}
+
+type DialogTitleProps = {
+  title: string,
+  closeButton?: boolean,
+  onClose?: () => void,
+};
+
+const dialogTitleDefaultProps = {
+  onClose: () => {},
+};
+
+export function DialogTitle(props: DialogTitleProps) {
+  const { title, closeButton, onClose } = { ...dialogTitleDefaultProps, ...props };
+  return (
+    <div className="x-dialog-title">
+      { closeButton && (
+        <Button circle onClick={onClose}>
+          <Icon name="arrow_back" className="h-6 w-6" />
+        </Button>
+      ) }
+      <h2>
+        {title}
+      </h2>
+    </div>
+  );
+}
+
+type DialogBodyProps = {
+  className?: string,
+  children?: ComponentChildren,
+};
+
+export function DialogBody({ children, className }: DialogBodyProps) {
+  return (
+    <div className={cx('x-dialog-body', className)}>
+      {children}
+    </div>
+  );
+}
+
+type DialogButtonsProps = {
+  children?: ComponentChildren,
+};
+
+export function DialogButtons({ children }: DialogButtonsProps) {
+  return (
+    <div className="x-dialog-buttons">
+      {children}
+    </div>
+  );
 }
 
 export function Dialogs({ children }: DialogsProps) {
@@ -126,18 +179,11 @@ export function Dialogs({ children }: DialogsProps) {
   return (
     <dialogContext.Provider value={providerValue}>
       { children }
-      { opensDialog.length > 0 && (
-        <div
-          className="x-dialog-container"
-          style={{ zIndex: 999 }}
-        >
-          {
-            opensDialog.map((dialog) => (
-              dialog.element()
-            ))
-          }
-        </div>
-      ) }
+      {
+        opensDialog.map((dialog) => (
+          dialog.element()
+        ))
+      }
     </dialogContext.Provider>
   );
 }

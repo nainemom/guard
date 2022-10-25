@@ -1,10 +1,24 @@
-@tailwind components;
+.x-dialog {
+  @apply fixed w-full h-full left-0 top-0 bg-body-normal rounded-md shadow-lg flex flex-col;
+}
 
-@layer components {
-  .x-dialog {
-    @apply w-full bg-body-normal rounded-md shadow-lg;
-  }
-  .x-dialog-container {
-    @apply top-0 left-0 w-full h-full p-4 fixed flex items-center justify-center bg-ghost-normal bg-opacity-80;
-  }
+.x-dialog > *:not(.x-dialog-title):not(.x-dialog-body):not(.x-dialog-buttons) {
+  @apply contents;
+}
+
+.x-dialog-title {
+  @apply shrink-0 flex flex-row items-center gap-3 font-semibold text-lg p-3 h-16;
+}
+.x-dialog-body {
+  @apply flex-grow overflow-auto;
+}
+.x-dialog-buttons {
+  @apply shrink-0 flex flex-row p-3 gap-3;
+}
+
+.x-dialog-buttons > * {
+  @apply shrink-0;
+}
+.x-dialog-buttons > *:last-child {
+  @apply flex-grow;
 }

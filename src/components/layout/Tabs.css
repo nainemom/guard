@@ -2,7 +2,7 @@
 
 @layer components {
   .x-tabs-container {
-    @apply h-auto flex items-center justify-center p-2 gap-2 bg-section-normal;
+    @apply h-auto flex items-center justify-center p-3 gap-3 bg-section-normal;
   }
   .x-tab-button {
     @apply basis-0 shrink-0;

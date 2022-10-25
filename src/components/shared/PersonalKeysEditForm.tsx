@@ -3,6 +3,7 @@ import Form, { FormErrors } from '@/components/form/Form';
 import Input from '@/components/form/Input';
 import { saveAuth, storageKey as authStorageKey } from '@/services/auth';
 import { CryptographyPairKeys, generatePairKeys } from '@/services/cryptography';
+import { DialogBody, DialogButtons, DialogTitle } from '@/services/dialog';
 import { useStorage } from '@/services/storage';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import Icon from './Icon';
@@ -63,38 +64,32 @@ export default function PersonalKeysEditForm({ onSuccess, onClose }: PersonalKey
 
   return (
     <>
-      <h2 className="text-center font-semibold text-base p-4">Edit Personal Key</h2>
+      <DialogTitle title="Edit Personal Keys" closeButton onClose={requestClose} />
       <Form
         value={formData}
         onInput={handleFormInput}
         onSubmit={handleFormSubmit}
         validator={formValidator}
       >
-        <div className="py-2 px-4">
-          <Input className="h-40" name="public_key" size="manual" multiLine placeholder="Your Public Key." label="Public Key:" />
-        </div>
-        <div className="py-2 px-4">
-          <Input className="text-danger-normal h-40" name="private_key" size="manual" multiLine placeholder="Your Private Key." label="Private Key:" />
-          <p className="mt-2 text-xs text-body-subtitle">Never share this value to anyone!</p>
-        </div>
-        <div className="p-4 flex flex-row items-center gap-2">
-          <div className="flex-grow flex flex-row items-center gap-2">
-            <Button type="button" onClick={regenerate}>
-              <Icon name="magic_button" className="w-4 h-4" />
-              Regenerate
-            </Button>
+        <DialogBody className="p-3">
+          <div className="mb-3">
+            <Input className="h-52" name="public_key" size="manual" multiLine placeholder="Your Public Key." label="Public Key:" />
           </div>
-          <div className="contents">
-            <Button type="button" onClick={requestClose}>
-              <Icon name="close" className="w-4 h-4" />
-              Close
-            </Button>
-            <Button type="submit" theme="primary">
-              <Icon name="save" className="w-4 h-4" />
-              Save
-            </Button>
+          <div>
+            <Input className="text-danger-normal h-52" name="private_key" size="manual" multiLine placeholder="Your Private Key." label="Private Key:" />
+            <p className="mt-3 text-xs text-body-subtitle">Never share this value to anyone!</p>
           </div>
-        </div>
+        </DialogBody>
+        <DialogButtons>
+          <Button type="button" onClick={regenerate}>
+            <Icon name="magic_button" className="w-5 h-5" />
+            Regenerate
+          </Button>
+          <Button type="submit" theme="primary">
+            <Icon name="save" className="w-5 h-5" />
+            Save
+          </Button>
+        </DialogButtons>
       </Form>
     </>
   )

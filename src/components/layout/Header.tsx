@@ -9,7 +9,7 @@ type HeaderProps = {
 
 export default function Header({ title, subtitle, startButtons, endButtons }: HeaderProps) {
   return (
-    <header class="h-16 shrink-0 flex items-center bg-section-normal text-section-content px-4 gap-4">
+    <header class="h-16 shrink-0 flex items-center bg-section-normal text-section-content p-3 gap-3">
       { startButtons && (
         <div>
           { startButtons }

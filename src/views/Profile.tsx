@@ -45,7 +45,7 @@ export default function Profile(_props: RouterProps) {
           )
         }
       >
-        <div className="shrink-0 p-4 mb-6">
+        <div className="shrink-0 p-3 mb-6">
           <div className="flex flex-col items-center w-full mx-auto">
             <Avatar publicKey={personalKeys.public_key} className="w-32 h-32" />
             <p className="text-lg font-bold">
@@ -68,14 +68,14 @@ export default function Profile(_props: RouterProps) {
           </div>
         </div>
         { (contacts || []).length > 0 ? (
-          <div className="flex-grow p-4">
+          <div className="flex-grow p-3">
             <h2 className="text-xl font-semibold mb-2"> Contact List: </h2>
               { contacts.map((contact) => (
                 <div
                   key={contact.id}
-                  className="flex flex-row items-center h-16 w-full gap-2"
+                  className="flex flex-row items-center h-16 w-full gap-3"
                 >
-                  <Avatar publicKey={contact.public_key} className="w-12 h-12 border border-body-darker rounded-xl p-2 bg-body-active" />
+                  <Avatar publicKey={contact.public_key} className="w-12 h-12 border border-body-darker rounded-xl p-3 bg-body-active" />
                   <h2 className="flex-grow text-sm font-semibold overflow-hidden text-ellipsis">
                     <Username publicKey={contact.public_key} />
                   </h2>
@@ -90,7 +90,7 @@ export default function Profile(_props: RouterProps) {
           </div>
         ) : (
           <>
-            <div className="flex-grow p-4 flex flex-col items-center justify-start gap-4 text-base">
+            <div className="flex-grow p-3 flex flex-col items-center justify-start gap-3 text-base">
               <p>You don't have any contact yet!</p>
               <Button theme="primary" onClick={() => setEditingContact(UNSAVED_CONTACT)}>
                 <Icon name="add" className="w-5 h-5" />

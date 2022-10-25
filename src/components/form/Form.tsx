@@ -93,12 +93,12 @@ export default function Form({ children, className, value, onInput, onSubmit, va
 
 export function FormFieldLabel({ label }: FormFieldLabelProps) {
   return typeof label === 'string' ? (
-    <label className="block text-base mb-2">{ label }</label>
+    <label className="block text-base mb-3">{ label }</label>
   ) : <></>;
 }
 export function FormFieldError({ error }: FormFieldErrorProps) {
   return typeof error === 'string' ? (
-    <p className="text-xs mt-2 text-danger-normal">{ error }</p>
+    <p className="text-xs mt-3 text-danger-normal">{ error }</p>
   ) : <></>;
 }
 
