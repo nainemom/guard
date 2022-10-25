@@ -3,8 +3,10 @@ import { cx } from '@/utils/cx';
 import { ComponentChildren, createContext, VNode } from 'preact';
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
+type DialogId = number;
+
 type Dialog = {
-  id: string,
+  id: DialogId,
   element: () => VNode,
   isOpen?: boolean,
 }
@@ -12,9 +14,9 @@ type Dialog = {
 type DialogContext = {
   list: Dialog[],
   register: (dialog: Dialog) => void,
-  unregister: (dialogId: string) => void,
-  open: (dialogId: string) => void,
-  close: (dialogId: string) => void,
+  unregister: (dialogId: DialogId) => void,
+  open: (dialogId: DialogId) => void,
+  close: (dialogId: DialogId) => void,
 }
 
 type DialogProps = {
@@ -29,10 +31,12 @@ type DialogsProps = {
 
 const dialogContext = createContext<DialogContext | null>(null);
 
+let _dialogId: DialogId = 0;
+
 export default function Dialog({ isOpen, className, children }: DialogProps) {
   const dialogs = useContext<DialogContext | null>(dialogContext);
 
-  const dialogId = useMemo<string>(() => crypto.randomUUID(), []);
+  const dialogId = useMemo<DialogId>(() => _dialogId += 1, []);
 
   useEffect(() => {
     dialogs?.register?.({
@@ -63,7 +67,7 @@ export function Dialogs({ children }: DialogsProps) {
 
   const providerValue = useMemo<DialogContext>(() => ({
     list: dialogs,
-    register: (dialog: Dialog) => setDialogs((oldDialogs) => {
+    register: (dialog) => setDialogs((oldDialogs) => {
       const index = oldDialogs.findIndex((dialogItem) => dialogItem.id === dialog.id);
       if (index === -1) {
         return [
@@ -77,7 +81,7 @@ export function Dialogs({ children }: DialogsProps) {
         ...oldDialogs.slice(index + 1),
       ];
     }),
-    unregister: (dialogId: string) => setDialogs((oldDialogs) => {
+    unregister: (dialogId) => setDialogs((oldDialogs) => {
       const index = oldDialogs.findIndex((dialogItem) => dialogItem.id === dialogId);
       if (index === -1) {
         return oldDialogs;
@@ -87,7 +91,7 @@ export function Dialogs({ children }: DialogsProps) {
         ...oldDialogs.slice(index + 1),
       ];
     }),
-    open: (dialogId: string) => setDialogs((oldDialogs) => {
+    open: (dialogId) => setDialogs((oldDialogs) => {
       const index = oldDialogs.findIndex((dialogItem) => dialogItem.id === dialogId);
       if (index === -1) {
         return oldDialogs;
@@ -101,7 +105,7 @@ export function Dialogs({ children }: DialogsProps) {
         ...oldDialogs.slice(index + 1),
       ];
     }),
-    close: (dialogId: string) => setDialogs((oldDialogs) => {
+    close: (dialogId) => setDialogs((oldDialogs) => {
       const index = oldDialogs.findIndex((dialogItem) => dialogItem.id === dialogId);
       if (index === -1) {
         return oldDialogs;
