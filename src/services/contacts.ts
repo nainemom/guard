@@ -7,7 +7,6 @@ type ContactId = string;
 
 export type Contact = {
   id: ContactId,
-  display_name: string,
   public_key: CryptographyPublicKey,
 };
 

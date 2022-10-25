@@ -14,10 +14,11 @@ import { RouterProps } from 'preact-router';
 import { useState } from 'preact/hooks';
 import PersonalKeysEditForm from '@/components/shared/PersonalKeysEditForm';
 import Icon from '@/components/shared/Icon';
+import Avatar from '@/components/shared/Avatar';
+import Username from '@/components/shared/Username';
 
 const UNSAVED_CONTACT: UnSavedContact = {
   public_key: '',
-  display_name: '',
 };
 
 type EditingContactDialog = Partial<Contact> | null;
@@ -34,63 +35,70 @@ export default function Profile(_props: RouterProps) {
     <Layout>
       <Header title="Guard App" subtitle="Encrypt and Decrypt Messages" />
       <Body
+        className="flex flex-col"
         stickyPadding
         stickyArea={
-          <Button theme="primary" onClick={() => setEditingContact(UNSAVED_CONTACT)}>
-            <Icon name="add" className="w-5 h-5" />
-            Add New Contact
-          </Button>
+          (contacts || []).length > 0 && (
+            <Button theme="primary" size="lg" circle onClick={() => setEditingContact(UNSAVED_CONTACT)}>
+              <Icon name="add" className="w-6 h-6" />
+            </Button>
+          )
         }
       >
-        <div className="p-4">
-          <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto">
-            <Icon name="manage_accounts" className="w-20 h-20 border-2 rounded-full p-2" />
-            <p className="w-full overflow-hidden text-ellipsis font-mono">
-              { personalKeys.public_key }
+        <div className="shrink-0 p-4 mb-6">
+          <div className="flex flex-col items-center w-full mx-auto">
+            <Avatar publicKey={personalKeys.public_key} className="w-32 h-32" />
+            <p className="text-lg font-bold">
+              <Username publicKey={personalKeys.public_key} />
             </p>
-            <div className="w-full flex flex-row gap-2">
-              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)} disabled>
-                <Icon name="share" className="w-4 h-4" />
-                Share
+            <div className="w-full flex flex-row justify-center gap-6 mt-6">
+              <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)} disabled>
+                <Icon name="share" className="w-6 h-6" />
               </Button>
-              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)} disabled>
-                <Icon name="download" className="w-4 h-4" />
-                Import
+              <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)} disabled>
+                <Icon name="download" className="w-6 h-6" />
               </Button>
-              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)} disabled>
-                <Icon name="upload" className="w-4 h-4" />
-                Export
+              <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)} disabled>
+                <Icon name="upload" className="w-6 h-6" />
               </Button>
-              <Button size="sm" className="flex-grow" onClick={() => setPersonalKeysDialog(true)}>
-                <Icon name="edit" className="w-4 h-4" />
-                Edit
+              <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)}>
+                <Icon name="edit" className="w-6 h-6" />
               </Button>
             </div>
           </div>
         </div>
-        <hr className="my-2" />
-        <div className="p-4">
-          <h2 className="text-base mb-2"> Contacts: </h2>
-          <List>
-            { (contacts || []).map((contact) => (
-            <ListItem
-              key={contact.id}
-              className="flex flex-row items-center px-2 h-16"
-            >
-              <div className="flex-grow">
-                <h2 className="text-base">{ contact.display_name }</h2>
-                <p className="text-sm font-mono text-body-subtitle">{ contact.public_key }</p>  
-              </div>
-              <div className="shrink-0 flex flex-row gap-2">
-                <Button size="sm" onClick={() => setEditingContact(contact)}>
-                  <Icon name="edit" className="w-4 h-4" />
-                  Edit
-                </Button>
-              </div>
-            </ListItem>
-            )) }
-          </List>
-        </div>
+        { (contacts || []).length > 0 ? (
+          <div className="flex-grow p-4">
+            <h2 className="text-xl font-semibold mb-2"> Contact List: </h2>
+              { contacts.map((contact) => (
+                <div
+                  key={contact.id}
+                  className="flex flex-row items-center h-16 w-full gap-2"
+                >
+                  <Avatar publicKey={contact.public_key} className="w-12 h-12 border border-body-darker rounded-xl p-2 bg-body-active" />
+                  <h2 className="flex-grow text-sm font-semibold overflow-hidden text-ellipsis">
+                    <Username publicKey={contact.public_key} />
+                  </h2>
+                  <div className="shrink-0">
+                    <Button size="sm" onClick={() => setEditingContact(contact)}>
+                      <Icon name="edit" className="w-4 h-4" />
+                      Edit
+                    </Button>
+                  </div>
+                </div>
+              )) }
+          </div>
+        ) : (
+          <>
+            <div className="flex-grow p-4 flex flex-col items-center justify-start gap-4 text-base">
+              <p>You don't have any contact yet!</p>
+              <Button theme="primary" onClick={() => setEditingContact(UNSAVED_CONTACT)}>
+                <Icon name="add" className="w-5 h-5" />
+                Create New Contact
+              </Button>
+            </div>
+          </>
+        ) }
 
         {/* Personal Keys Edit Dialog */}
         <Dialog

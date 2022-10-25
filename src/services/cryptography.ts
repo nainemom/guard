@@ -1,4 +1,4 @@
-import { ENCRYPTION_MODULES_LENGTH, ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE } from '@/constants';
+import { ENCRYPTION_MODULES_LENGTH, ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE, LOCAL_HASH_ALGORITHM } from '@/constants';
 
 export enum CryptographyShaHashSize {
   sha1 = 1,
@@ -34,6 +34,15 @@ export const str2ab = (str: string): ArrayBuffer => {
     bufView[index] = str.charCodeAt(index);
   });
   return buf;
+}
+
+export const str2hex = (str: string): string => {
+  let result = '';
+  for (let i = 0; i < str.length; i++) {
+    const hex = str.charCodeAt(i).toString(16);
+    result += (hex.length === 2 ? hex : '0' + hex);
+  }
+  return result.toUpperCase();
 }
 
 export const getHashName = (hash: CryptographyShaHashSize): string => `SHA-${hash}`;
@@ -104,3 +113,24 @@ export const encrypt = async (message: string, publicKey: CryptographyPublicKey)
     ),
   ));
 }
+
+
+const hashCache = new Map();
+export const hash = (content: string) => {
+  if (hashCache.has(content)) {
+    const cached = hashCache.get(content);
+    if (cached instanceof Promise) {
+      return cached;
+    }
+    return Promise.resolve(cached);
+  }
+  const promise = crypto.subtle.digest(LOCAL_HASH_ALGORITHM, str2ab(content))
+    .then((hashed) => btoa(ab2str(hashed)))
+    .catch((e) => {
+      hashCache.delete(content);
+      throw e;
+    });
+  hashCache.set(content, promise);
+  return promise;
+}
+

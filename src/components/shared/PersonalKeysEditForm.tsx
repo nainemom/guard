@@ -23,10 +23,10 @@ export default function PersonalKeysEditForm({ onSuccess, onClose }: PersonalKey
   const formValidator = useCallback((submittedFormData: Partial<CryptographyPairKeys>) => {
     let errors: FormErrors = {};
     if ((submittedFormData?.public_key?.length || 0) < 10) {
-      errors.display_name = 'This field is required!';
+      errors.public_key = 'This field is required!';
     }
     if ((submittedFormData?.private_key?.length || 0) < 10) {
-      errors.public_key = 'This field is required!';
+      errors.private_key = 'This field is required!';
     }
     return errors;
   }, []);
@@ -71,10 +71,10 @@ export default function PersonalKeysEditForm({ onSuccess, onClose }: PersonalKey
         validator={formValidator}
       >
         <div className="py-2 px-4">
-          <Input name="public_key" multiLine placeholder="Your Public Key." label="Public Key:" />
+          <Input className="h-40" name="public_key" size="manual" multiLine placeholder="Your Public Key." label="Public Key:" />
         </div>
         <div className="py-2 px-4">
-          <Input className="text-danger-normal" name="private_key" multiLine placeholder="Your Private Key." label="Private Key:" />
+          <Input className="text-danger-normal h-40" name="private_key" size="manual" multiLine placeholder="Your Private Key." label="Private Key:" />
           <p className="mt-2 text-xs text-body-subtitle">Never share this value to anyone!</p>
         </div>
         <div className="p-4 flex flex-row items-center gap-2">
