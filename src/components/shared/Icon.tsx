@@ -38,7 +38,7 @@ export type IconProps = {
 export default function Icon({ name, className }: IconProps) {
   const [iconContent, setIconContent] = useState<string>('');
   useEffect(() => {
-    downloadAndPrepareIcon(`/icons/${name}.svg`).then(setIconContent);
+    downloadAndPrepareIcon(`${import.meta.env.BASE_URL}icons/${name}.svg`).then(setIconContent);
   }, [name]);
   return (<div className={cx('inline-block', className)} dangerouslySetInnerHTML={{ __html: iconContent }} />);
 }

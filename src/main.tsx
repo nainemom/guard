@@ -1,6 +1,8 @@
 import { render } from 'preact';
 import '@/main.css';
 import Router from 'preact-router';
+import { createHashHistory } from 'history';
+
 import Profile from '@/views/Profile';
 import Encrypt from '@/views/Encrypt';
 import Decrypt from '@/views/Decrypt';
@@ -26,11 +28,12 @@ function Main() {
 
   return isReady ? (
     <Dialogs>
-      <Router>
+      { /* @ts-ignore */ }
+      <Router history={createHashHistory()}>
         <Profile path="/profile" />
         <Encrypt path="/encrypt" />
         <Decrypt path="/decrypt" />
-        <Redirect path="/:any" to="/profile" />
+        <Redirect path="/" to="/profile" />
       </Router>
     </Dialogs>
   ) : (
