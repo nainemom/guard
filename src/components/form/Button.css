@@ -1,25 +1,40 @@
 .x-button {
   @apply inline-flex items-center justify-center h-10 text-sm transition-colors duration-100;
 }
+.x-button[disabled] {
+  @apply opacity-50 cursor-not-allowed;
+}
 
 .x-button:not(.x-button-circle) {
-  @apply rounded-md;
+  @apply rounded-md gap-1;
 }
 .x-button-circle {
   @apply rounded-full;
 }
 
 .x-button-default {
-  @apply shadow bg-body-lighter hover:bg-body-hover focus:bg-body-hover active:bg-body-active text-body-content;
+  @apply shadow bg-body-lighter text-body-content;
+}
+.x-button-default:not([disabled]) {
+  @apply hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
 }
 .x-button-ghost {
-  @apply shadow bg-ghost-normal hover:bg-ghost-hover focus:bg-ghost-hover active:bg-ghost-active text-ghost-content;
+  @apply shadow bg-ghost-normal text-ghost-content;
+}
+.x-button-ghost:not([disabled]) {
+  @apply hover:bg-ghost-hover focus:bg-ghost-hover active:bg-ghost-active;
 }
 .x-button-primary {
-  @apply shadow bg-primary-normal hover:bg-primary-hover focus:bg-primary-hover active:bg-primary-active text-primary-content;
+  @apply shadow bg-primary-normal text-primary-content;
+}
+.x-button-primary:not([disabled]) {
+  @apply hover:bg-primary-hover focus:bg-primary-hover active:bg-primary-active;
 }
 .x-button-danger {
-  @apply shadow bg-body-lighter hover:bg-body-hover focus:bg-body-hover active:bg-body-active text-danger-normal;
+  @apply shadow bg-body-lighter text-danger-normal;
+}
+.x-button-danger:not([disabled]) {
+  @apply hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
 }
 
 .x-button-sm {

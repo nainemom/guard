@@ -24,7 +24,7 @@ body {
 }
 
 hr {
-  @apply border-ghost-normal;
+  @apply border-ghost-active border-t-2;
 }
 
 @layer utilities {

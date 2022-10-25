@@ -31,7 +31,7 @@ export function ListItem({ children, className, onMenu }: ListItemProps) {
   }, [onMenu]);
 
   return (
-    <li class={cx('x-list-item', className)} tabIndex={1} onContextMenu={handleContextMenu}>
+    <li class={cx('x-list-item', className)} onContextMenu={handleContextMenu}>
       { children }
     </li>
   )

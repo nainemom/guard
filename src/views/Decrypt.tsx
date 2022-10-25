@@ -9,6 +9,8 @@ import { CryptographyPairKeys, decrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
 import { useStorage } from '@/services/storage';
 import Button from '@/components/form/Button';
+import { Resizable, ResizableSection } from '@/components/common/Resizable';
+import Icon from '@/components/shared/Icon';
 
 let decryptTimer: number = -1;
 
@@ -31,33 +33,29 @@ export default function Decrypt(_props: RouterProps) {
     decrypt(message, personalKeys.private_key).then(setDecryptedMessage);
   }, [setDecryptedMessage, personalKeys]);
 
-  const pasteFromClipboard = useCallback(() => {
-    navigator.clipboard.readText().then(setEncryptedMessage);
-  }, []);
-
   return (
     <Layout>
       <Header title="Guard App" subtitle="Encrypt and Decrypt Messages" />
-      <Body className="flex flex-col">
-        <div className="p-4 overflow-hidden relative">
-          <Input
-            size="manual"
-            className="h-60 font-mono"
-            value={encryptedMessage}
-            onInput={setEncryptedMessage}
-            multiLine
-            placeholder="Enter Encrypted Message."
-            label="Encrypted Message:"
-          />
-          <Button className="absolute bottom-6 right-6" size="sm" theme="primary" onClick={pasteFromClipboard}>Paste</Button>
-        </div>
-        <hr />
-        <div className="p-4 flex-grow overflow-hidden relative">
-          <h2 className="pb-2 text-base font-bold"> Output: </h2>
-          <p className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto">
-            { decryptedMessage }
-          </p>
-        </div>
+      <Body>
+        <Resizable>
+          <ResizableSection className="p-4 h-64">
+            <Input
+              size="manual"
+              className="h-full font-mono"
+              value={encryptedMessage}
+              onInput={setEncryptedMessage}
+              multiLine
+              placeholder="Enter Encrypted Message."
+              label="Encrypted Message:"
+            />
+          </ResizableSection>
+          <ResizableSection className="p-4">
+            <h2 className="pb-2 text-base font-bold"> Output: </h2>
+            <p className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto whitespace-pre">
+              { decryptedMessage }
+            </p>
+          </ResizableSection>
+        </Resizable>
       </Body>
       <Tabs />
     </Layout>

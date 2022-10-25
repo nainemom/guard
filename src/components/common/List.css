@@ -2,7 +2,7 @@
   @apply h-auto flex flex-col gap-2;
 }
 .x-list-item {
-  @apply cursor-pointer border border-dashed rounded-md border-ghost-normal hover:bg-body-hover focus:bg-body-hover active:bg-body-active list-none;
+  @apply border border-ghost-normal rounded-md list-none;
 }
 .x-list-item,
 .x-list-item > * {

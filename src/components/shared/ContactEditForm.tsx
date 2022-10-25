@@ -3,6 +3,7 @@ import Form, { FormErrors } from '@/components/form/Form';
 import Input from '@/components/form/Input';
 import { Contact, removeContact, saveContact, UnSavedContact } from '@/services/contacts';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import Icon from './Icon';
 
 export type ContactEditFormProps = {
   contact: Partial<Contact>,
@@ -80,11 +81,20 @@ export default function ContactEditForm({ contact, onSuccess, onClose }: Contact
         </div>
         <div className="p-4 flex flex-row items-center gap-2">
           <div className="flex-grow">
-            <Button type="button" theme="danger" onClick={handleRemoveContact}>Delete</Button>
+            <Button type="button" theme="danger" onClick={handleRemoveContact}>
+              <Icon name="delete" className="w-4 h-4" />
+              Delete
+            </Button>
           </div>
           <div class="contents">
-            <Button type="button" onClick={requestClose}>Close</Button>
-            <Button type="submit" theme="primary">Save</Button>
+            <Button type="button" onClick={requestClose}>
+              <Icon name="close" className="w-4 h-4" />
+              Close
+            </Button>
+            <Button type="submit" theme="primary">
+              <Icon name="save" className="w-4 h-4" />
+              Save
+            </Button>
           </div>
         </div>
       </Form>

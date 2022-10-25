@@ -23,7 +23,7 @@ export default function Input(props: InputProps) {
   const Tag = useMemo(() => multiLine ? 'textarea' : 'input', [multiLine]);
 
   return (
-    <div>
+    <>
       <FormFieldLabel label={formFieldProps.label} />
       <Tag
         class={cx('x-input', `x-input-size-${size}`, className)}
@@ -33,6 +33,6 @@ export default function Input(props: InputProps) {
         onInput={(e) => setValue((e?.target as HTMLInputElement)?.value)}
       />
       <FormFieldError error={fieldError} />
-    </div>
+    </>
   )
 }

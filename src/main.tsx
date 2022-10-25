@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import '@/main.css';
 import Router from 'preact-router';
-import Keys from '@/views/Keys';
+import Profile from '@/views/Profile';
 import Encrypt from '@/views/Encrypt';
 import Decrypt from '@/views/Decrypt';
 import Redirect from '@/components/common/Redirect';
@@ -27,10 +27,10 @@ function Main() {
   return isReady ? (
     <Dialogs>
       <Router>
-        <Keys path="/keys" />
+        <Profile path="/profile" />
         <Encrypt path="/encrypt" />
         <Decrypt path="/decrypt" />
-        <Redirect path="/" to="/keys" />
+        <Redirect path="/:any" to="/profile" />
       </Router>
     </Dialogs>
   ) : (
