@@ -1,8 +1,11 @@
 .x-list {
-  @apply h-auto flex flex-col gap-2;
+  @apply h-auto flex flex-col gap-3;
 }
 .x-list-item {
-  @apply border border-ghost-normal rounded-md list-none;
+  @apply list-none h-16 bg-body-normal transition-colors duration-100;
+}
+.x-list-item.x-list-item-clickable {
+  @apply hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
 }
 .x-list-item,
 .x-list-item > * {

@@ -36,7 +36,6 @@ export default function Profile(_props: RouterProps) {
       <Header title="Guard App" subtitle="Encrypt and Decrypt Messages" />
       <Body
         className="flex flex-col"
-        stickyPadding
         stickyArea={
           (contacts || []).length > 0 && (
             <Button theme="primary" size="lg" circle onClick={() => setEditingContact(UNSAVED_CONTACT)}>
@@ -68,12 +67,15 @@ export default function Profile(_props: RouterProps) {
           </div>
         </div>
         { (contacts || []).length > 0 ? (
-          <div className="flex-grow p-3">
-            <h2 className="text-xl font-semibold mb-2"> Contact List: </h2>
+          <div className="flex-grow">
+            <h2 className="text-xl font-semibold mb-2 p-3"> Contact List: </h2>
+            <List>
               { contacts.map((contact) => (
-                <div
+                <ListItem
                   key={contact.id}
-                  className="flex flex-row items-center h-16 w-full gap-3"
+                  className="flex flex-row items-center h-16 w-full gap-3 p-3"
+                  clickable
+                  onMenu={() => setEditingContact(contact)}
                 >
                   <Avatar publicKey={contact.public_key} className="w-12 h-12 border border-body-darker rounded-xl p-3 bg-body-active" />
                   <div className="flex-grow overflow-hidden text-ellipsis">
@@ -84,14 +86,9 @@ export default function Profile(_props: RouterProps) {
                       <p className="text-xs text-body-subtitle">{ contact.note }</p>
                     ) }
                   </div>
-                  <div className="shrink-0">
-                    <Button size="sm" onClick={() => setEditingContact(contact)}>
-                      <Icon name="edit" className="w-4 h-4" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
+                </ListItem>
               )) }
+            </List>
           </div>
         ) : (
           <>
