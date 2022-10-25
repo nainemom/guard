@@ -27,6 +27,14 @@ hr {
   @apply border-ghost-active border-t-2;
 }
 
+::-webkit-scrollbar {
+  @apply bg-transparent w-1 h-2;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white bg-blend-overlay bg-opacity-30 rounded-lg;
+}
+
 @layer utilities {
   .contain-layout {
     contain: layout;
