@@ -1,8 +1,8 @@
 .x-input {
-  @apply block w-full shadow px-2 rounded-md text-sm bg-body-hover focus:bg-body-lighter transition-colors duration-100;
+  @apply block w-full shadow px-2 min-h-[2.5rem] rounded-md text-sm bg-body-hover focus:bg-body-lighter transition-colors duration-100;
 }
 textarea.x-input {
-  @apply resize-y p-2;
+  @apply resize-none p-2;
 }
 
 input.x-input-size-md {
