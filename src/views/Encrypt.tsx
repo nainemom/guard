@@ -18,13 +18,13 @@ export default function Encrypt(_props: RouterProps) {
   const share = useCallback(async () => {
     try {
       const encryptedMessage = await encrypt(message, publicKey);
-      if (Object.hasOwnProperty.call(navigator, 'share')) {
+      if (navigator.share) {
         await navigator.share({
           text: encryptedMessage,
         });
       } else {
         navigator.clipboard.writeText(encryptedMessage);
-        alert('Copied To Clipboard!');
+        alert('Cannot use share feature, so just copied to clipboard!');
       }
     } catch (_e) {
       alert('Error!');
