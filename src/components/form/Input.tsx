@@ -5,7 +5,7 @@ import { FormFieldProps, FormFieldLabel, useFormField, FormFieldError } from './
 
 type InputProps = FormFieldProps & {
   className?: string,
-  size?: 'md' | 'manual',
+  size?: 'md' | 'lg' | 'manual',
   placeholder?: string,
   readOnly?: boolean,
   multiLine?: boolean,
@@ -26,7 +26,7 @@ export default function Input(props: InputProps) {
     <>
       <FormFieldLabel label={formFieldProps.label} />
       <Tag
-        class={cx('x-input', `x-input-size-${size}`, className)}
+        class={cx('x-input', `x-input-${size}`, className)}
         value={value}
         placeholder={placeholder}
         readOnly={readOnly}

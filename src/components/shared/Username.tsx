@@ -9,7 +9,11 @@ export type UsernameProps = {
 export default function Username({ publicKey }: UsernameProps) {
   const [username, setUsername] = useState<string>('');
   useEffect(() => {
-    hash(publicKey).then(setUsername);
+    if (!publicKey) {
+      setUsername('');
+    } else {
+      hash(publicKey).then(setUsername);
+    }
   }, [publicKey]);
   return (<>{username}</>);
 }

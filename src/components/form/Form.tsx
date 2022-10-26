@@ -93,7 +93,7 @@ export default function Form({ children, className, value, onInput, onSubmit, va
 
 export function FormFieldLabel({ label }: FormFieldLabelProps) {
   return typeof label === 'string' ? (
-    <label className="block text-base mb-3">{ label }</label>
+    <label className="block text-base mb-1">{ label }</label>
   ) : <></>;
 }
 export function FormFieldError({ error }: FormFieldErrorProps) {

@@ -12,6 +12,7 @@ type ListItemProps = {
   children?: ComponentChildren,
   className?: string,
   clickable?: boolean,
+  selected?: boolean,
   onMenu?: () => void,
   onClick?: () => void,
 }
@@ -30,14 +31,14 @@ export function List({ children, className }: ListProps) {
 }
 
 export function ListItem(props: ListItemProps) {
-  const { children, className, clickable, onClick, onMenu } = { ...listItemDefaultProps, ...props };
+  const { children, className, clickable, selected, onClick, onMenu } = { ...listItemDefaultProps, ...props };
   const handleContextMenu = useCallback((event: Event) => {
     event.preventDefault();
     onMenu();
   }, [onMenu]);
 
   return (
-    <li class={cx('x-list-item', clickable && 'x-list-item-clickable', className)} {...(clickable && {
+    <li class={cx('x-list-item', clickable && 'x-list-item-clickable', selected && 'x-list-item-selected', className)} {...(clickable && {
       onContextMenu: handleContextMenu,
       onClick,
       tabIndex: 1,

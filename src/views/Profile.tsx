@@ -1,9 +1,8 @@
-import { List, ListItem } from '@/components/common/List';
 import Button from '@/components/form/Button';
 import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
-import Tabs from '@/components/layout/Tabs';
+import BottomTabs from '@/components/layout/BottomTabs';
 import ContactEditForm from '@/components/shared/ContactEditForm';
 import { Contact, UnSavedContact, storageKey as contactsStorageKey } from '@/services/contacts';
 import { storageKey as authStorageKey } from '@/services/auth';
@@ -16,6 +15,7 @@ import PersonalKeysEditForm from '@/components/shared/PersonalKeysEditForm';
 import Icon from '@/components/shared/Icon';
 import Avatar from '@/components/shared/Avatar';
 import Username from '@/components/shared/Username';
+import ContactList from '@/components/shared/ContactList';
 
 const UNSAVED_CONTACT: UnSavedContact = {
   public_key: '',
@@ -69,26 +69,9 @@ export default function Profile(_props: RouterProps) {
         { (contacts || []).length > 0 ? (
           <div className="flex-grow">
             <h2 className="text-xl font-semibold mb-2 p-3"> Contact List: </h2>
-            <List>
-              { contacts.map((contact) => (
-                <ListItem
-                  key={contact.id}
-                  className="flex flex-row items-center h-16 w-full gap-3 p-3"
-                  clickable
-                  onMenu={() => setEditingContact(contact)}
-                >
-                  <Avatar publicKey={contact.public_key} className="w-12 h-12 border border-body-darker rounded-xl p-3 bg-body-active" />
-                  <div className="flex-grow overflow-hidden text-ellipsis">
-                    <h2 className="text-sm font-semibold">
-                      <Username publicKey={contact.public_key} />
-                    </h2>
-                    { contact.note && (
-                      <p className="text-xs text-body-subtitle">{ contact.note }</p>
-                    ) }
-                  </div>
-                </ListItem>
-              )) }
-            </List>
+            <ContactList
+              onContactMenu={setEditingContact}
+            />
           </div>
         ) : (
           <>
@@ -126,7 +109,7 @@ export default function Profile(_props: RouterProps) {
         </Dialog>
 
       </Body>
-      <Tabs />
+      <BottomTabs />
     </Layout>
   )
 }

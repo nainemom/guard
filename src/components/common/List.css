@@ -2,10 +2,18 @@
   @apply h-auto flex flex-col gap-3;
 }
 .x-list-item {
-  @apply list-none h-16 bg-body-normal transition-colors duration-100;
+  @apply list-none h-16 transition-colors duration-100;
 }
+
+.x-list-item:not(.x-list-item-selected) {
+  @apply first-line:bg-body-normal
+}
+.x-list-item.x-list-item-selected {
+  @apply border-l-4 border-primary-normal;
+}
+
 .x-list-item.x-list-item-clickable {
-  @apply hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
+  @apply cursor-pointer hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
 }
 .x-list-item,
 .x-list-item > * {

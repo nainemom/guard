@@ -76,7 +76,7 @@ export default function ContactEditForm({ contact, onSuccess, onClose }: Contact
             <Input name="public_key" size="manual" className="h-52" multiLine placeholder="Ask Your Contact to Share His/Her Public Key with You." label="Public Key:" />
           </div>
           <div>
-          <Input name="note" size="md" placeholder="Something for you to remember this contact." label="Note:" />
+            <Input name="note" size="md" placeholder="Something for you to remember this contact." label="Note:" />
           </div>
         </DialogBody>
         <DialogButtons>

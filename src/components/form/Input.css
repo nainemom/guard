@@ -5,9 +5,15 @@ textarea.x-input {
   @apply resize-none p-3;
 }
 
-input.x-input-size-md {
+.x-input-md {
   @apply h-10;
 }
-textarea.x-input-size-md {
+textarea.x-input-md {
   @apply h-24;
+}
+.x-input-lg {
+  @apply h-12;
+}
+textarea.x-input-lg {
+  @apply h-32;
 }

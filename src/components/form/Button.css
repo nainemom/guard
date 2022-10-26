@@ -6,18 +6,31 @@
 }
 
 .x-button:not(.x-button-circle) {
-  @apply rounded-md gap-1;
+  @apply gap-1;
 }
+
 .x-button-circle {
   @apply rounded-full;
+}
+.x-button-rounded {
+  @apply rounded-md;
 }
 
 .x-button-default {
   @apply shadow bg-body-lighter text-body-content;
 }
-.x-button-default:not([disabled]) {
+.x-button-transparent {
+  @apply bg-transparent;
+}
+.x-button-danger {
+  @apply shadow bg-body-lighter text-danger-normal;
+}
+.x-button-default:not([disabled]),
+.x-button-transparent:not([disabled]),
+.x-button-danger:not([disabled]) {
   @apply hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
 }
+
 .x-button-ghost {
   @apply shadow bg-ghost-normal text-ghost-content;
 }
@@ -30,12 +43,8 @@
 .x-button-primary:not([disabled]) {
   @apply hover:bg-primary-hover focus:bg-primary-hover active:bg-primary-active;
 }
-.x-button-danger {
-  @apply shadow bg-body-lighter text-danger-normal;
-}
-.x-button-danger:not([disabled]) {
-  @apply hover:bg-body-hover focus:bg-body-hover active:bg-body-active;
-}
+
+
 
 .x-button-sm {
   @apply h-8;

@@ -1,7 +1,7 @@
 import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
-import Tabs from '@/components/layout/Tabs';
+import BottomTabs from '@/components/layout/BottomTabs';
 import { RouterProps } from 'preact-router';
 import { storageKey as authStorageKey } from '@/services/auth';
 import { useCallback, useEffect, useState } from 'preact/hooks';
@@ -57,7 +57,7 @@ export default function Decrypt(_props: RouterProps) {
           </ResizableSection>
         </Resizable>
       </Body>
-      <Tabs />
+      <BottomTabs />
     </Layout>
   )
 }

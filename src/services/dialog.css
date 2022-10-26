@@ -13,7 +13,7 @@
   @apply flex-grow overflow-auto;
 }
 .x-dialog-buttons {
-  @apply shrink-0 flex flex-row p-3 gap-3;
+  @apply shrink-0 flex flex-row p-3 gap-3 pt-0;
 }
 
 .x-dialog-buttons > * {

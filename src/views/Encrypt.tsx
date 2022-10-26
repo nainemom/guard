@@ -1,82 +1,65 @@
 import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
-import Tabs from '@/components/layout/Tabs';
+import BottomTabs from '@/components/layout/BottomTabs';
 import { RouterProps } from 'preact-router';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useState } from 'preact/hooks';
 import { CryptographyPublicKey, encrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
 import Button from '@/components/form/Button';
-import { Resizable, ResizableSection } from '@/components/common/Resizable';
 import Icon from '@/components/shared/Icon';
+import ContactSelector from '@/components/shared/ContactSelector';
 
-let decryptTimer: number = -1;
 
 export default function Encrypt(_props: RouterProps) {
   const [publicKey, setPublicKey] = useState<CryptographyPublicKey>('');
-  const [decryptedMessage, setDecryptedMessage] = useState<string>('');
-  const [encryptedMessage, setEncryptedMessage] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
 
-  const doEncrypt = useCallback((message: string) => {
-    encrypt(message, publicKey).then(setEncryptedMessage);
-  }, [setDecryptedMessage, publicKey]);
-
-  useEffect(() => {
-    clearTimeout(decryptTimer);
-    if (decryptedMessage) {
-      decryptTimer = setTimeout(() => doEncrypt(decryptedMessage), 300);
-    } else {
-      setDecryptedMessage('');
+  const share = useCallback(async () => {
+    try {
+      const encryptedMessage = await encrypt(message, publicKey);
+      if (Object.hasOwnProperty.call(navigator, 'share')) {
+        await navigator.share({
+          text: encryptedMessage,
+        });
+      } else {
+        navigator.clipboard.writeText(encryptedMessage);
+        alert('Copied To Clipboard!');
+      }
+    } catch (_e) {
+      alert('Error!');
     }
-    return () => {
-      clearTimeout(decryptTimer);
-    }
-  }, [decryptedMessage, doEncrypt, setDecryptedMessage]);
-
-  const copyToClipboard = useCallback(() => {
-    navigator.clipboard.writeText(encryptedMessage);
-  }, [encryptedMessage]);
+  }, [message, publicKey]);
 
   return (
     <Layout>
       <Header title="Guard App" subtitle="Encrypt and Decrypt Messages" />
       <Body
+        className="flex flex-col p-3"
         stickyArea={
-          <Button theme="primary" onClick={copyToClipboard} disabled={!encryptedMessage}>
+          <Button className="m-3" theme="primary" onClick={share} disabled={!publicKey || !message}>
             <Icon name="share" className="w-5 h-5" />
             Share
           </Button>
         }
       >
-        <Resizable>
-          <ResizableSection className="p-4 h-64">
-            <Input
-              size="md"
-              value={publicKey}
-              onInput={setPublicKey}
-              placeholder="Receiver Public Key."
-              label="Receiver:"
-              className="mb-4"
-            />
-            <Input
-              size="manual"
-              className="h-full"
-              value={decryptedMessage}
-              onInput={setDecryptedMessage}
-              multiLine
-              placeholder="Enter Your Raw Message."
-              label="Message:"
-            />
-          </ResizableSection>
-          <ResizableSection className="p-4">
-            <h2 className="pb-2 text-base font-bold"> Output: </h2>
-            <p className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto select-text font-mono">
-              { encryptedMessage }
-            </p>
-          </ResizableSection>
-        </Resizable>
+        <ContactSelector
+          label="Receiver:"
+          className="shrink-0 mb-3"
+          publicKey={publicKey}
+          onInput={setPublicKey}
+        />
+        <Input
+          label="Message:"
+          size="manual"
+          className="h-full flex-grow"
+          value={message}
+          onInput={setMessage}
+          multiLine
+          placeholder="Enter Your Raw Message."
+        />
       </Body>
-      <Tabs />
+      <BottomTabs />
     </Layout>
   )
 }
