@@ -92,7 +92,7 @@ export default function ContactSelector({ publicKey, onInput, className, label }
         />
         <div>
           <Tabs value={selectedTab} onChange={(newTab) => setSelectedTab(newTab as ContactSelectorTabs)}>
-            <TabItem tabId="contact">Select From Contact List</TabItem>
+            <TabItem tabId="contact">Select From Contacts</TabItem>
             <TabItem tabId="manual">Enter Public Key</TabItem>
           </Tabs>
         </div>
