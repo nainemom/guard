@@ -21,10 +21,10 @@ export type ContactSelectorTabs = null | 'contact' | 'manual';
 export default function ContactSelector({ publicKey, onInput, className, label }: ContactSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleContactClick = useCallback((selectedContact: Contact) => {
+  const handleContactClick = useCallback((selectedContact: CryptographyPublicKey) => {
     setIsOpen(false);
     if (onInput) {
-      onInput(selectedContact.public_key);
+      onInput(selectedContact);
     }
   }, [setIsOpen, onInput]);
 
@@ -58,6 +58,7 @@ export default function ContactSelector({ publicKey, onInput, className, label }
           <ContactList
             onContactClick={handleContactClick}
             selectedContact={publicKey}
+            includesMe
           />
         </DialogBody>
       </Dialog>

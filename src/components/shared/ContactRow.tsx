@@ -1,10 +1,13 @@
+import './ContactRow.css';
 import { getContacts, UnSavedContact } from "@/services/contacts";
-import { CryptographyPublicKey } from "@/services/cryptography";
+import { CryptographyPairKeys, CryptographyPublicKey } from "@/services/cryptography";
 import { cx } from "@/utils/cx";
 import { useMemo } from "preact/hooks";
 import Avatar from "./Avatar";
 import Username from "./Username";
-import './ContactRow.css';
+import { storageKey as authStorageKey } from '@/services/auth';
+import { useStorage } from '@/services/storage';
+
 
 export type ContactRowProps = {
   publicKey: CryptographyPublicKey,
@@ -18,6 +21,7 @@ const contactRowDefaultProps = {
 
 export default function ContactRow(props: ContactRowProps) {
   const { publicKey, className, size } = { ...contactRowDefaultProps, ...props };
+  const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
   const contact = useMemo<UnSavedContact>(() => {
     const fromContacts = getContacts().find((contactItem) => contactItem.public_key === publicKey);
     if (fromContacts) {
@@ -25,9 +29,9 @@ export default function ContactRow(props: ContactRowProps) {
     }
     return {
       public_key: publicKey,
-      note: '',
+      note: publicKey === personalKeys.public_key ? 'Me' : '',
     };
-  }, [publicKey]);
+  }, [publicKey, personalKeys]);
   
   return (
     <div className={cx('x-contact-row', `x-contact-row-${size}`, className)}>

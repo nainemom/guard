@@ -100,7 +100,7 @@ export default function Profile(_props: RouterProps) {
           <div className="flex-grow">
             <h2 className="text-xl font-semibold mb-2 p-3"> Contact List: </h2>
             <ContactList
-              onContactMenu={setEditingContact}
+              onContactMenu={(selectedPublicKey) => setEditingContact((contacts?.find((contactItem) => contactItem.public_key === selectedPublicKey) as Contact) || UNSAVED_CONTACT)}
             />
           </div>
         ) : (
