@@ -4,7 +4,7 @@ import { List, ListItem } from "../common/List";
 import { useStorage } from "@/services/storage";
 import ContactRow from "./ContactRow";
 import { CryptographyPairKeys, CryptographyPublicKey } from '@/services/cryptography';
-import { useMemo } from 'preact/hooks';
+import { useEffect, useMemo } from 'preact/hooks';
 import { storageKey as authStorageKey } from '@/services/auth';
 
 export type ContactListProps = {
@@ -14,6 +14,11 @@ export type ContactListProps = {
   includesMe?: boolean,
   className?: string,
 }
+
+type ContactItemWithKey = {
+  key: string,
+  value: CryptographyPublicKey,
+};
 
 const contactListDefaultProps = {
   onContactMenu: () => {},
@@ -25,27 +30,33 @@ export default function ContactList(props: ContactListProps) {
   const [contacts] = useStorage<Contact[]>(contactsStorageKey);
   const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
 
-  const list = useMemo<CryptographyPublicKey[]>(() => [
+  const list = useMemo<ContactItemWithKey[]>(() => [
     ...(props.includesMe ? [
-      personalKeys.public_key,
+      {
+        key: personalKeys.public_key,
+        value: personalKeys.public_key,
+      },
     ] : []),
-    ...(contacts || []).map((contact) => contact.public_key),
+    ...(contacts || []).map((contact, index) => ({
+      key: JSON.stringify(contact) + index,
+      value: contact.public_key,
+    })),
   ], [contacts, props.includesMe, personalKeys]);
   
   return (
     <List className={className}>
-      { list.map((contactPublicKey) => (
+      { list.map((listITem) => (
         <ListItem
-          key={contactPublicKey}
+          key={listITem.key}
           className="h-16 p-3"
           clickable
-          onMenu={() => onContactMenu(contactPublicKey)}
-          onClick={() => onContactClick(contactPublicKey)}
-          selected={props?.selectedContact === contactPublicKey}
+          onMenu={() => onContactMenu(listITem.value)}
+          onClick={() => onContactClick(listITem.value)}
+          selected={props?.selectedContact === listITem.value}
         >
           <ContactRow
             size="md"
-            publicKey={contactPublicKey}
+            publicKey={listITem.value}
           />
         </ListItem>
       )) }
