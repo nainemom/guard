@@ -13,4 +13,19 @@ export default defineConfig({
   define: {
     APP_VERSION: JSON.stringify(version),
   },
+  build: {
+    rollupOptions: {
+      manualChunks(id) {
+        if (id.includes('node_modules/preact')) {
+          return 'preact';
+        }
+        if (id.includes('node_modules/@dicebear')) {
+          return 'dicebear';
+        }
+        if (id.includes('node_modules')) {
+          return 'vendor';
+        }
+      },
+    },
+  },
 })
