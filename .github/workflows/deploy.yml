@@ -1,0 +1,38 @@
+name: 'Deploy the App to Github Pages'
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+        with:
+          path: master
+      - name: 'Setup Node'
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+
+      - name: 'Build The App'
+        run: npm run build -- --base=/guard/
+
+      - name: 'Upload Pages Artifact'
+        uses: actions/upload-pages-artifact@v1.0.4
+        with: 
+          path: dist
+          
+      - name: 'Publish to Github Pages'
+        uses: actions/deploy-pages@v1
+        with:
+          token: ${{ github.token }}
