@@ -48,3 +48,6 @@ render(
   <Main />,
   document.querySelector('#app') as HTMLElement,
 );
+
+/* @ts-ignore */
+console.info(`Guard v${APP_VERSION}`);
