@@ -23,6 +23,9 @@ jobs:
           node-version: 16
           cache: 'npm'
 
+      - name: 'Install Dependencies'
+        run: npm i
+
       - name: 'Build The App'
         run: npm run build -- --base=/guard/
 
