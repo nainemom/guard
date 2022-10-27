@@ -15,7 +15,7 @@ export default function Decrypt(_props: RouterProps) {
   const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
   const [encryptedContent, setEncryptedContent] = useState<string>('');
   const [decryptedMessage, setDecryptedMessage] = useState<string>('');
-  const [decryptTimer, setDecryptTimer] = useState<number>(-1);
+  const [decryptTimer, setDecryptTimer] = useState<NodeJS.Timeout>();
   const [decryptError, setDecryptError] = useState<boolean>(false);
 
   useEffect(() => {
