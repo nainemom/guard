@@ -3,9 +3,9 @@ import '@/main.css';
 import Router from 'preact-router';
 import { createHashHistory } from 'history';
 
-import Profile from '@/views/Profile';
-import Encrypt from '@/views/Encrypt';
-import Decrypt from '@/views/Decrypt';
+import Profile from '@/pages/Profile';
+import Encrypt from '@/pages/Encrypt';
+import Decrypt from '@/pages/Decrypt';
 import Redirect from '@/components/common/Redirect';
 import { Dialogs } from '@/services/dialog';
 import { useEffect, useState } from 'preact/hooks';
