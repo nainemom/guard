@@ -33,7 +33,7 @@ function Main() {
         { /* @ts-ignore */ }
         <Router history={createHashHistory()}>
           <Profile path="/profile" />
-          <Encrypt path="/encrypt" />
+          <Encrypt path="/encrypt/:receiver?" />
           <Decrypt path="/decrypt" />
           <Redirect path="/" to="/profile" />
         </Router>

@@ -3,10 +3,12 @@ import { Contact, storageKey as contactsStorageKey } from '@/services/contacts';
 import { List, ListItem } from "../common/List";
 import { useStorage } from "@/services/storage";
 import ContactRow from "./ContactRow";
+import { CryptographyPublicKey } from '@/services/cryptography';
 
 export type ContactListProps = {
   onContactMenu?: (contactItem: Contact) => void,
   onContactClick?: (contactItem: Contact) => void,
+  selectedContact?: CryptographyPublicKey,
   className?: string,
 }
 
@@ -28,6 +30,7 @@ export default function ContactList(props: ContactListProps) {
           clickable
           onMenu={() => onContactMenu(contact)}
           onClick={() => onContactClick(contact)}
+          selected={props?.selectedContact === contact.public_key}
         >
           <ContactRow
             size="md"

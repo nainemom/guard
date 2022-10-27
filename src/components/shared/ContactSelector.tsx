@@ -1,69 +1,33 @@
-import { CryptographyPublicKey, hash } from "@/services/cryptography";
-import { cx } from "@/utils/cx";
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
-import Avatar from "./Avatar";
-import Icon from "./Icon";
-import Username from "./Username";
 import './ContactSelector.css'
-import Dialog, { DialogBody, DialogButtons, DialogTitle } from "@/services/dialog";
+import { CryptographyPublicKey } from "@/services/cryptography";
+import { cx } from "@/utils/cx";
+import { useCallback, useState } from "preact/hooks";
+import Icon from "./Icon";
+import Dialog, { DialogBody, DialogTitle } from "@/services/dialog";
 import ContactRow from "./ContactRow";
-import { List, ListItem } from "../common/List";
-import { useStorage } from "@/services/storage";
-import { Contact, storageKey as contactsStorageKey, UnSavedContact } from '@/services/contacts';
-import Form, { FormFieldLabel, FormFieldProps } from "../form/Form";
-import Button from "../form/Button";
-import Input from "../form/Input";
+import { Contact } from '@/services/contacts';
+import { FormFieldLabel, FormFieldProps } from "../form/Form";
 import ContactList from "./ContactList";
-import { TabItem, Tabs } from "../common/Tabs";
 
 
 export type ContactSelectorProps = FormFieldProps & {
   className?: string,
-  publicKey: CryptographyPublicKey,
+  publicKey?: CryptographyPublicKey,
   onInput?: (newPublicKey: CryptographyPublicKey) => void,
 }
 
 export type ContactSelectorTabs = null | 'contact' | 'manual';
 
 export default function ContactSelector({ publicKey, onInput, className, label }: ContactSelectorProps) {
-  const [manualContact, setManualContact] = useState<UnSavedContact>({
-    public_key: publicKey,
-  });
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<ContactSelectorTabs>(null);
-  const [contacts] = useStorage<Contact[]>(contactsStorageKey);
-  
-  useEffect(() => {
-    setManualContact({
-      public_key: publicKey,
-    });
-  }, [publicKey]);
 
-  useEffect(() => {
-    if (isOpen) {
-      if ((!publicKey && contacts?.length || 0 > 0) || contacts?.findIndex?.((contactItem) => contactItem.public_key === publicKey) || -1 > -1) {
-        setSelectedTab('contact');
-      } else {
-        setSelectedTab('manual');
-      }
-    } else {
-      setSelectedTab(null);
-    }
-  }, [isOpen, publicKey, contacts, setSelectedTab]);
-
-  const handleContactClick = useCallback((selectedContact: UnSavedContact) => {
+  const handleContactClick = useCallback((selectedContact: Contact) => {
     setIsOpen(false);
     if (onInput) {
       onInput(selectedContact.public_key);
     }
   }, [setIsOpen, onInput]);
 
-  const handleManualContactSubmit = useCallback((newManualContact: UnSavedContact) => {
-    setIsOpen(false);
-    if (onInput) {
-      onInput(newManualContact.public_key);
-    }
-  }, [setIsOpen, onInput]);
 
   return (
     <>
@@ -90,42 +54,12 @@ export default function ContactSelector({ publicKey, onInput, className, label }
           closeButton
           onClose={() => setIsOpen(false)}
         />
-        <div>
-          <Tabs value={selectedTab} onChange={(newTab) => setSelectedTab(newTab as ContactSelectorTabs)}>
-            <TabItem tabId="contact">Select From Contacts</TabItem>
-            <TabItem tabId="manual">Enter Public Key</TabItem>
-          </Tabs>
-        </div>
-        { selectedTab === 'contact' && (
-          <DialogBody className="py-3">
-            <ContactList
-              onContactClick={handleContactClick}
-            />
-          </DialogBody>
-        ) }
-        { selectedTab === 'manual' && (
-          <Form
-            value={manualContact}
-            onInput={(newManualContact) => setManualContact(newManualContact as UnSavedContact)}
-            onSubmit={(newManualContact) => handleManualContactSubmit(newManualContact as UnSavedContact)}
-          >
-            <DialogBody className="p-3">
-              <Input
-                name="public_key"
-                size="manual"
-                className="h-full"
-                multiLine
-                placeholder="Ask Your Contact to Share His/Her Public Key with You."
-              />
-            </DialogBody>
-            <DialogButtons>
-              <Button type="submit" theme="primary">
-                <Icon name="done" className="w-5 h-5" />
-                Submit
-              </Button>
-            </DialogButtons>
-          </Form>
-        ) }
+        <DialogBody className="py-3">
+          <ContactList
+            onContactClick={handleContactClick}
+            selectedContact={publicKey}
+          />
+        </DialogBody>
       </Dialog>
     </>
   );
