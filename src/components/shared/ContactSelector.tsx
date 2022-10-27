@@ -5,9 +5,12 @@ import { useCallback, useState } from "preact/hooks";
 import Icon from "./Icon";
 import Dialog, { DialogBody, DialogTitle } from "@/services/dialog";
 import ContactRow from "./ContactRow";
-import { Contact } from '@/services/contacts';
+import { Contact, storageKey as contactsStorageKey, saveContact } from '@/services/contacts';
 import { FormFieldLabel, FormFieldProps } from "../form/Form";
 import ContactList from "./ContactList";
+import { useStorage } from '@/services/storage';
+import Button from '../form/Button';
+import { showToast } from '@/services/notification';
 
 
 export type ContactSelectorProps = FormFieldProps & {
@@ -16,10 +19,9 @@ export type ContactSelectorProps = FormFieldProps & {
   onInput?: (newPublicKey: CryptographyPublicKey) => void,
 }
 
-export type ContactSelectorTabs = null | 'contact' | 'manual';
-
 export default function ContactSelector({ publicKey, onInput, className, label }: ContactSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [contacts] = useStorage<Contact[]>(contactsStorageKey);
 
   const handleContactClick = useCallback((selectedContact: CryptographyPublicKey) => {
     setIsOpen(false);
@@ -27,6 +29,18 @@ export default function ContactSelector({ publicKey, onInput, className, label }
       onInput(selectedContact);
     }
   }, [setIsOpen, onInput]);
+
+  const addToContacts = useCallback((event: Event) => {
+    if (publicKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      saveContact({
+        public_key: publicKey,
+        note: 'Added from url',
+      });
+      showToast('Added to your Contacts!');
+    }
+  }, [publicKey]);
 
 
   return (
@@ -44,6 +58,11 @@ export default function ContactSelector({ publicKey, onInput, className, label }
           <div className="flex-grow"> Click to Select </div>
         ) }
         <Icon name="expand_more" className="w-5 h-5" />
+        { publicKey && (contacts || []).findIndex((contactItem) => contactItem.public_key === publicKey) === -1 && (
+          <Button circle size="sm" theme="default" onClick={addToContacts}>
+            <Icon name="person_add" className="w-5 h-5" />
+          </Button>
+        ) }
       </div>
 
       <Dialog
