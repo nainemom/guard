@@ -1,11 +1,11 @@
-import { AUTH_MIME_TYPE, ENCRYPTED_MIME_TYPE, FILE_EXT } from '@/constants';
+import { AUTH_MIME_TYPE, ENCRYPTED_MIME_TYPE, AUTH_FILE_EXT, ENCRYPTED_FILE_EXT } from '@/constants';
 import { ab2str, str2ab } from '@/utils/convert';
 import { CryptographyPairKeys } from './cryptography';
 
 
 export const createAuthFile = (pairKeys: CryptographyPairKeys) => new File([
   str2ab(JSON.stringify(pairKeys)),
-], `auth.${FILE_EXT}`, {
+], `private_access_key.${AUTH_FILE_EXT}`, {
   type: AUTH_MIME_TYPE,
 });
 
@@ -14,13 +14,13 @@ export const openAuthFile = async (file: File): Promise<CryptographyPairKeys> =>
 export const createEncryptedFile = (
   encrypted: ArrayBuffer,
   originalFileName: string = 'message.txt',
-) => new File([encrypted], `${originalFileName}.${FILE_EXT}`, {
+) => new File([encrypted], `${originalFileName}.${ENCRYPTED_FILE_EXT}`, {
   type: ENCRYPTED_MIME_TYPE,
 });
 
 export const openEncryptedFile = async (file: File): Promise<[ArrayBuffer, string]> => {
   const ab = await file.arrayBuffer();
-  let name = ((file as File)?.name || 'unknown.file').replace(new RegExp(`\.${FILE_EXT}$`, 'g'), '');
+  let name = ((file as File)?.name || 'unknown.file').replace(new RegExp(`\.${ENCRYPTED_FILE_EXT}$`, 'g'), '');
   return [ab, name];
 }
 
