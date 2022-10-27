@@ -1,5 +1,5 @@
 import './ContactSelector.css'
-import { CryptographyPublicKey } from "@/services/cryptography";
+import { CryptographyPairKeys, CryptographyPublicKey } from "@/services/cryptography";
 import { cx } from "@/utils/cx";
 import { useCallback, useState } from "preact/hooks";
 import Icon from "./Icon";
@@ -11,7 +11,7 @@ import ContactList from "./ContactList";
 import { useStorage } from '@/services/storage';
 import Button from '../form/Button';
 import { showToast } from '@/services/notification';
-
+import { storageKey as authStorageKey } from '@/services/auth';
 
 export type ContactSelectorProps = FormFieldProps & {
   className?: string,
@@ -22,6 +22,7 @@ export type ContactSelectorProps = FormFieldProps & {
 export default function ContactSelector({ publicKey, onInput, className, label }: ContactSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [contacts] = useStorage<Contact[]>(contactsStorageKey);
+  const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
 
   const handleContactClick = useCallback((selectedContact: CryptographyPublicKey) => {
     setIsOpen(false);
@@ -58,7 +59,7 @@ export default function ContactSelector({ publicKey, onInput, className, label }
           <div className="flex-grow"> Click to Select </div>
         ) }
         <Icon name="expand_more" className="w-5 h-5" />
-        { publicKey && (contacts || []).findIndex((contactItem) => contactItem.public_key === publicKey) === -1 && (
+        { publicKey && publicKey !== personalKeys.public_key && (contacts || []).findIndex((contactItem) => contactItem.public_key === publicKey) === -1 && (
           <Button circle size="sm" theme="default" onClick={addToContacts}>
             <Icon name="person_add" className="w-5 h-5" />
           </Button>
