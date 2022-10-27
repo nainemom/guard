@@ -1,13 +1,14 @@
 import { ComponentChildren } from 'preact';
+import Button from '../form/Button';
+import Icon from '../shared/Icon';
 
 type HeaderProps = {
   title: string,
   subtitle?: string,
   startButtons?: ComponentChildren,
-  endButtons?: ComponentChildren,
 }
 
-export default function Header({ title, subtitle, startButtons, endButtons }: HeaderProps) {
+export default function Header({ title, subtitle, startButtons }: HeaderProps) {
   return (
     <header class="h-16 shrink-0 flex items-center bg-section-normal text-section-content p-3 gap-3">
       { startButtons && (
@@ -22,11 +23,9 @@ export default function Header({ title, subtitle, startButtons, endButtons }: He
           { subtitle && (<p className="text-xs text-section-subtitle">{subtitle}</p>) }
         </div>
       </div>
-      { endButtons && (
-        <div>
-          { endButtons }
-        </div>
-      ) }
+      <a class="x-button x-button-transparent x-button-rounded x-button-lg x-button-circle" href="https://github.com/nainemom/guard" target="_blank">
+        <Icon name="github" className="h-6 w-6" />
+      </a>
     </header>
   )
 }

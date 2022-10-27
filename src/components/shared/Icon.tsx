@@ -16,7 +16,10 @@ const downloadAndPrepareIcon = (url: string) => {
     svg.setAttribute('fill', 'currentColor');
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
-    svg.setAttribute('viewBox', '0 0 48 48');
+    // default google icons
+    if (!svg.getAttribute('viewBox')) {
+      svg.setAttribute('viewBox', '0 0 48 48');
+    }
     cache.set(url, svg.outerHTML);
     if (svg.querySelector('parsererror')) { // svg content is not correct
       return Promise.reject();
