@@ -23,7 +23,7 @@ export const showToast = (message: string) => eventTarget.dispatchEvent(new Cust
 
 
 export function Notifcations({ children }: NotifcationsProps) {
-  const [cleanInterval, setCleanInterval] = useState<NodeJS.Timer>();
+  const [cleanInterval, setCleanInterval] = useState<ReturnType<typeof setInterval>>();
   const [activeToasts, setActiveToasts] = useState<Toast[]>([]);
   const [currentToastId, setCurrentToastId] = useState<number>(0);
 
