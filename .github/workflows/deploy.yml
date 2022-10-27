@@ -6,9 +6,7 @@ on:
       - master
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 jobs:
   deploy:
@@ -29,10 +27,7 @@ jobs:
       - name: 'Build The App'
         run: npm run build -- --base=/guard/
 
-      - name: 'Publish to Github Pages'
-        uses: Cecilapp/GitHub-Pages-deploy@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Deploy to Github Pages'
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: gh-pages
-          build_dir: dist
+          folder: dist
