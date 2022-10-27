@@ -1,53 +1,21 @@
 import { ENCRYPTION_MODULES_LENGTH, ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE, LOCAL_HASH_ALGORITHM } from '@/constants';
-
-export enum CryptographyShaHashSize {
-  sha1 = 1,
-  sha256 = 256,
-  sha384 = 384,
-  sha512 = 512,
-}
-
-export enum CryptographyModulesLength {
-  '2kb' = 2048,
-  '4kb' = 4096,
-}
+import { abs2ab, str2ab, uatob, ubtoa } from '@/utils/convert';
 
 export type CryptographyPublicKey = string;
+
 export type CryptographyPrivateKey = string;
-export interface CryptographyPairKeys {
+
+export type CryptographyPairKeys = {
   public_key: CryptographyPublicKey,
   private_key: CryptographyPrivateKey,
 }
 
+export type CryptographyProgressCallback = (current: number, total: number) => void;
 
-export const ab2str = (buf: ArrayBuffer): string => {
-  const bufView = new Uint8Array(buf);
-  return [...Array(bufView.length)].map((_, index) => {
-    return String.fromCharCode(bufView[index]);
-  }).join('');
-}
+const MESSAGE_SLICE_SIZE = ENCRYPTION_MODULES_LENGTH / 8 - 2 * ENCRYPTION_SHA_SIZE / 8 - 2;
 
-export const str2ab = (str: string): ArrayBuffer => {
-  const buf = new ArrayBuffer(str.length);
-  const bufView = new Uint8Array(buf);
-  [...Array(str.length)].forEach((_, index) => {
-    bufView[index] = str.charCodeAt(index);
-  });
-  return buf;
-}
+const ENCRYPTED_SLICE_SIZE = ENCRYPTION_MODULES_LENGTH / 8;
 
-export const str2hex = (str: string): string => {
-  let result = '';
-  for (let i = 0; i < str.length; i++) {
-    const hex = str.charCodeAt(i).toString(16);
-    result += (hex.length === 2 ? hex : '0' + hex);
-  }
-  return result.toUpperCase();
-}
-
-export const getHashName = (hash: CryptographyShaHashSize): string => `SHA-${hash}`;
-
-export const getMaximumMessageSize = (modulusLength: CryptographyModulesLength, hash: CryptographyShaHashSize) => modulusLength / 8 - 2 * hash / 8 - 2 ;
 
 export const generatePairKeys = async () : Promise<CryptographyPairKeys> => {
   const keyPair = await crypto.subtle.generateKey(
@@ -65,15 +33,18 @@ export const generatePairKeys = async () : Promise<CryptographyPairKeys> => {
     crypto.subtle.exportKey('pkcs8', keyPair.privateKey),
   ]);
   return {
-    public_key: btoa(ab2str(publicBuffer)),
-    private_key: btoa(ab2str(privateBuffer)),
+    public_key: ubtoa(publicBuffer),
+    private_key: ubtoa(privateBuffer),
   };
 }
 
-export const decrypt = async (message: string, privateKey: CryptographyPrivateKey): Promise<string> => {
+export const decrypt = async (encrypted: ArrayBuffer, privateKey: CryptographyPrivateKey, onProgress?: CryptographyProgressCallback): Promise<ArrayBuffer> => {
+  const progress = onProgress || (() => {});
+  let current = 0;
+  progress(current, encrypted.byteLength);
   const keyObject = await crypto.subtle.importKey(
     'pkcs8',
-    str2ab(atob(privateKey)),
+    uatob(privateKey),
     {
       name: ENCRYPTION_TYPE,
       hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
@@ -81,21 +52,34 @@ export const decrypt = async (message: string, privateKey: CryptographyPrivateKe
     false,
     ['decrypt']
   );
-  return ab2str(
-    await crypto.subtle.decrypt(
-      {
-        name: ENCRYPTION_TYPE,
-      },
-      keyObject,
-      str2ab(atob(message)),
-    ),
-  );
+  
+  let arrayBuffers: ArrayBuffer[] = [];
+  do {
+    const endByte = Math.min(current + ENCRYPTED_SLICE_SIZE, encrypted.byteLength);
+    arrayBuffers = [
+      ...arrayBuffers,
+      await crypto.subtle.decrypt(
+        {
+          name: ENCRYPTION_TYPE,
+        },
+        keyObject,
+        encrypted.slice(current, endByte),
+      ),
+    ];
+    current = endByte;
+    progress(current, encrypted.byteLength);
+  } while (current < encrypted.byteLength);
+
+  return abs2ab(arrayBuffers);
 }
 
-export const encrypt = async (message: string, publicKey: CryptographyPublicKey): Promise<string> => {
+export const encrypt = async (raw: ArrayBuffer, publicKey: CryptographyPublicKey, onProgress?: CryptographyProgressCallback): Promise<ArrayBuffer> => {
+  const progress = onProgress || (() => {});
+  let current = 0;
+  progress(current, raw.byteLength);
   const keyObject = await crypto.subtle.importKey(
     'spki',
-    str2ab(atob(publicKey)),
+    uatob(publicKey),
     {
       name: ENCRYPTION_TYPE,
       hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
@@ -103,15 +87,25 @@ export const encrypt = async (message: string, publicKey: CryptographyPublicKey)
     false,
     ['encrypt']
   );
-  return btoa(ab2str(
-    await crypto.subtle.encrypt(
-      {
-        name: ENCRYPTION_TYPE,
-      },
-      keyObject,
-      str2ab(message),
-    ),
-  ));
+  
+  let arrayBuffers: ArrayBuffer[] = [];
+  do {
+    const endByte = Math.min(current + MESSAGE_SLICE_SIZE, raw.byteLength);
+    arrayBuffers = [
+      ...arrayBuffers,
+      await crypto.subtle.encrypt(
+        {
+          name: ENCRYPTION_TYPE,
+        },
+        keyObject,
+        raw.slice(current, endByte),
+      ),
+    ];
+    current = endByte;
+    progress(current, raw.byteLength);
+  } while (current < raw.byteLength);
+
+  return abs2ab(arrayBuffers);
 }
 
 
@@ -125,7 +119,7 @@ export const hash = (content: string) => {
     return Promise.resolve(cached);
   }
   const promise = crypto.subtle.digest(LOCAL_HASH_ALGORITHM, str2ab(content))
-    .then((hashed) => btoa(ab2str(hashed)))
+    .then((hashed) => ubtoa(hashed))
     .catch((e) => {
       hashCache.delete(content);
       throw e;
