@@ -10,12 +10,15 @@ import { CryptographyPairKeys } from '@/services/cryptography';
 import Dialog from '@/services/dialog';
 import { useStorage } from '@/services/storage';
 import { RouterProps } from 'preact-router';
-import { useState } from 'preact/hooks';
+import { useCallback, useState } from 'preact/hooks';
 import PersonalKeysEditForm from '@/components/shared/PersonalKeysEditForm';
 import Icon from '@/components/shared/Icon';
 import Avatar from '@/components/shared/Avatar';
 import Username from '@/components/shared/Username';
 import ContactList from '@/components/shared/ContactList';
+import { createAuthFile, exportFileToUser, getFileFromUser, openAuthFile } from '@/services/files';
+import { showToast } from '@/services/notification';
+import { copyToClipboard } from '@/utils/clipboard';
 
 const UNSAVED_CONTACT: UnSavedContact = {
   public_key: '',
@@ -26,10 +29,34 @@ type EditingContactDialog = Partial<Contact> | null;
 
 export default function Profile(_props: RouterProps) {
   const [contacts] = useStorage<Contact[]>(contactsStorageKey);
-  const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
+  const [personalKeys, setPersonalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
 
   const [editingContact, setEditingContact] = useState<EditingContactDialog>(null);
   const [personalKeysDialog, setPersonalKeysDialog] = useState<boolean>(false);
+
+  const exportAuth = useCallback(() => {
+    const file = createAuthFile(personalKeys);
+    exportFileToUser(file);
+  }, [personalKeys]);
+
+  const importAuth = useCallback(async () => {
+    try {
+      const authFile = await getFileFromUser();
+      const newPersonalKeys = await openAuthFile(authFile);
+      setPersonalKeys(newPersonalKeys);
+      showToast('Account Updated!');
+    } catch (_e) {}
+  }, []);
+
+  const share = useCallback(() => {
+    const shareLink = new URL(window.location.href);
+    shareLink.hash = `#/encrypt/${encodeURIComponent(personalKeys.public_key)}`;
+    copyToClipboard(shareLink.href).then((ok) => {
+      if (ok) {
+        showToast('Share Link Copied To Clipboard!');
+      }
+    });
+  }, [personalKeys]);
 
   return (
     <Layout>
@@ -44,25 +71,28 @@ export default function Profile(_props: RouterProps) {
           )
         }
       >
-        <div className="shrink-0 p-3 mb-6">
+        <div className="shrink-0 p-3 mb-6 max-w-xs mx-auto">
           <div className="flex flex-col items-center w-full mx-auto">
             <Avatar publicKey={personalKeys.public_key} className="w-32 h-32" />
-            <p className="text-lg font-bold">
+            <p className="text-base font-bold">
               <Username publicKey={personalKeys.public_key} />
             </p>
-            <div className="w-full flex flex-row justify-center gap-6 mt-6">
-              <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)} disabled>
+            <div className="w-full flex flex-row flex-wrap justify-center gap-3 mt-6">
+              <Button className="shrink-0" size="lg" circle onClick={importAuth}>
+                <Icon name="upload_file" className="w-6 h-6" />
+              </Button>
+              <Button className="shrink-0" size="lg" circle onClick={exportAuth}>
+                <Icon name="save" className="w-6 h-6" />
+              </Button>
+              <Button className="shrink-0" size="lg" circle onClick={share}>
                 <Icon name="share" className="w-6 h-6" />
-              </Button>
-              <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)} disabled>
-                <Icon name="download" className="w-6 h-6" />
-              </Button>
-              <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)} disabled>
-                <Icon name="upload" className="w-6 h-6" />
               </Button>
               <Button className="shrink-0" size="lg" circle onClick={() => setPersonalKeysDialog(true)}>
                 <Icon name="edit" className="w-6 h-6" />
               </Button>
+            </div>
+            <div className="w-full flex flex-row justify-center gap-1 mt-6">
+
             </div>
           </div>
         </div>

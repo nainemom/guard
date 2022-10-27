@@ -11,6 +11,7 @@ import { useStorage } from '@/services/storage';
 import Button from '@/components/form/Button';
 import { Resizable, ResizableSection } from '@/components/common/Resizable';
 import Icon from '@/components/shared/Icon';
+import { ab2str, str2ab } from '@/utils/convert';
 
 let decryptTimer: number = -1;
 
@@ -30,7 +31,7 @@ export default function Decrypt(_props: RouterProps) {
   }, [encryptedMessage]);
 
   const doDecrypt = useCallback((message: string) => {
-    decrypt(message, personalKeys.private_key).then(setDecryptedMessage);
+    decrypt(str2ab(message), personalKeys.private_key).then(ab2str).then(setDecryptedMessage);
   }, [setDecryptedMessage, personalKeys]);
 
   return (

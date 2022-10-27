@@ -1,0 +1,7 @@
+.x-toasts {
+  @apply fixed bottom-0 left-0 w-full h-auto p-3 gap-3 flex flex-col;
+}
+
+.x-toast-item {
+  @apply h-12 flex text-sm font-semibold items-center rounded-lg justify-center bg-section-normal text-section-content shadow;
+}

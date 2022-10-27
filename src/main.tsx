@@ -11,6 +11,7 @@ import { Dialogs } from '@/services/dialog';
 import { useEffect, useState } from 'preact/hooks';
 import { getAuth, saveAuth } from './services/auth';
 import { generatePairKeys } from './services/cryptography';
+import { Notifcations } from './services/notification';
 
 function Main() {
   const [isReady, setIsReady] = useState<boolean>(false);
@@ -27,15 +28,17 @@ function Main() {
   }, []);
 
   return isReady ? (
-    <Dialogs>
-      { /* @ts-ignore */ }
-      <Router history={createHashHistory()}>
-        <Profile path="/profile" />
-        <Encrypt path="/encrypt" />
-        <Decrypt path="/decrypt" />
-        <Redirect path="/" to="/profile" />
-      </Router>
-    </Dialogs>
+    <Notifcations>
+      <Dialogs>
+        { /* @ts-ignore */ }
+        <Router history={createHashHistory()}>
+          <Profile path="/profile" />
+          <Encrypt path="/encrypt" />
+          <Decrypt path="/decrypt" />
+          <Redirect path="/" to="/profile" />
+        </Router>
+      </Dialogs>
+    </Notifcations>
   ) : (
     <div>Please wait...</div>
   );

@@ -4,29 +4,32 @@ import Layout from '@/components/layout/Layout';
 import BottomTabs from '@/components/layout/BottomTabs';
 import { RouterProps } from 'preact-router';
 import { useCallback, useState } from 'preact/hooks';
-import { CryptographyPublicKey, encrypt } from '@/services/cryptography';
+import { CryptographyPairKeys, CryptographyPublicKey, encrypt, decrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
 import Button from '@/components/form/Button';
 import Icon from '@/components/shared/Icon';
 import ContactSelector from '@/components/shared/ContactSelector';
-
+import { storageKey as authStorageKey } from '@/services/auth';
+import { useStorage } from '@/services/storage';
+import { ab2str, str2ab } from '@/utils/convert';
 
 export default function Encrypt(_props: RouterProps) {
-  const [publicKey, setPublicKey] = useState<CryptographyPublicKey>('');
+  const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
+
+  const [publicKey, setPublicKey] = useState<CryptographyPublicKey>(personalKeys.public_key);
   const [message, setMessage] = useState<string>('');
+
 
   const share = useCallback(async () => {
     try {
-      const encryptedMessage = await encrypt(message, publicKey);
-      if (navigator.share) {
-        await navigator.share({
-          text: encryptedMessage,
-        });
-      } else {
-        navigator.clipboard.writeText(encryptedMessage);
-        alert('Cannot use share feature, so just copied to clipboard!');
-      }
+      console.log('encrypting...', `str-length: ${message.length}, ab-size: ${str2ab(message).byteLength}`);
+      const encryptedMessage = await encrypt(str2ab(message), publicKey);
+      console.log('encrypt done.', encryptedMessage);
+      console.log('decrypting...');
+      const decryptedAgain = await decrypt(encryptedMessage, personalKeys.private_key);
+      console.log(ab2str(decryptedAgain));
     } catch (_e) {
+      console.error(_e);
       alert('Error!');
     }
   }, [message, publicKey]);
