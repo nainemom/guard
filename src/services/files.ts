@@ -1,12 +1,12 @@
-import { AUTH_MIME_TYPE, ENCRYPTED_MIME_TYPE, AUTH_FILE_EXT, ENCRYPTED_FILE_EXT } from '@/constants';
+import { FILES_MIME_TYPE, AUTH_FILE_EXT, ENCRYPTED_FILE_EXT } from '@/constants';
 import { ab2str, str2ab } from '@/utils/convert';
 import { CryptographyPairKeys } from './cryptography';
 
 
 export const createAuthFile = (pairKeys: CryptographyPairKeys) => new File([
   str2ab(JSON.stringify(pairKeys)),
-], `private_access_key.${AUTH_FILE_EXT}`, {
-  type: AUTH_MIME_TYPE,
+], `guard_access_key.${AUTH_FILE_EXT}`, {
+  type: FILES_MIME_TYPE,
 });
 
 export const openAuthFile = async (file: File): Promise<CryptographyPairKeys> => JSON.parse(ab2str(await file.arrayBuffer()));
@@ -15,7 +15,7 @@ export const createEncryptedFile = (
   encrypted: ArrayBuffer,
   originalFileName: string = 'message.txt',
 ) => new File([encrypted], `${originalFileName}.${ENCRYPTED_FILE_EXT}`, {
-  type: ENCRYPTED_MIME_TYPE,
+  type: FILES_MIME_TYPE,
 });
 
 export const openEncryptedFile = async (file: File): Promise<[ArrayBuffer, string]> => {
