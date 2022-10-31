@@ -1,4 +1,4 @@
-import { ENCRYPTION_MODULES_LENGTH, ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE, LOCAL_HASH_ALGORITHM } from '@/constants';
+import { ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE, LOCAL_HASH_ALGORITHM } from '@/constants';
 import { abs2ab, str2ab, uatob, ubtoa } from '@/utils/convert';
 
 export type CryptographyPublicKey = string;
@@ -10,18 +10,19 @@ export type CryptographyPairKeys = {
   private_key: CryptographyPrivateKey,
 }
 
+export type CryptographyModulusLength = 2048 | 4096;
+
 export type CryptographyProgressCallback = (current: number, total: number) => void;
 
-const MESSAGE_SLICE_SIZE = ENCRYPTION_MODULES_LENGTH / 8 - 2 * ENCRYPTION_SHA_SIZE / 8 - 2;
+const calculateEncryptedSliceSize = (modulusLength: number) => modulusLength / 8;
 
-const ENCRYPTED_SLICE_SIZE = ENCRYPTION_MODULES_LENGTH / 8;
+const calculateMessageSliceSize = (modulusLength: number) => modulusLength / 8 - 2 * ENCRYPTION_SHA_SIZE / 8 - 2;
 
-
-export const generatePairKeys = async () : Promise<CryptographyPairKeys> => {
+export const generatePairKeys = async (modulusLength: CryptographyModulusLength = 4096) : Promise<CryptographyPairKeys> => {
   const keyPair = await crypto.subtle.generateKey(
     {
       name: ENCRYPTION_TYPE,
-      modulusLength: ENCRYPTION_MODULES_LENGTH,
+      modulusLength,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
     },
@@ -52,10 +53,11 @@ export const decrypt = async (encrypted: ArrayBuffer, privateKey: CryptographyPr
     false,
     ['decrypt']
   );
-  
+
   let arrayBuffers: ArrayBuffer[] = [];
+  const sliceSize = calculateEncryptedSliceSize((keyObject.algorithm as RsaKeyAlgorithm).modulusLength);
   do {
-    const endByte = Math.min(current + ENCRYPTED_SLICE_SIZE, encrypted.byteLength);
+    const endByte = Math.min(current + sliceSize, encrypted.byteLength);
     arrayBuffers = [
       ...arrayBuffers,
       await crypto.subtle.decrypt(
@@ -87,10 +89,11 @@ export const encrypt = async (raw: ArrayBuffer, publicKey: CryptographyPublicKey
     false,
     ['encrypt']
   );
-  
+
   let arrayBuffers: ArrayBuffer[] = [];
+  const sliceSize = calculateMessageSliceSize((keyObject.algorithm as RsaKeyAlgorithm).modulusLength);
   do {
-    const endByte = Math.min(current + MESSAGE_SLICE_SIZE, raw.byteLength);
+    const endByte = Math.min(current + sliceSize, raw.byteLength);
     arrayBuffers = [
       ...arrayBuffers,
       await crypto.subtle.encrypt(
