@@ -18,7 +18,7 @@ const calculateEncryptedSliceSize = (modulusLength: number) => modulusLength / 8
 
 const calculateMessageSliceSize = (modulusLength: number) => modulusLength / 8 - 2 * ENCRYPTION_SHA_SIZE / 8 - 2;
 
-export const generatePairKeys = async (modulusLength: CryptographyModulusLength = 4096) : Promise<CryptographyPairKeys> => {
+export const generatePairKeys = async (modulusLength: CryptographyModulusLength = 2048) : Promise<CryptographyPairKeys> => {
   const keyPair = await crypto.subtle.generateKey(
     {
       name: ENCRYPTION_TYPE,
