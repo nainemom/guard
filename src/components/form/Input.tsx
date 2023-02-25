@@ -1,6 +1,6 @@
 import './Input.css';
 import { cx } from '@/utils/cx';
-import { useMemo } from 'preact/hooks';
+import { useMemo } from 'react';
 import { FormFieldProps, FormFieldLabel, useFormField, FormFieldError } from './Form';
 
 type InputProps = FormFieldProps & {
@@ -26,7 +26,7 @@ export default function Input(props: InputProps) {
     <>
       <FormFieldLabel label={formFieldProps.label} />
       <Tag
-        class={cx('x-input', `x-input-${size}`, className)}
+        className={cx('x-input', `x-input-${size}`, className)}
         value={value}
         placeholder={placeholder}
         readOnly={readOnly}

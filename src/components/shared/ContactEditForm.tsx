@@ -3,7 +3,7 @@ import Form, { FormErrors } from '@/components/form/Form';
 import Input from '@/components/form/Input';
 import { Contact, removeContact, saveContact, UnSavedContact } from '@/services/contacts';
 import { DialogBody, DialogButtons, DialogTitle } from '@/services/dialog';
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from './Icon';
 
 export type ContactEditFormProps = {

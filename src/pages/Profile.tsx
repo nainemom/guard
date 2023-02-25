@@ -9,8 +9,7 @@ import { storageKey as authStorageKey } from '@/services/auth';
 import { CryptographyPairKeys } from '@/services/cryptography';
 import Dialog from '@/services/dialog';
 import { useStorage } from '@/services/storage';
-import { RouterProps } from 'preact-router';
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useState } from 'react';
 import PersonalKeysEditForm from '@/components/shared/PersonalKeysEditForm';
 import Icon from '@/components/shared/Icon';
 import Avatar from '@/components/shared/Avatar';
@@ -27,7 +26,7 @@ const UNSAVED_CONTACT: UnSavedContact = {
 type EditingContactDialog = Partial<Contact> | null;
 
 
-export default function Profile(_props: RouterProps) {
+export default function Profile() {
   const [contacts] = useStorage<Contact[]>(contactsStorageKey);
   const [personalKeys, setPersonalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
 

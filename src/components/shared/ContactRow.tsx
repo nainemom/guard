@@ -2,7 +2,7 @@ import './ContactRow.css';
 import { getContacts, UnSavedContact } from "@/services/contacts";
 import { CryptographyPairKeys, CryptographyPublicKey } from "@/services/cryptography";
 import { cx } from "@/utils/cx";
-import { useMemo } from "preact/hooks";
+import { useMemo } from "react";
 import Avatar from "./Avatar";
 import Username from "./Username";
 import { storageKey as authStorageKey } from '@/services/auth';

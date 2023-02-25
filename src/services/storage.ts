@@ -1,6 +1,6 @@
 import { STORAGE_PREFIX } from '@/constants';
 import { createEventTarget } from '@/utils/events';
-import { StateUpdater, useCallback, useEffect, useState } from 'preact/hooks';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 
 const eventTarget = createEventTarget();
 export const on = eventTarget.on;
@@ -25,7 +25,7 @@ export const set = (key: string, newValue: any) => {
   return newRawValue;
 };
 
-export const useStorage = <T>(key: string): [T, StateUpdater<T>] => {
+export const useStorage = <T>(key: string): [T,  Dispatch<SetStateAction<T>>] => {
   const [value, setValue] = useState<T>(get(key));
 
   const handleStorageUpdate = useCallback((event: CustomEventInit) => {

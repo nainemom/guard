@@ -2,16 +2,15 @@ import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
 import BottomTabs from '@/components/layout/BottomTabs';
-import { RouterProps } from 'preact-router';
 import { storageKey as authStorageKey } from '@/services/auth';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
 import { CryptographyPairKeys, decrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
 import { useStorage } from '@/services/storage';
 import { Resizable, ResizableSection } from '@/components/common/Resizable';
 import { ab2str, uatob } from '@/utils/convert';
 
-export default function Decrypt(_props: RouterProps) {
+export default function Decrypt() {
   const [personalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
   const [encryptedContent, setEncryptedContent] = useState<string>('');
   const [decryptedMessage, setDecryptedMessage] = useState<string>('');

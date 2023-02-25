@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite';
-import preact from '@preact/preset-vite';
+import react from '@vitejs/plugin-react-swc'
 import { version } from './package.json';
 import { resolve as pathResolve } from 'path';
 
 export default defineConfig({
-  plugins: [preact()],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': pathResolve(__dirname, './src'),
@@ -16,14 +16,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       manualChunks(id) {
-        if (id.includes('node_modules/preact')) {
-          return 'preact';
+        if (id.includes('node_modules/react')) {
+          return 'react';
         }
         if (id.includes('node_modules/@dicebear')) {
           return 'dicebear';
-        }
-        if (id.includes('node_modules')) {
-          return 'vendor';
         }
       },
     },

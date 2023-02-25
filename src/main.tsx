@@ -1,14 +1,17 @@
-import { render } from 'preact';
+import { createRoot } from 'react-dom/client';
 import '@/main.css';
-import Router from 'preact-router';
-import { createHashHistory } from 'history';
+import {
+  Routes,
+  Route,
+  Navigate,
+  HashRouter,
+} from 'react-router-dom';
 
 import Profile from '@/pages/Profile';
 import Encrypt from '@/pages/Encrypt';
 import Decrypt from '@/pages/Decrypt';
-import Redirect from '@/components/common/Redirect';
 import { Dialogs } from '@/services/dialog';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
 import { getAuth, saveAuth } from './services/auth';
 import { generatePairKeys } from './services/cryptography';
 import { Notifcations } from './services/notification';
@@ -31,12 +34,14 @@ function Main() {
     <Notifcations>
       <Dialogs>
         { /* @ts-ignore */ }
-        <Router history={createHashHistory()}>
-          <Profile path="/profile" />
-          <Encrypt path="/encrypt/:receiver?" />
-          <Decrypt path="/decrypt" />
-          <Redirect path="/" to="/profile" />
-        </Router>
+        <HashRouter>
+          <Routes>
+            <Route key="profile" path="/profile" element={<Profile />} />
+            <Route key="encrypt" path="/encrypt/:receiver?" element={<Encrypt />} />
+            <Route key="encrypt" path="/decrypt" element={<Decrypt />} />
+            <Route key="*" path="/*" element={<Navigate to="/profile" />} />
+          </Routes>
+        </HashRouter  >
       </Dialogs>
     </Notifcations>
   ) : (
@@ -44,10 +49,9 @@ function Main() {
   );
 }
 
-render(
-  <Main />,
+createRoot(
   document.querySelector('#app') as HTMLElement,
-);
+).render((<Main />));
 
 /* @ts-ignore */
 console.info(`Guard v${APP_VERSION}`);

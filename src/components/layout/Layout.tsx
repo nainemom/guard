@@ -1,12 +1,12 @@
-import { ComponentChildren } from 'preact';
+import { ReactNode } from 'react';
 
 type LayoutProps = {
-  children: ComponentChildren,
+  children: ReactNode,
 }
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div class="h-full min-h-full flex flex-col">
+    <div className="h-full min-h-full flex flex-col">
       { children }
     </div>
   )

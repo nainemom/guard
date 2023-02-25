@@ -1,6 +1,5 @@
 import { cx } from '@/utils/cx';
-import { ComponentChildren, createContext } from 'preact';
-import { StateUpdater, useCallback, useContext, useEffect, useMemo, useState } from 'preact/hooks';
+import { ReactNode, useCallback, useContext, useEffect, useMemo, useState, createContext, Dispatch, SetStateAction, FormEventHandler } from 'react';
 
 export type FormData = {};
 
@@ -15,7 +14,7 @@ type FormContext = [
 ];
 
 type FormProps = {
-  children?: ComponentChildren,
+  children?: ReactNode,
   className?: string,
   value: FormData | null,
   onInput: (newValue: FormData) => void,
@@ -68,7 +67,7 @@ export default function Form({ children, className, value, onInput, onSubmit, va
     formErrors,
   ], [formValue, updateFieldValue, formErrors]);
 
-  const handleSubmit = useCallback((event: Event) => {
+  const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>((event) => {
     event.preventDefault();
     if (validator) {
       const activeErrors = validator(formValue);
@@ -139,7 +138,7 @@ export const useFormField = (formFieldProps: FormFieldProps, defaultValue: any) 
     return false;
   }, [formErrors, formFieldProps]);
 
-  const setFieldValue: StateUpdater<any> = useCallback((newValue: any) => {
+  const setFieldValue: Dispatch<SetStateAction<any>> = useCallback((newValue: any) => {
     if (!formFieldProps.name) {
       throw new Error('Form field must have name!');
     }

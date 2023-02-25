@@ -1,12 +1,8 @@
 import './notification.css';
-import { cx } from '@/utils/cx';
-import { ComponentChildren, createContext, VNode } from 'preact';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'preact/hooks';
-import Button from '@/components/form/Button';
-import Icon from '@/components/shared/Icon';
+import { useCallback, useEffect, useState, ReactNode } from 'react';
 
 type NotifcationsProps = {
-  children: ComponentChildren,
+  children: ReactNode,
 };
 
 type Toast = {
@@ -72,7 +68,7 @@ export function Notifcations({ children }: NotifcationsProps) {
         <div className="x-toasts">
           {
             activeToasts.map((toast) => (
-              <div className="x-toast-item" onClick={() => removeToast(toast.id)}>{ toast.message }</div>
+              <div key={toast.id} className="x-toast-item" onClick={() => removeToast(toast.id)}>{ toast.message }</div>
             ))
           }
         </div>

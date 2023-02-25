@@ -1,7 +1,6 @@
 import './dialog.css';
 import { cx } from '@/utils/cx';
-import { ComponentChildren, createContext, VNode } from 'preact';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+import { useContext, useEffect, useMemo, useState, ReactNode, createContext } from 'react';
 import Button from '@/components/form/Button';
 import Icon from '@/components/shared/Icon';
 
@@ -9,7 +8,7 @@ type DialogId = number;
 
 type Dialog = {
   id: DialogId,
-  element: () => VNode,
+  element: () => JSX.Element,
   isOpen?: boolean,
 }
 
@@ -24,11 +23,11 @@ type DialogContext = {
 type DialogProps = {
   isOpen?: boolean,
   className?: string,
-  children: ComponentChildren,
+  children: ReactNode,
 };
 
 type DialogsProps = {
-  children: ComponentChildren,
+  children: ReactNode,
 };
 
 const dialogContext = createContext<DialogContext | null>(null);
@@ -92,7 +91,7 @@ export function DialogTitle(props: DialogTitleProps) {
 
 type DialogBodyProps = {
   className?: string,
-  children?: ComponentChildren,
+  children?: ReactNode,
 };
 
 export function DialogBody({ children, className }: DialogBodyProps) {
@@ -104,7 +103,7 @@ export function DialogBody({ children, className }: DialogBodyProps) {
 }
 
 type DialogButtonsProps = {
-  children?: ComponentChildren,
+  children?: ReactNode,
 };
 
 export function DialogButtons({ children }: DialogButtonsProps) {
@@ -181,7 +180,9 @@ export function Dialogs({ children }: DialogsProps) {
       { children }
       {
         opensDialog.map((dialog) => (
-          dialog.element()
+          <div key={dialog.id}>
+            { dialog.element() }
+          </div>
         ))
       }
     </dialogContext.Provider>
