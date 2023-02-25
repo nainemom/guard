@@ -1,7 +1,7 @@
 import './ContactSelector.css'
 import { CryptographyPairKeys, CryptographyPublicKey } from "@/services/cryptography";
 import { cx } from "@/utils/cx";
-import { useCallback, useState } from "preact/hooks";
+import { MouseEvent, useCallback, useState } from "react";
 import Icon from "./Icon";
 import Dialog, { DialogBody, DialogTitle } from "@/services/dialog";
 import ContactRow from "./ContactRow";
@@ -31,7 +31,7 @@ export default function ContactSelector({ publicKey, onInput, className, label }
     }
   }, [setIsOpen, onInput]);
 
-  const addToContacts = useCallback((event: Event) => {
+  const addToContacts = useCallback((event: MouseEvent) => {
     if (publicKey) {
       event.preventDefault();
       event.stopPropagation();

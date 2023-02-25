@@ -1,9 +1,9 @@
 import { cx } from '@/utils/cx';
-import { ComponentChildren } from 'preact';
+import { ReactNode } from 'react';
 
 type BodyProps = {
-  children?: ComponentChildren,
-  stickyArea?: ComponentChildren,
+  children?: ReactNode,
+  stickyArea?: ReactNode,
   stickyPadding?: boolean,
   className?: string,
 }

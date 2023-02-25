@@ -4,7 +4,7 @@ import { List, ListItem } from "../common/List";
 import { useStorage } from "@/services/storage";
 import ContactRow from "./ContactRow";
 import { CryptographyPairKeys, CryptographyPublicKey } from '@/services/cryptography';
-import { useMemo } from 'preact/hooks';
+import { useMemo } from 'react';
 import { storageKey as authStorageKey } from '@/services/auth';
 
 export type ContactListProps = {

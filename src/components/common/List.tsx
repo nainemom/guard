@@ -1,20 +1,19 @@
 import './List.css';
 import { cx } from '@/utils/cx';
-import { ComponentChildren } from 'preact';
-import { useCallback } from 'preact/hooks';
+import { ReactNode, useCallback, MouseEventHandler, MouseEvent } from 'react';
 
 type ListProps = {
-  children?: ComponentChildren,
+  children?: ReactNode,
   className?: string,
 }
 
 type ListItemProps = {
-  children?: ComponentChildren,
+  children?: ReactNode,
   className?: string,
   clickable?: boolean,
   selected?: boolean,
-  onMenu?: () => void,
-  onClick?: () => void,
+  onMenu?: MouseEventHandler<HTMLLIElement>,
+  onClick?: MouseEventHandler<HTMLLIElement>,
 }
 
 const listItemDefaultProps = {
@@ -24,7 +23,7 @@ const listItemDefaultProps = {
 
 export function List({ children, className }: ListProps) {
   return (
-    <ul class={cx('x-list', className)}>
+    <ul className={cx('x-list', className)}>
       { children }
     </ul>
   )
@@ -32,17 +31,20 @@ export function List({ children, className }: ListProps) {
 
 export function ListItem(props: ListItemProps) {
   const { children, className, clickable, selected, onClick, onMenu } = { ...listItemDefaultProps, ...props };
-  const handleContextMenu = useCallback((event: Event) => {
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLLIElement>) => {
     event.preventDefault();
-    onMenu();
+    onMenu(event);
   }, [onMenu]);
 
   return (
-    <li class={cx('x-list-item', clickable && 'x-list-item-clickable', selected && 'x-list-item-selected', className)} {...(clickable && {
-      onContextMenu: handleContextMenu,
-      onClick,
-      tabIndex: 1,
-    })}>
+    <li
+      className={cx('x-list-item', clickable && 'x-list-item-clickable', selected && 'x-list-item-selected', className)}
+      {...(clickable && {
+        onContextMenu: handleContextMenu,
+        onClick,
+        tabIndex: 1,
+      })}
+    >
       { children }
     </li>
   )

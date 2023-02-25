@@ -5,7 +5,7 @@ import { saveAuth, storageKey as authStorageKey } from '@/services/auth';
 import { CryptographyPairKeys, generatePairKeys } from '@/services/cryptography';
 import { DialogBody, DialogButtons, DialogTitle } from '@/services/dialog';
 import { useStorage } from '@/services/storage';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'react';
 import Icon from './Icon';
 
 export type PersonalKeysEditFormProps = {

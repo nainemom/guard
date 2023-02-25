@@ -2,8 +2,8 @@ import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
 import BottomTabs from '@/components/layout/BottomTabs';
-import { route, RouterProps } from 'preact-router';
-import { useCallback, useMemo, useState } from 'preact/hooks';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useMemo, useState } from 'react';
 import { encrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
 import Button from '@/components/form/Button';
@@ -13,12 +13,11 @@ import { str2ab, ubtoa } from '@/utils/convert';
 import { copyToClipboard } from '@/utils/clipboard';
 import { showToast } from '@/services/notification';
 
-type EncryptProps = RouterProps & {
-  receiver?: string,
-}
-export default function Encrypt({ receiver }: EncryptProps) {
+export default function Encrypt() {
+  const { receiver } = useParams();
   const receiverPublic = useMemo(() => decodeURIComponent(receiver || ''), [receiver]);
   const [message, setMessage] = useState<string>('');
+  const navigate = useNavigate();
 
   const share = useCallback(async () => {
     try {
@@ -68,7 +67,7 @@ export default function Encrypt({ receiver }: EncryptProps) {
           className="shrink-0 mb-3"
           label="Receiver:"
           publicKey={receiver}
-          onInput={(newReceiver) => route(`/encrypt/${encodeURIComponent(newReceiver)}`, true)}
+          onInput={(newReceiver) => navigate(`/encrypt/${encodeURIComponent(newReceiver)}`)}
         />
         <Input
           className="h-full flex-grow"

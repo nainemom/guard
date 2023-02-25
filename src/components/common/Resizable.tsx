@@ -1,20 +1,20 @@
 import './Resizable.css';
 import { cx } from '@/utils/cx';
-import { ComponentChildren } from 'preact';
+import { ReactNode } from 'react';
 
 type ResizableProps = {
-  children?: ComponentChildren,
+  children?: ReactNode,
   className?: string,
 }
 
 type ResizableSectionProps = {
-  children?: ComponentChildren,
+  children?: ReactNode,
   className?: string,
 }
 
 export function Resizable({ children, className }: ResizableProps) {
   return (
-    <div class={cx('x-resizable', className)}>
+    <div className={cx('x-resizable', className)}>
       { children }
     </div>
   )
@@ -22,7 +22,7 @@ export function Resizable({ children, className }: ResizableProps) {
 
 export function ResizableSection({ children, className }: ResizableSectionProps) {
   return (
-    <div class={cx('x-resizable-section', className)}>
+    <div className={cx('x-resizable-section', className)}>
       { children }
     </div>
   )

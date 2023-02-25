@@ -1,13 +1,12 @@
 import './Tabs.css';
 import { cx } from '@/utils/cx';
-import { ComponentChildren, createContext } from 'preact';
-import { useContext } from 'preact/hooks';
+import { ReactNode, createContext, useContext } from 'react';
 import Button from '../form/Button';
 
 type TabId = string | number | null;
 
 type TabsProps = {
-  children?: ComponentChildren,
+  children?: ReactNode,
   className?: string,
   value?: TabId,
   onChange?: (newTab: TabId) => void,
@@ -20,7 +19,7 @@ const tabsContext = createContext<{
 
 type TabItemProps = {
   tabId: TabId,
-  children?: ComponentChildren,
+  children?: ReactNode,
   className?: string,
 }
 

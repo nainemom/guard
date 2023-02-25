@@ -1,6 +1,6 @@
 import { CryptographyPublicKey } from "@/services/cryptography";
 import { cx } from "@/utils/cx";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useState } from "react";
 import { createAvatar } from '@dicebear/avatars';
 import * as bottts from '@dicebear/avatars-bottts-sprites';
 

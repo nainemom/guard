@@ -1,19 +1,21 @@
 import './BottomTabs.css';
-import { Link } from 'preact-router/match';
+import { NavLink } from 'react-router-dom';
 import Icon from '../shared/Icon';
+import { cx } from '@/utils/cx';
 
 export default function BottomTabs() {
+  const withActiveClass = (className: string) => (state: { isActive: boolean }) => cx(state.isActive ? 'x-bottom-tab-button-active' : '', className)
   return (
-    <nav class="x-bottom-tabs-container">
-      <Link class="x-button x-button-lg x-button-rounded x-bottom-tab-button" activeClassName="x-bottom-tab-button-active" href="/profile">
+    <nav className="x-bottom-tabs-container">
+      <NavLink className={withActiveClass("x-button x-button-lg x-button-rounded x-bottom-tab-button")} to="/profile">
         <Icon name="manage_accounts" className="w-7 h-7" />
-      </Link>
-      <Link class="x-button x-button-lg x-button-rounded x-bottom-tab-button gap-1" activeClassName="x-bottom-tab-button-active" href="/encrypt">
+      </NavLink>
+      <NavLink className={withActiveClass("x-button x-button-lg x-button-rounded x-bottom-tab-button gap-1")} to="/encrypt">
         <Icon name="mail_lock" className="w-7 h-7" />
-      </Link>
-      <Link class="x-button x-button-lg x-button-rounded x-bottom-tab-button gap-1" activeClassName="x-bottom-tab-button-active" href="/decrypt">
+      </NavLink>
+      <NavLink className={withActiveClass("x-button x-button-lg x-button-rounded x-bottom-tab-button gap-1")} to="/decrypt">
         <Icon name="drafts" className="w-7 h-7" />
-      </Link>
+      </NavLink>
     </nav>
   );
 }
