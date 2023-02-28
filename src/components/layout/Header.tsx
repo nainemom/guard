@@ -96,7 +96,7 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
         ) }
         { !auth && (
           <MenuItem onClick={() => navigate('/setup')}>
-            <Icon name="drafts" className="w-6 h-6" />
+            <Icon name="login" className="w-6 h-6" />
             <div>
               <h3>Login</h3>
               <p className="text-xs text-section-subtitle">Login to your own account or just generate a new account</p>
