@@ -2,7 +2,7 @@ import './Button.css';
 import { cx } from '@/utils/cx';
 import { MouseEventHandler, ReactNode } from 'react';
 
-type ButtonProps = {
+export type ButtonProps = {
   children?: ReactNode,
   className?: string,
   type?: 'submit' | 'button',
@@ -11,10 +11,11 @@ type ButtonProps = {
   size?: 'sm' | 'md' | 'lg',
   circle?: boolean,
   disabled?: boolean,
+  ariaLabel: string,
   onClick?: MouseEventHandler<HTMLButtonElement>,
 }
 
-const buttonDefaultProps: ButtonProps = {
+export const buttonDefaultProps: Partial<ButtonProps> = {
   type: 'button',
   theme: 'default',
   size: 'md',
@@ -22,13 +23,13 @@ const buttonDefaultProps: ButtonProps = {
 };
 
 export default function Button(props: ButtonProps) {
-  const { children, className, type, theme, size, circle, rounded, disabled, onClick } = { ...buttonDefaultProps, ...props };
+  const { children, className, type, theme, size, circle, rounded, disabled, onClick, ariaLabel } = { ...buttonDefaultProps, ...props };
   return (
     <button
       className={cx('x-button', `x-button-${theme}`, rounded && 'x-button-rounded', `x-button-${size}`, circle && 'x-button-circle', className)}
       type={type}
+      aria-label={ariaLabel}
       disabled={disabled}
-      onClick={() => console.log('s')}
       {...(onClick && {
         onClick,
       })}

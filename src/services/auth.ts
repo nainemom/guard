@@ -1,19 +1,20 @@
 import { CryptographyPairKeys } from "@/services/cryptography";
-import { get, set } from "@/services/storage";
+import { useStorage } from "@/utils/storage";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-export const storageKey = 'auth';
+export const storageKey = 'guard-auth';
 
-export const getAuth = (): CryptographyPairKeys | null => get(storageKey);
+export const useAuth = () => {
+  return useStorage<CryptographyPairKeys | null>(storageKey, null);
+};
 
-export const saveAuth = (newAuth: CryptographyPairKeys) => {
-  if (!newAuth.private_key || !newAuth.public_key) {
-    throw new Error('Auth Error!');
-  }
-  set(storageKey, newAuth);
-  return newAuth;
-}
-
-export const clearAuth = () => {
-  set(storageKey, null);
-  return null;
+export const needAuth = () => {
+  const [auth] = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!auth?.private_key) {
+      navigate('/setup');
+    }
+  }, [auth]);
 }

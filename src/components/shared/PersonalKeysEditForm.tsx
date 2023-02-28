@@ -1,12 +1,11 @@
 import Button from '@/components/form/Button';
 import Form, { FormErrors } from '@/components/form/Form';
 import Input from '@/components/form/Input';
-import { saveAuth, storageKey as authStorageKey } from '@/services/auth';
-import { CryptographyPairKeys, generatePairKeys } from '@/services/cryptography';
+import { useAuth } from '@/services/auth';
+import { CryptographyPairKeys } from '@/services/cryptography';
 import { DialogBody, DialogButtons, DialogTitle } from '@/services/dialog';
-import { useStorage } from '@/services/storage';
 import { useCallback, useEffect, useState } from 'react';
-import Icon from './Icon';
+import Icon from '@/components/shared/Icon';
 
 export type PersonalKeysEditFormProps = {
   onSuccess?: () => void,
@@ -14,11 +13,11 @@ export type PersonalKeysEditFormProps = {
 }
 
 export default function PersonalKeysEditForm({ onSuccess, onClose }: PersonalKeysEditFormProps) {
-  const [personalKeys, setPersonalKeys] = useStorage<CryptographyPairKeys>(authStorageKey);
+  const [personalKeys, setPersonalKeys] = useAuth();
 
-  const [formData, setFormData] = useState<Partial<CryptographyPairKeys>>(personalKeys);
+  const [formData, setFormData] = useState<Partial<CryptographyPairKeys>>(personalKeys || {});
   useEffect(() => {
-    setFormData(personalKeys);
+    setFormData(personalKeys || {});
   }, [personalKeys]);
 
   const formValidator = useCallback((submittedFormData: Partial<CryptographyPairKeys>) => {
@@ -42,18 +41,9 @@ export default function PersonalKeysEditForm({ onSuccess, onClose }: PersonalKey
     }
   }, [onClose]);
 
-  const regenerate = useCallback(() => {
-    generatePairKeys().then(setFormData);
-  }, []);
-
   const handleFormSubmit = useCallback((submittedFormData: Partial<CryptographyPairKeys>) => {
     if (!submittedFormData) {
       return;
-    }
-    if (submittedFormData.private_key !== personalKeys.private_key || submittedFormData.public_key !== personalKeys.public_key) {
-      if (!confirm('You have changed your personal keys! You cannot decrypt messages encrypted by your previous public key. Are you sure you want to do this?')) {
-        return;
-      }
     }
     setPersonalKeys(submittedFormData as CryptographyPairKeys);
     if (onSuccess) {
@@ -81,11 +71,7 @@ export default function PersonalKeysEditForm({ onSuccess, onClose }: PersonalKey
           </div>
         </DialogBody>
         <DialogButtons>
-          <Button type="button" onClick={regenerate}>
-            <Icon name="magic_button" className="w-5 h-5" />
-            Regenerate
-          </Button>
-          <Button type="submit" theme="primary">
+          <Button type="submit" theme="primary" ariaLabel="Submit Keys">
             <Icon name="save" className="w-5 h-5" />
             Save
           </Button>

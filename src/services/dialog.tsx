@@ -78,7 +78,7 @@ export function DialogTitle(props: DialogTitleProps) {
   return (
     <div className="x-dialog-title">
       { closeButton && (
-        <Button circle onClick={onClose} theme="transparent">
+        <Button circle onClick={onClose} theme="transparent" ariaLabel="Close Dialog">
           <Icon name="arrow_back" className="h-6 w-6" />
         </Button>
       ) }

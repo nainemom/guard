@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client';
+import { createRoot  } from 'react-dom/client';
 import '@/main.css';
 import {
   Routes,
@@ -6,46 +6,29 @@ import {
   Navigate,
   HashRouter,
 } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 
-import Profile from '@/pages/Profile';
-import Encrypt from '@/pages/Encrypt';
-import Decrypt from '@/pages/Decrypt';
+const Setup = lazy(() => import('@/pages/Setup'));
+const Encrypt = lazy(() => import('@/pages/Encrypt'));
+const Decrypt = lazy(() => import('@/pages/Decrypt'));
+
 import { Dialogs } from '@/services/dialog';
-import { useEffect, useState } from 'react';
-import { getAuth, saveAuth } from './services/auth';
-import { generatePairKeys } from './services/cryptography';
 import { Notifcations } from './services/notification';
 
 function Main() {
-  const [isReady, setIsReady] = useState<boolean>(false);
-
-  useEffect(() => {
-    const personalKeys = getAuth();
-    if (personalKeys === null) {
-      generatePairKeys().then(saveAuth).then(() => {
-        setIsReady(true);
-      });
-    } else {
-      setIsReady(true);
-    }
-  }, []);
-
-  return isReady ? (
+  return (
     <Notifcations>
       <Dialogs>
-        { /* @ts-ignore */ }
         <HashRouter>
           <Routes>
-            <Route key="profile" path="/profile" element={<Profile />} />
-            <Route key="encrypt" path="/encrypt/:receiver?" element={<Encrypt />} />
-            <Route key="encrypt" path="/decrypt" element={<Decrypt />} />
-            <Route key="*" path="/*" element={<Navigate to="/profile" />} />
+            <Route key="setup" path="/setup" element={<Suspense><Setup /></Suspense>} />
+            <Route key="decrypt" path="/decrypt" element={<Suspense><Decrypt /></Suspense>} />
+            <Route key="encrypt" path="/encrypt/:receiver" element={<Suspense><Encrypt /></Suspense>} />
+            <Route key="*" path="*" element={<Navigate to="/decrypt" />} />
           </Routes>
-        </HashRouter  >
+        </HashRouter>
       </Dialogs>
     </Notifcations>
-  ) : (
-    <div>Please wait...</div>
   );
 }
 

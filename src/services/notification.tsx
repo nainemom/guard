@@ -21,7 +21,7 @@ export const showToast = (message: string) => eventTarget.dispatchEvent(new Cust
 export function Notifcations({ children }: NotifcationsProps) {
   const [cleanInterval, setCleanInterval] = useState<ReturnType<typeof setInterval>>();
   const [activeToasts, setActiveToasts] = useState<Toast[]>([]);
-  const [currentToastId, setCurrentToastId] = useState<number>(0);
+  const [currentToastId, setCurrentToastId] = useState<number>(1);
 
   const addToast = useCallback((event: CustomEventInit) => {
     setActiveToasts((p) => [

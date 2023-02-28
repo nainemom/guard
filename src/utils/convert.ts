@@ -26,3 +26,10 @@ export const abs2ab = (abs: ArrayBuffer[]): ArrayBuffer => {
   }, 0);
   return ret;
 }
+
+export const str2num = (str: string, min = 0, max = 10) => {
+  const sum = str.split('').reduce((s, c) => c.charCodeAt(0) + s, 0);
+  const num = (Math.sin(sum) + 1) / 2; // 0 to 1
+  const max2 = Math.abs(min - max);
+  return Math.round(num * max2) + min;
+};
