@@ -58,20 +58,20 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
       >
         <Icon name="github" className="h-6 w-6" />
       </a>
-      { auth?.public_key && (
-        <Menu>
-          <MenuActivator circle theme="transparent" size="lg" ariaLabel="Profile Menu">
-            <Icon name="manage_accounts" className="w-8 h-8" />
-          </MenuActivator>
-          { currentPath !== '/decrypt' && (
-            <MenuItem onClick={() => navigate('/decrypt')}>
-              <Icon name="drafts" className="w-6 h-6" />
-              <div>
-                <h3>Decrypt</h3>
-                <p className="text-xs text-section-subtitle">You can decrypt your encrypted message through this page</p>
-              </div>
-            </MenuItem>
-          ) }
+      <Menu>
+        <MenuActivator circle theme="transparent" size="lg" ariaLabel="Profile Menu">
+          <Icon name="manage_accounts" className="w-8 h-8" />
+        </MenuActivator>
+        { auth && currentPath !== '/decrypt' && (
+          <MenuItem onClick={() => navigate('/decrypt')}>
+            <Icon name="drafts" className="w-6 h-6" />
+            <div>
+              <h3>Decrypt</h3>
+              <p className="text-xs text-section-subtitle">You can decrypt your encrypted message through this page</p>
+            </div>
+          </MenuItem>
+        ) }
+        { auth && (
           <MenuItem onClick={() => shareLink()}>
             <Icon name="share" className="w-6 h-6 shrink-0" />
             <div>
@@ -79,6 +79,8 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
               <p className="text-xs text-section-subtitle">Create a unique url with your public key to let others encrypt data for you</p>
             </div>
           </MenuItem>
+        ) }
+        { auth && (
           <MenuItem onClick={() => exportAuth()}>
             <Icon name="save" className="w-6 h-6 shrink-0" />
             <div>
@@ -86,11 +88,22 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
               <p className="text-xs text-section-subtitle">Generate a .auth file from your account to access it in future</p>
             </div>
           </MenuItem>
+        ) }
+        { auth && (
           <MenuItem onClick={() => setAuth(null)}>
             <Icon name="logout" className="w-6 h-6 shrink-0" /> Logout
           </MenuItem>
-        </Menu>
-      ) }
+        ) }
+        { !auth && (
+          <MenuItem onClick={() => navigate('/setup')}>
+            <Icon name="drafts" className="w-6 h-6" />
+            <div>
+              <h3>Login</h3>
+              <p className="text-xs text-section-subtitle">Login to your own account or just generate a new account</p>
+            </div>
+          </MenuItem>
+        ) }
+      </Menu>
     </header>
   )
 }
