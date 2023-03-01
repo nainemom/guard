@@ -46,15 +46,15 @@ export default function Profile() {
           <div className='flex flex-row justify-center'>
             <img src={`${import.meta.env.BASE_URL}logo_white.svg`} className="w-24 h-24" alt="Guard Logo" />
           </div>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold">Setup</h2>
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold">Guard</h2>
             <p className="text-sm text-body-subtitle">Setup your Account to use Guard App!</p>
           </div>
           <Button theme="primary" onClick={() => generateAccount()} size="lg" ariaLabel="Generate new Account">
             <Icon name="magic_button" className="w-5 h-5" />
             Generate new Account!
           </Button>
-          <div className="text-center border-b border- border-body-lighter"/>
+          <div className="text-center border-b my-3 border-body-lighter leading-[2px]">or</div>
           <Button theme="default" onClick={() => importAuth()} size="lg" ariaLabel="Import Account">
             <Icon name="upload_file" className="w-5 h-5" />
             Import via .auth File

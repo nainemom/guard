@@ -2,11 +2,12 @@ import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
 import { needAuth, useAuth } from '@/services/auth';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { decrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
 import { Resizable, ResizableSection } from '@/components/common/Resizable';
 import { ab2str, uatob } from '@/utils/convert';
+import { NavLink } from 'react-router-dom';
 
 export default function Decrypt() {
   needAuth();
@@ -36,6 +37,13 @@ export default function Decrypt() {
     }
   }, [encryptedContent, setDecryptTimer, setDecryptedMessage, setDecryptError]);
 
+  const shareLink = useMemo(() => {
+    if (!auth) return;
+    const shareLink = new URL(window.location.href);
+    shareLink.hash = `#/encrypt/${encodeURIComponent(auth.public_key)}`;
+    return shareLink.href;
+  }, []);
+
   return (
     <Layout>
       <Header title="Guard Decrypt" subtitle="Decrypt received messages" />
@@ -55,7 +63,14 @@ export default function Decrypt() {
             <h2 className="pb-2 text-base font-bold"> Output: </h2>
             <p className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto whitespace-pre-line">
               { decryptError ? (
-                <div className="text-danger-normal">Decrypt Error!</div>
+                <div className="space-y-2">
+                  <b className="text-danger-normal font-bold">Decrypt Error!</b>
+                  { shareLink && (
+                    <p className="text-sm text-section-subtitle">
+                      Encrypted content must be created using your <NavLink className="underline underline-offset-4" to={shareLink} target="_blank">Guard link</NavLink>.
+                    </p>
+                  ) }
+                </div>
               ) : (
                 <>{ decryptedMessage }</>
               )}

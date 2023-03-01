@@ -37,7 +37,7 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 shrink-0 flex items-center bg-section-normal text-section-content p-3 gap-3">
+    <header className="h-[4.5rem] shrink-0 flex items-center bg-section-normal text-section-content p-3 gap-3">
       { startButtons && (
         <div>
           { startButtons }
