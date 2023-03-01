@@ -37,11 +37,9 @@ export default function Decrypt() {
     }
   }, [encryptedContent, setDecryptTimer, setDecryptedMessage, setDecryptError]);
 
-  const shareLink = useMemo(() => {
+  const encryptLink = useMemo(() => {
     if (!auth) return;
-    const shareLink = new URL(window.location.href);
-    shareLink.hash = `#/encrypt/${encodeURIComponent(auth.public_key)}`;
-    return shareLink.href;
+    return `/encrypt/${encodeURIComponent(auth.public_key)}`;
   }, []);
 
   return (
@@ -61,20 +59,20 @@ export default function Decrypt() {
           </ResizableSection>
           <ResizableSection className="p-3">
             <h2 className="pb-2 text-base font-bold"> Output: </h2>
-            <p className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto whitespace-pre-line">
+            <div className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto whitespace-pre-line">
               { decryptError ? (
                 <div className="space-y-2">
-                  <b className="text-danger-normal font-bold">Decrypt Error!</b>
-                  { shareLink && (
+                  <h3 className="text-danger-normal font-bold">Decrypt Error!</h3>
+                  { encryptLink && (
                     <p className="text-sm text-section-subtitle">
-                      Encrypted content must be created using your <NavLink className="underline underline-offset-4" to={shareLink} target="_blank">Guard link</NavLink>.
+                      Encrypted content must be created using your <NavLink className="underline underline-offset-4" to={encryptLink} target="_blank">Guard Link</NavLink>.
                     </p>
                   ) }
                 </div>
               ) : (
                 <>{ decryptedMessage }</>
               )}
-            </p>
+            </div>
           </ResizableSection>
         </Resizable>
       </Body>

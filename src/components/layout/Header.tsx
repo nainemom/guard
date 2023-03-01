@@ -2,7 +2,7 @@ import { useAuth } from '@/services/auth';
 import { createAuthFile, exportFileToUser } from '@/services/files';
 import { showToast } from '@/services/notification';
 import { share } from '@/utils/share';
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, MenuActivator, MenuItem } from '../common/Menu';
 import Icon from '@/components/shared/Icon';
@@ -17,6 +17,7 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
   const [auth, setAuth] = useAuth();
 
   const navigate = useNavigate();
+
   const { pathname: currentPath } = useLocation();
 
   const exportAuth = () => {
@@ -25,11 +26,14 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
     exportFileToUser(file);
   };
 
-  const shareLink = () => {
+  const encryptLink = useMemo(() => {
     if (!auth) return;
-    const shareLink = new URL(window.location.href);
-    shareLink.hash = `#/encrypt/${encodeURIComponent(auth.public_key)}`;
-    share(shareLink.href).then((type) => {
+    return `/encrypt/${encodeURIComponent(auth.public_key)}`;
+  }, []);
+
+  const shareLink = () => {
+    if (!encryptLink) return;
+    share(encryptLink).then((type) => {
       if (type === 'clipboard') {
         showToast('Share Link Copied To Clipboard!');
       }
@@ -63,7 +67,7 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
           <Icon name="manage_accounts" className="w-8 h-8" />
         </MenuActivator>
         { auth && currentPath !== '/decrypt' && (
-          <MenuItem onClick={() => navigate('/decrypt')}>
+          <MenuItem onClick={() => navigate('/decrypt')} key="decrypt">
             <Icon name="drafts" className="w-6 h-6" />
             <div>
               <h3>Decrypt</h3>
@@ -71,17 +75,26 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
             </div>
           </MenuItem>
         ) }
-        { auth && (
-          <MenuItem onClick={() => shareLink()}>
-            <Icon name="share" className="w-6 h-6 shrink-0" />
+        { auth && encryptLink && !currentPath.startsWith('/encrypt') && (
+          <MenuItem onClick={() => navigate(encryptLink)} key="encrypt">
+            <Icon name="mail_lock" className="w-6 h-6" />
             <div>
-              <h3>Share</h3>
-              <p className="text-xs text-section-subtitle">Create a unique url with your public key to let others encrypt data for you</p>
+              <h3>Encrypt</h3>
+              <p className="text-xs text-section-subtitle">Your encryptor page (Guard Link)</p>
             </div>
           </MenuItem>
         ) }
         { auth && (
-          <MenuItem onClick={() => exportAuth()}>
+          <MenuItem onClick={() => shareLink()} key="share">
+            <Icon name="share" className="w-6 h-6 shrink-0" />
+            <div>
+              <h3>Share</h3>
+              <p className="text-xs text-section-subtitle">Share your Guard Link to let others encrypt data for you</p>
+            </div>
+          </MenuItem>
+        ) }
+        { auth && (
+          <MenuItem onClick={() => exportAuth()} key="export">
             <Icon name="save" className="w-6 h-6 shrink-0" />
             <div>
               <h3>Export</h3>
@@ -90,7 +103,7 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
           </MenuItem>
         ) }
         { auth && (
-          <MenuItem onClick={() => setAuth(null)}>
+          <MenuItem onClick={() => setAuth(null)} key="logout">
             <Icon name="logout" className="w-6 h-6 shrink-0" /> Logout
           </MenuItem>
         ) }
