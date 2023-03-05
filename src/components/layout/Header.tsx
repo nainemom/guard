@@ -1,4 +1,4 @@
-import { useAuth } from '@/services/auth';
+import { useAuth, useEncryptLink } from '@/services/auth';
 import { createAuthFile, exportFileToUser } from '@/services/files';
 import { showToast } from '@/services/notification';
 import { share } from '@/utils/share';
@@ -26,14 +26,14 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
     exportFileToUser(file);
   };
 
-  const encryptLink = useMemo(() => {
-    if (!auth) return;
-    return `/encrypt/${encodeURIComponent(auth.public_key)}`;
-  }, []);
+  const encryptLink = useEncryptLink();
 
   const shareLink = () => {
     if (!encryptLink) return;
-    share(encryptLink).then((type) => {
+    /* @ts-ignore */
+    const url = `${window.location.origin}${ENV.BASE_URL || '/'}#${encryptLink}`;
+    alert(url);
+    share(url).then((type) => {
       if (type === 'clipboard') {
         showToast('Share Link Copied To Clipboard!');
       }

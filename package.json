@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "npm run build -- --base=/guard/  && gh-pages -d ./dist"
+    "upload": "gh-pages -d ./dist"
   },
   "dependencies": {
     "cancelable-promise": "^4.3.1",
