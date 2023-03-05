@@ -32,7 +32,6 @@ export default function Header({ title, subtitle, startButtons }: HeaderProps) {
     if (!encryptLink) return;
     /* @ts-ignore */
     const url = `${window.location.origin}${ENV.BASE_URL || '/'}#${encryptLink}`;
-    alert(url);
     share(url).then((type) => {
       if (type === 'clipboard') {
         showToast('Share Link Copied To Clipboard!');
