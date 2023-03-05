@@ -1,46 +1,23 @@
 import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
-import { needAuth, useAuth } from '@/services/auth';
-import { useEffect, useMemo, useState } from 'react';
+import { needAuth, useAuth, useEncryptLink } from '@/services/auth';
 import { decrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
 import { Resizable, ResizableSection } from '@/components/common/Resizable';
 import { ab2str, uatob } from '@/utils/convert';
 import { NavLink } from 'react-router-dom';
+import { usePromise } from '@/utils/usePromise';
+import Icon from '@/components/shared/Icon';
 
 export default function Decrypt() {
   needAuth();
   const [auth] = useAuth();
-  const [encryptedContent, setEncryptedContent] = useState<string>('');
-  const [decryptedMessage, setDecryptedMessage] = useState<string>('');
-  const [decryptTimer, setDecryptTimer] = useState<ReturnType<typeof setTimeout>>();
-  const [decryptError, setDecryptError] = useState<boolean>(false);
-
-  useEffect(() => {
-    clearTimeout(decryptTimer);
-    if (encryptedContent) {
-      setDecryptTimer(setTimeout(async () => {
-        try {
-          setDecryptError(false);
-          if (auth) {
-            setDecryptedMessage(ab2str(await decrypt(uatob(encryptedContent), auth.private_key)));
-          };
-        } catch (_e) {
-          setDecryptedMessage('');
-          setDecryptError(true);
-        }
-      }, 300));
-    }
-    return () => {
-      clearTimeout(decryptTimer);
-    }
-  }, [encryptedContent, setDecryptTimer, setDecryptedMessage, setDecryptError]);
-
-  const encryptLink = useMemo(() => {
-    if (!auth) return;
-    return `/encrypt/${encodeURIComponent(auth.public_key)}`;
-  }, []);
+  const decryptor = usePromise(
+    (encrypted: string) => decrypt(uatob(encrypted), auth?.private_key || '').then(ab2str),
+    { debounceTimer: 300, respectLoading: false },
+  );
+  const encryptLink = useEncryptLink();
 
   return (
     <Layout>
@@ -51,16 +28,18 @@ export default function Decrypt() {
             <Input
               size="manual"
               className="h-full font-mono"
-              value={encryptedContent}
-              onInput={setEncryptedContent}
+              onInput={decryptor.refresh}
               multiLine
               placeholder="Enter Encrypted Content."
             />
           </ResizableSection>
           <ResizableSection className="p-3">
-            <h2 className="pb-2 text-base font-bold"> Output: </h2>
+            <h2 className="pb-2 text-base font-bold">Output:</h2>
             <div className="pb-4 text-base text-body-content h-full w-full break-all overflow-auto whitespace-pre-line">
-              { decryptError ? (
+              { decryptor.state === 'loading' && (
+                <Icon name="sync" className="w-6 h-6 animate-spin" />
+              ) }
+              { decryptor.state === 'rejected' && (
                 <div className="space-y-2">
                   <h3 className="text-danger-normal font-bold">Decrypt Error!</h3>
                   { encryptLink && (
@@ -69,9 +48,10 @@ export default function Decrypt() {
                     </p>
                   ) }
                 </div>
-              ) : (
-                <>{ decryptedMessage }</>
-              )}
+              ) }
+              { decryptor.state === 'resolved' && (
+                <>{ decryptor.response }</>
+              ) }
             </div>
           </ResizableSection>
         </Resizable>
