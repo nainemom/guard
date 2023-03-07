@@ -25,12 +25,18 @@ export default function Encrypt() {
 
   const [message, setMessage] = useState<string>('');
 
-  const encryptAndShare = () => {
-    encryptor.refresh(message).then(share).then((shareType) => {
+  const encryptAndShare = async () => {
+    try {
+      const encryptedData = await encryptor.refresh(message);
+  
+      const shareType = await share(encryptedData);
+  
       if (shareType === 'clipboard') {
         showToast('Encrypted Content Copied to Clipboard!');
       }
-    });
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   return (
@@ -45,7 +51,7 @@ export default function Encrypt() {
           <div className="m-3 flex flex-row gap-3">
             <Button theme="primary" size="lg" circle onClick={encryptAndShare} disabled={!receiverPublic || !message} ariaLabel="Share">
               { encryptor.state === 'loading' ? (
-                <Icon name="sync" className="w-6 h-6 animate-spin" />
+                <Icon name="sync" className="w-6 h-6 animate-spin" key="loading" />
               ) : (<Icon name="share" className="w-6 h-6" />) }
             </Button>
           </div>

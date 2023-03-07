@@ -20,9 +20,8 @@ export function osShare(text: string): Promise<void> {
 }
 
 export function share(text: string): Promise<'clipboard' | 'os'> {
-  try {
-    return osShare(text).then(() => 'os');
-  } catch (_e) {
-    return copyToClipboard(text).then(() => 'clipboard');
-  }
+  return osShare(text)
+    .then(() => 'os')
+    .catch(() => copyToClipboard(text))
+    .then(() => 'clipboard');
 }
