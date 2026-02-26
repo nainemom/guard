@@ -9,7 +9,7 @@ import PersonalKeysEditForm from '@/components/shared/PersonalKeysEditForm';
 import Icon from '@/components/shared/Icon';
 import { getFileFromUser, openAuthFile } from '@/services/files';
 import { showToast } from '@/services/notification';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 export default function Profile() {
   const [auth, setAuth] = useAuth();
@@ -31,7 +31,7 @@ export default function Profile() {
     } catch (_e) {}
   }, []);
 
-  const navigate = useNavigate();
+  const [,navigate] = useLocation();
 
   useEffect(() => {
     if (auth?.private_key && auth?.public_key) {

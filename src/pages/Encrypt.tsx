@@ -1,7 +1,6 @@
 import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
-import { useParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { encrypt } from '@/services/cryptography';
 import Input from '@/components/form/Input';
@@ -13,6 +12,7 @@ import { share } from '@/utils/share';
 import Username from '@/components/shared/Username';
 import { Resizable, ResizableSection } from '@/components/common/Resizable';
 import { usePromise } from '@/utils/usePromise';
+import { useParams } from 'wouter';
 
 export default function Encrypt() {
   const { receiver } = useParams();
