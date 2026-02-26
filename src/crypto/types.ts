@@ -1,17 +1,12 @@
 export type KeyType = 'public' | 'private';
 
-export type MethodCategory =
-  | 'standard'
-  | 'ecdh'
-  | 'rsa'
-  | 'post-quantum'
-  | 'experimental';
+export type MethodCategory = 'standard' | 'ecdh' | 'rsa' | 'post-quantum';
 
 export interface MethodHandler {
   id: string;
   name: string;
   description: string;
-  type: 'none' | 'asymmetric' | 'symmetric';
+  type: 'asymmetric' | 'symmetric';
   category: MethodCategory;
   generatePrivateKey(): Promise<Uint8Array>;
   getPublicKey(privateKeyBytes: Uint8Array): Promise<Uint8Array>;

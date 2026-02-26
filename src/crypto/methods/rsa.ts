@@ -1,7 +1,6 @@
 import { gcm } from '@noble/ciphers/aes.js';
-import { randomBytes } from '@noble/ciphers/utils.js';
+import { concatBytes, randomBytes } from '@noble/ciphers/utils.js';
 import type { MethodHandler } from '../types';
-import { concatBytes } from '../utils';
 
 interface RSAConfig {
   name: string;

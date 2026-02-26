@@ -1,11 +1,11 @@
 import { gcm } from '@noble/ciphers/aes.js';
+import { concatBytes } from '@noble/ciphers/utils.js';
 import { x448 } from '@noble/curves/ed448.js';
 import { x25519 } from '@noble/curves/ed25519.js';
 import { p256, p384, p521 } from '@noble/curves/nist.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import type { MethodHandler } from '../types';
-import { concatBytes } from '../utils';
 
 interface MontgomeryCurve {
   getSharedSecret(privateKey: Uint8Array, publicKey: Uint8Array): Uint8Array;

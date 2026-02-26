@@ -1,7 +1,6 @@
 import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
-import { randomBytes } from '@noble/ciphers/utils.js';
+import { concatBytes, randomBytes } from '@noble/ciphers/utils.js';
 import type { MethodHandler } from '../types';
-import { concatBytes } from '../utils';
 
 const KEY_SIZE = 32;
 const NONCE_SIZE = 24;

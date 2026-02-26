@@ -1,3 +1,4 @@
+import { base58 } from '@scure/base';
 import { aes256Gcm } from './methods/aes-gcm';
 import {
   ecdhP256,
@@ -11,13 +12,10 @@ import { mlKem512, mlKem768, mlKem1024 } from './methods/ml-kem';
 import { rsa2048, rsa4096 } from './methods/rsa';
 import { salsa20 } from './methods/salsa20';
 import { xchacha20 } from './methods/xchacha20';
-import { xor } from './methods/xor';
 import type { KeyType, MethodHandler } from './types';
-import { base58ToBytes, bytesToBase58 } from './utils';
 
 export const METHODS = {
   [aes256Gcm.id]: aes256Gcm,
-  [xor.id]: xor,
   [ecdhX25519.id]: ecdhX25519,
   [ecdhX448.id]: ecdhX448,
   [ecdhP256.id]: ecdhP256,
@@ -44,7 +42,7 @@ export function parseKey(key: string): {
     throw new Error(`Unknown key type: ${methodId}`);
   const method = METHODS[methodId];
   if (!method) throw new Error(`Unknown method: ${methodId}`);
-  const data = base58ToBytes(encodedData);
+  const data = base58.decode(encodedData);
   return { method, type: keyType as KeyType, data };
 }
 
@@ -53,7 +51,7 @@ function formatKey(
   keyType: KeyType,
   data: Uint8Array,
 ): string {
-  return `${method.id}:${keyType}:${bytesToBase58(data)}`;
+  return `${method.id}:${keyType}:${base58.encode(data)}`;
 }
 
 export async function generatePrivateKey(methodId: string) {

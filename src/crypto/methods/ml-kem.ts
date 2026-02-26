@@ -1,4 +1,5 @@
 import { gcm } from '@noble/ciphers/aes.js';
+import { concatBytes } from '@noble/ciphers/utils.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import {
   ml_kem512,
@@ -6,7 +7,6 @@ import {
   ml_kem1024,
 } from '@noble/post-quantum/ml-kem.js';
 import type { MethodHandler } from '../types';
-import { concatBytes } from '../utils';
 
 interface KEMAlgorithm {
   keygen(): { publicKey: Uint8Array; secretKey: Uint8Array };
