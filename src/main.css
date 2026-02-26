@@ -1,1 +1,15 @@
 @import "tailwindcss";
+@import "framework7/css/bundle";
+
+@layer base {
+  body {
+    @apply bg-slate-300!;
+  }
+  #app {
+    @apply mx-auto max-w-xl sm:max-h-[calc(100svh-3rem)] sm:my-6 sm:rounded-xl! sm:shadow-2xl overflow-hidden isolate;
+  }
+  .page-content {
+    scrollbar-width: none;
+    -webkit-scrollbar-width: none;
+  }
+}

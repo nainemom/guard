@@ -15,11 +15,12 @@
     "test": "echo \"All fake tests passed!\""
   },
   "dependencies": {
+    "framework7": "^9.0.3",
+    "framework7-react": "^9.0.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-use": "^17.6.0",
-    "tailwindcss": "^4.2.1",
-    "wouter": "^3.9.0"
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
