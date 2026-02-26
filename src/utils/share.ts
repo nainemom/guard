@@ -6,7 +6,10 @@ export function copyToClipboard(text: string): Promise<void> {
       resolve();
     };
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(() => resolve()).catch(fallback);
+      navigator.clipboard
+        .writeText(text)
+        .then(() => resolve())
+        .catch(fallback);
     } else {
       fallback();
     }

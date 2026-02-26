@@ -44,8 +44,6 @@
   @apply hover:bg-primary-hover focus:bg-primary-hover active:bg-primary-active;
 }
 
-
-
 .x-button-sm {
   @apply h-8;
 }

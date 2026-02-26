@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "upload": "gh-pages -d ./dist"
+    "upload": "gh-pages -d ./dist",
+    "lint": "biome check",
+    "lint:staged": "biome check --staged --no-errors-on-unmatched",
+    "lint:ci": "biome ci",
+    "lint:fix": "biome check --write --unsafe"
   },
   "dependencies": {
     "react": "^19.2.4",
@@ -17,6 +21,7 @@
     "wouter": "^3.9.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.4",
     "@tailwindcss/vite": "^4.2.1",
     "@types/node": "^25.3.1",
     "@types/react": "^19.2.14",

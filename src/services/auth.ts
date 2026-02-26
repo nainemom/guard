@@ -1,7 +1,7 @@
-import { CryptographyPairKeys } from "@/services/cryptography";
-import { useStorage } from "@/utils/storage";
-import { useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { CryptographyPairKeys } from '@/services/cryptography';
+import { useStorage } from '@/utils/storage';
 
 export const storageKey = 'guard-auth';
 
@@ -12,7 +12,7 @@ export const useAuth = () => {
 export const useEncryptLink = () => {
   const [auth] = useAuth();
   return auth?.public_key && `/encrypt/${encodeURIComponent(auth.public_key)}`;
-}
+};
 
 export const needAuth = () => {
   const [auth] = useAuth();
@@ -21,5 +21,5 @@ export const needAuth = () => {
     if (!auth?.private_key) {
       navigate('/setup');
     }
-  }, [auth]);
-}
+  }, [auth, navigate]);
+};

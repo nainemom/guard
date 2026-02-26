@@ -1,26 +1,38 @@
 import './Input.css';
-import { cx } from '@/utils/cx';
 import { useMemo } from 'react';
-import { FormFieldProps, FormFieldLabel, useFormField, FormFieldError } from './Form';
+import { cx } from '@/utils/cx';
+import {
+  FormFieldError,
+  FormFieldLabel,
+  type FormFieldProps,
+  useFormField,
+} from './Form';
 
 type InputProps = FormFieldProps & {
-  className?: string,
-  size?: 'md' | 'lg' | 'manual',
-  placeholder?: string,
-  readOnly?: boolean,
-  multiLine?: boolean,
-}
+  className?: string;
+  size?: 'md' | 'lg' | 'manual';
+  placeholder?: string;
+  readOnly?: boolean;
+  multiLine?: boolean;
+};
 
 const inputDefaultProps: InputProps = {
   size: 'md',
 };
 
 export default function Input(props: InputProps) {
-  const { className, size, placeholder, readOnly, multiLine, ...formFieldProps } = { ...inputDefaultProps, ...props };
+  const {
+    className,
+    size,
+    placeholder,
+    readOnly,
+    multiLine,
+    ...formFieldProps
+  } = { ...inputDefaultProps, ...props };
 
   const [value, setValue, fieldError] = useFormField(formFieldProps, '');
 
-  const Tag = useMemo(() => multiLine ? 'textarea' : 'input', [multiLine]);
+  const Tag = useMemo(() => (multiLine ? 'textarea' : 'input'), [multiLine]);
 
   return (
     <>
@@ -34,5 +46,5 @@ export default function Input(props: InputProps) {
       />
       <FormFieldError error={fieldError} />
     </>
-  )
+  );
 }

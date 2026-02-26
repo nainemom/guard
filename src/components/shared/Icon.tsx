@@ -1,5 +1,5 @@
-import { cx } from "@/utils/cx";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { cx } from '@/utils/cx';
 
 const cache = new Map();
 
@@ -11,37 +11,53 @@ const downloadAndPrepareIcon = (url: string) => {
     }
     return Promise.resolve(cached);
   }
-  const downloader = fetch(url).then((res) => res.text()).then((svgContent) => {
-    const svg = (new DOMParser()).parseFromString(svgContent, 'text/xml').documentElement;
-    svg.setAttribute('fill', 'currentColor');
-    svg.setAttribute('width', '100%');
-    svg.setAttribute('height', '100%');
-    // default google icons
-    if (!svg.getAttribute('viewBox')) {
-      svg.setAttribute('viewBox', '0 0 48 48');
-    }
-    cache.set(url, svg.outerHTML);
-    if (svg.querySelector('parsererror')) { // svg content is not correct
-      return Promise.reject();
-    }
-    return svg.outerHTML;
-  }).catch(() => {
-    cache.delete(url);
-    return Promise.resolve('<span style="display:inline-block;width:100%;height:100%;border-radius:50%;border:dashed 1px currentColor;"></div>');
-  });
+  const downloader = fetch(url)
+    .then((res) => res.text())
+    .then((svgContent) => {
+      const svg = new DOMParser().parseFromString(
+        svgContent,
+        'text/xml',
+      ).documentElement;
+      svg.setAttribute('fill', 'currentColor');
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+      // default google icons
+      if (!svg.getAttribute('viewBox')) {
+        svg.setAttribute('viewBox', '0 0 48 48');
+      }
+      cache.set(url, svg.outerHTML);
+      if (svg.querySelector('parsererror')) {
+        // svg content is not correct
+        return Promise.reject();
+      }
+      return svg.outerHTML;
+    })
+    .catch(() => {
+      cache.delete(url);
+      return Promise.resolve(
+        '<span style="display:inline-block;width:100%;height:100%;border-radius:50%;border:dashed 1px currentColor;"></div>',
+      );
+    });
   cache.set(url, downloader);
   return downloader;
 };
 
 export type IconProps = {
-  name: string,
-  className?: string,
-}
+  name: string;
+  className?: string;
+};
 
 export default function Icon({ name, className }: IconProps) {
   const [iconContent, setIconContent] = useState<string>('');
   useEffect(() => {
-    downloadAndPrepareIcon(`${import.meta.env.BASE_URL}icons/${name}.svg`).then(setIconContent);
+    downloadAndPrepareIcon(`${import.meta.env.BASE_URL}icons/${name}.svg`).then(
+      setIconContent,
+    );
   }, [name]);
-  return (<div className={cx('inline-block', className)} dangerouslySetInnerHTML={{ __html: iconContent }} />);
+  return (
+    <div
+      className={cx('inline-block', className)}
+      dangerouslySetInnerHTML={{ __html: iconContent }}
+    />
+  );
 }

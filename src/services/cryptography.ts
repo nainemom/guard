@@ -1,4 +1,8 @@
-import { ENCRYPTION_SHA_SIZE, ENCRYPTION_TYPE, LOCAL_HASH_ALGORITHM } from '@/constants';
+import {
+  ENCRYPTION_SHA_SIZE,
+  ENCRYPTION_TYPE,
+  LOCAL_HASH_ALGORITHM,
+} from '@/constants';
 import { abs2ab, str2ab, uatob, ubtoa } from '@/utils/convert';
 
 export type CryptographyPublicKey = string;
@@ -6,19 +10,26 @@ export type CryptographyPublicKey = string;
 export type CryptographyPrivateKey = string;
 
 export type CryptographyPairKeys = {
-  public_key: CryptographyPublicKey,
-  private_key: CryptographyPrivateKey,
-}
+  public_key: CryptographyPublicKey;
+  private_key: CryptographyPrivateKey;
+};
 
 export type CryptographyModulusLength = 2048 | 4096;
 
-export type CryptographyProgressCallback = (current: number, total: number) => void;
+export type CryptographyProgressCallback = (
+  current: number,
+  total: number,
+) => void;
 
-const calculateEncryptedSliceSize = (modulusLength: number) => modulusLength / 8;
+const calculateEncryptedSliceSize = (modulusLength: number) =>
+  modulusLength / 8;
 
-const calculateMessageSliceSize = (modulusLength: number) => modulusLength / 8 - 2 * ENCRYPTION_SHA_SIZE / 8 - 2;
+const calculateMessageSliceSize = (modulusLength: number) =>
+  modulusLength / 8 - (2 * ENCRYPTION_SHA_SIZE) / 8 - 2;
 
-export const generatePairKeys = async (modulusLength: CryptographyModulusLength = 2048) : Promise<CryptographyPairKeys> => {
+export const generatePairKeys = async (
+  modulusLength: CryptographyModulusLength = 2048,
+): Promise<CryptographyPairKeys> => {
   const keyPair = await crypto.subtle.generateKey(
     {
       name: ENCRYPTION_TYPE,
@@ -37,9 +48,13 @@ export const generatePairKeys = async (modulusLength: CryptographyModulusLength 
     public_key: ubtoa(publicBuffer),
     private_key: ubtoa(privateBuffer),
   };
-}
+};
 
-export const decrypt = async (encrypted: ArrayBuffer, privateKey: CryptographyPrivateKey, onProgress?: CryptographyProgressCallback): Promise<ArrayBuffer> => {
+export const decrypt = async (
+  encrypted: ArrayBuffer,
+  privateKey: CryptographyPrivateKey,
+  onProgress?: CryptographyProgressCallback,
+): Promise<ArrayBuffer> => {
   const progress = onProgress || (() => {});
   let current = 0;
   progress(current, encrypted.byteLength);
@@ -51,11 +66,13 @@ export const decrypt = async (encrypted: ArrayBuffer, privateKey: CryptographyPr
       hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
     },
     false,
-    ['decrypt']
+    ['decrypt'],
   );
 
   let arrayBuffers: ArrayBuffer[] = [];
-  const sliceSize = calculateEncryptedSliceSize((keyObject.algorithm as RsaKeyAlgorithm).modulusLength);
+  const sliceSize = calculateEncryptedSliceSize(
+    (keyObject.algorithm as RsaKeyAlgorithm).modulusLength,
+  );
   do {
     const endByte = Math.min(current + sliceSize, encrypted.byteLength);
     arrayBuffers = [
@@ -73,9 +90,13 @@ export const decrypt = async (encrypted: ArrayBuffer, privateKey: CryptographyPr
   } while (current < encrypted.byteLength);
 
   return abs2ab(arrayBuffers);
-}
+};
 
-export const encrypt = async (raw: ArrayBuffer, publicKey: CryptographyPublicKey, onProgress?: CryptographyProgressCallback): Promise<ArrayBuffer> => {
+export const encrypt = async (
+  raw: ArrayBuffer,
+  publicKey: CryptographyPublicKey,
+  onProgress?: CryptographyProgressCallback,
+): Promise<ArrayBuffer> => {
   const progress = onProgress || (() => {});
   let current = 0;
   progress(current, raw.byteLength);
@@ -87,11 +108,13 @@ export const encrypt = async (raw: ArrayBuffer, publicKey: CryptographyPublicKey
       hash: `SHA-${ENCRYPTION_SHA_SIZE}`,
     },
     false,
-    ['encrypt']
+    ['encrypt'],
   );
 
   let arrayBuffers: ArrayBuffer[] = [];
-  const sliceSize = calculateMessageSliceSize((keyObject.algorithm as RsaKeyAlgorithm).modulusLength);
+  const sliceSize = calculateMessageSliceSize(
+    (keyObject.algorithm as RsaKeyAlgorithm).modulusLength,
+  );
   do {
     const endByte = Math.min(current + sliceSize, raw.byteLength);
     arrayBuffers = [
@@ -109,8 +132,7 @@ export const encrypt = async (raw: ArrayBuffer, publicKey: CryptographyPublicKey
   } while (current < raw.byteLength);
 
   return abs2ab(arrayBuffers);
-}
-
+};
 
 const hashCache = new Map();
 export const hash = (content: string) => {
@@ -121,7 +143,8 @@ export const hash = (content: string) => {
     }
     return Promise.resolve(cached);
   }
-  const promise = crypto.subtle.digest(LOCAL_HASH_ALGORITHM, str2ab(content))
+  const promise = crypto.subtle
+    .digest(LOCAL_HASH_ALGORITHM, str2ab(content))
     .then((hashed) => ubtoa(hashed))
     .catch((e) => {
       hashCache.delete(content);
@@ -129,5 +152,4 @@ export const hash = (content: string) => {
     });
   hashCache.set(content, promise);
   return promise;
-}
-
+};

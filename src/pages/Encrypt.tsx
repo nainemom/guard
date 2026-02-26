@@ -1,22 +1,24 @@
+import { useMemo, useState } from 'react';
+import { useParams } from 'wouter';
+import Button from '@/components/form/Button';
+import Input from '@/components/form/Input';
 import Body from '@/components/layout/Body';
 import Header from '@/components/layout/Header';
 import Layout from '@/components/layout/Layout';
-import { useMemo, useState } from 'react';
-import { encrypt } from '@/services/cryptography';
-import Input from '@/components/form/Input';
-import Button from '@/components/form/Button';
 import Icon from '@/components/shared/Icon';
-import { str2ab, ubtoa } from '@/utils/convert';
-import { showToast } from '@/services/notification';
-import { share } from '@/utils/share';
 import Username from '@/components/shared/Username';
-import { Resizable, ResizableSection } from '@/components/common/Resizable';
+import { encrypt } from '@/services/cryptography';
+import { showToast } from '@/services/notification';
+import { str2ab, ubtoa } from '@/utils/convert';
+import { share } from '@/utils/share';
 import { usePromise } from '@/utils/usePromise';
-import { useParams } from 'wouter';
 
 export default function Encrypt() {
   const { receiver } = useParams();
-  const receiverPublic = useMemo(() => decodeURIComponent(receiver || ''), [receiver]);
+  const receiverPublic = useMemo(
+    () => decodeURIComponent(receiver || ''),
+    [receiver],
+  );
 
   const encryptor = usePromise(
     (raw: string) => encrypt(str2ab(raw), receiverPublic).then(ubtoa),
@@ -28,9 +30,9 @@ export default function Encrypt() {
   const encryptAndShare = async () => {
     try {
       const encryptedData = await encryptor.refresh(message);
-  
+
       const shareType = await share(encryptedData);
-  
+
       if (shareType === 'clipboard') {
         showToast('Encrypted Content Copied to Clipboard!');
       }
@@ -49,10 +51,23 @@ export default function Encrypt() {
         className="flex flex-col"
         stickyArea={
           <div className="m-3 flex flex-row gap-3">
-            <Button theme="primary" size="lg" circle onClick={encryptAndShare} disabled={!receiverPublic || !message} ariaLabel="Share">
-              { encryptor.state === 'loading' ? (
-                <Icon name="sync" className="w-6 h-6 animate-spin" key="loading" />
-              ) : (<Icon name="share" className="w-6 h-6" />) }
+            <Button
+              theme="primary"
+              size="lg"
+              circle
+              onClick={encryptAndShare}
+              disabled={!receiverPublic || !message}
+              ariaLabel="Share"
+            >
+              {encryptor.state === 'loading' ? (
+                <Icon
+                  name="sync"
+                  className="w-6 h-6 animate-spin"
+                  key="loading"
+                />
+              ) : (
+                <Icon name="share" className="w-6 h-6" />
+              )}
             </Button>
           </div>
         }
@@ -68,5 +83,5 @@ export default function Encrypt() {
         />
       </Body>
     </Layout>
-  )
+  );
 }

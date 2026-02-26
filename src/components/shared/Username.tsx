@@ -1,10 +1,10 @@
-import { CryptographyPublicKey, hash } from "@/services/cryptography";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { type CryptographyPublicKey, hash } from '@/services/cryptography';
 
 export type UsernameProps = {
-  publicKey: CryptographyPublicKey,
-  className?: string,
-}
+  publicKey: CryptographyPublicKey;
+  className?: string;
+};
 
 export default function Username({ publicKey }: UsernameProps) {
   const [username, setUsername] = useState<string>('');
@@ -15,5 +15,5 @@ export default function Username({ publicKey }: UsernameProps) {
       hash(publicKey).then(setUsername);
     }
   }, [publicKey]);
-  return (<>{username}</>);
+  return <>{username}</>;
 }

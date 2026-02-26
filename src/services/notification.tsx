@@ -1,56 +1,61 @@
 import './notification.css';
-import { useCallback, useEffect, useState, ReactNode } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 type NotifcationsProps = {
-  children: ReactNode,
+  children: ReactNode;
 };
 
 type Toast = {
-  id: number,
-  message: string,
-  created: number,
+  id: number;
+  message: string;
+  created: number;
 };
 
 const eventTarget = document.createElement('DIV');
 
-export const showToast = (message: string) => eventTarget.dispatchEvent(new CustomEvent('toast', {
-  detail: message,
-}));
-
+export const showToast = (message: string) =>
+  eventTarget.dispatchEvent(
+    new CustomEvent('toast', {
+      detail: message,
+    }),
+  );
 
 export function Notifcations({ children }: NotifcationsProps) {
-  const [cleanInterval, setCleanInterval] = useState<ReturnType<typeof setInterval>>();
+  const [cleanInterval, setCleanInterval] =
+    useState<ReturnType<typeof setInterval>>();
   const [activeToasts, setActiveToasts] = useState<Toast[]>([]);
   const [currentToastId, setCurrentToastId] = useState<number>(1);
 
-  const addToast = useCallback((event: CustomEventInit) => {
-    setActiveToasts((p) => [
-      ...p,
-      {
-        message: event.detail,
-        id: currentToastId,
-        created: Date.now(),
-      },
-    ]);
-    setCurrentToastId((p) => p + 1);
-  }, [currentToastId, setActiveToasts]);
+  const addToast = useCallback(
+    (event: CustomEventInit) => {
+      setActiveToasts((p) => [
+        ...p,
+        {
+          message: event.detail,
+          id: currentToastId,
+          created: Date.now(),
+        },
+      ]);
+      setCurrentToastId((p) => p + 1);
+    },
+    [currentToastId],
+  );
 
   const removeToast = useCallback((id: number) => {
     setActiveToasts((p) => {
       const index = p.findIndex((toastItem) => toastItem.id === id);
       if (index > -1) {
-        return [
-          ...p.slice(0, index),
-          ...p.slice(index + 1),
-        ];
+        return [...p.slice(0, index), ...p.slice(index + 1)];
       }
       return p;
     });
-  }, [setActiveToasts]);
+  }, []);
 
   const autoClean = useCallback(() => {
-    setActiveToasts((p) => p.filter((toastItem) => toastItem.created + 3000 > Date.now()));
-  }, [setActiveToasts]);
+    setActiveToasts((p) =>
+      p.filter((toastItem) => toastItem.created + 3000 > Date.now()),
+    );
+  }, []);
 
   useEffect(() => {
     setCleanInterval(setInterval(autoClean, 1000));
@@ -58,21 +63,25 @@ export function Notifcations({ children }: NotifcationsProps) {
     return () => {
       eventTarget.removeEventListener('toast', addToast);
       clearInterval(cleanInterval);
-    }
-  }, [setCleanInterval, autoClean]);
+    };
+  }, [autoClean, addToast, cleanInterval]);
 
   return (
     <>
-      { children }
-      { activeToasts.length > 0 && (
+      {children}
+      {activeToasts.length > 0 && (
         <div className="x-toasts">
-          {
-            activeToasts.map((toast) => (
-              <div key={toast.id} className="x-toast-item" onClick={() => removeToast(toast.id)}>{ toast.message }</div>
-            ))
-          }
+          {activeToasts.map((toast) => (
+            <div
+              key={toast.id}
+              className="x-toast-item"
+              onClick={() => removeToast(toast.id)}
+            >
+              {toast.message}
+            </div>
+          ))}
         </div>
-      ) }
+      )}
     </>
   );
 }

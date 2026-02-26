@@ -13,7 +13,7 @@ export const useStorage = <T>(
       } else {
         newValue = JSON.parse(storageValue);
       }
-    } catch(_e) {
+    } catch (_e) {
       newValue = defaultValue;
     } finally {
       return newValue;
@@ -31,16 +31,21 @@ export const useStorage = <T>(
       const newStorageValue = JSON.stringify(newValue);
       localStorage.setItem(key, newStorageValue);
     }
-    
-    window.dispatchEvent(new StorageEvent('storage', {
-      key,
-    }));
-  }
+
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key,
+      }),
+    );
+  };
 
   useEffect(() => {
     window.addEventListener('storage', handleStorageUpdate);
     return () => window.removeEventListener('storage', handleStorageUpdate);
-  }, []);
+  }, [handleStorageUpdate]);
 
-  return useMemo(() => [localValue, setStorageValue], [localValue]);
-}
+  return useMemo(
+    () => [localValue, setStorageValue],
+    [localValue, setStorageValue],
+  );
+};
