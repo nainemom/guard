@@ -33,4 +33,6 @@ db.keys.hook('updating', () => {
   return { updatedAt: new Date().toISOString() };
 });
 
+export const dbReady = db.open();
+
 export { db };
