@@ -21,6 +21,8 @@
     "@noble/hashes": "^2.0.1",
     "@noble/post-quantum": "^0.5.4",
     "@scure/base": "^2.0.0",
+    "dexie": "^4.3.0",
+    "dexie-react-hooks": "^4.2.0",
     "framework7": "^9.0.3",
     "framework7-react": "^9.0.3",
     "react": "^19.2.4",
