@@ -12,7 +12,8 @@
     "lint:staged": "biome check --staged --no-errors-on-unmatched",
     "lint:ci": "biome ci",
     "lint:fix": "biome check --write --unsafe",
-    "test": "echo \"All fake tests passed!\""
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@noble/ciphers": "^2.1.1",
@@ -36,8 +37,10 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "globals": "^17.3.0",
+    "jsdom": "^28.1.0",
     "lefthook": "^2.1.1",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   }
 }
