@@ -1,24 +1,13 @@
-import { default as Framework7 } from 'framework7/lite/bundle';
-import { App, default as Framework7React, View } from 'framework7-react';
 import { type FC, type ReactNode, Suspense, use } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
+import { Redirect, Route, Router, Switch } from 'wouter';
+import { useHashLocation } from 'wouter/use-hash-location';
 import { dbReady } from '@/db';
-import { HomePage } from './routes/HomePage';
-import { TestPage } from './routes/TestPage';
+import { KeyCreatePage } from './keys/KeyCreatePage';
+import { KeyDetailsPage } from './keys/KeyDetailsPage';
+import { KeysListPage } from './keys/KeysListPage';
 import './main.css';
-
-Framework7.use(Framework7React);
-
-const routes = [
-  {
-    path: '/',
-    component: HomePage,
-  },
-  {
-    path: '/test',
-    component: TestPage,
-  },
-];
 
 const DbGate: FC<{ children: ReactNode }> = ({ children }) => {
   use(dbReady);
@@ -30,16 +19,27 @@ const root = document.querySelector<HTMLElement>('#app') as HTMLElement;
 createRoot(root).render(
   <Suspense>
     <DbGate>
-      <App name="Guard">
-        <View
-          main
-          url="/"
-          routes={routes}
-          browserHistory
-          browserHistorySeparator="#"
-          browserHistoryOnLoad
-        />
-      </App>
+      <Router
+        hook={useHashLocation}
+        aroundNav={(nav, to, opts) => {
+          if (!document.startViewTransition) {
+            nav(to, opts);
+            return;
+          }
+          document.startViewTransition(() => {
+            flushSync(() => nav(to, opts));
+          });
+        }}
+      >
+        <Switch>
+          <Route path="/keys" component={KeysListPage} />
+          <Route path="/keys/new" component={KeyCreatePage} />
+          <Route path="/keys/:id" component={KeyDetailsPage} />
+          <Route path="/">
+            <Redirect to="/keys" />
+          </Route>
+        </Switch>
+      </Router>
     </DbGate>
   </Suspense>,
 );

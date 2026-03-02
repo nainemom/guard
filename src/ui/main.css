@@ -1,15 +1,85 @@
 @import "tailwindcss";
-@import "framework7/css/bundle";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Primary (Indigo #4338ca) */
+  --color-primary: #4338ca;
+  --color-primary-hover: #3730a3;
+  --color-primary-active: #312e81;
+  --color-on-primary: #ffffff;
+
+  /* Surface / Background */
+  --color-bg: #cbd5e1;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafc;
+
+  /* Text */
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+
+  /* Border */
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+
+  /* Feedback */
+  --color-success: #059669;
+  --color-error: #dc2626;
+  --color-error-light: #fef2f2;
+  --color-on-error: #ffffff;
+}
+
+@variant dark {
+  color-scheme: dark;
+
+  --color-primary: #818cf8;
+  --color-primary-hover: #a5b4fc;
+  --color-on-primary: #1e1b4b;
+
+  --color-bg: #0a0a0a;
+  --color-surface: #171717;
+  --color-surface-alt: #212121;
+
+  --color-text: #f5f5f5;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #737373;
+
+  --color-border: #2e2e2e;
+  --color-border-light: #1c1c1c;
+
+  --color-success: #34d399;
+  --color-error: #f87171;
+  --color-error-light: #451a1a;
+  --color-on-error: #1e1b4b;
+}
 
 @layer base {
   body {
-    @apply bg-slate-300!;
+    @apply bg-bg!;
   }
   #app {
-    @apply mx-auto max-w-xl sm:max-h-[calc(100svh-3rem)] sm:my-6 sm:rounded-xl! sm:shadow-2xl overflow-hidden isolate;
+    @apply mx-auto max-w-xl sm:max-h-[calc(100svh-3rem)] sm:my-6 sm:rounded-xl! sm:shadow-2xl overflow-hidden isolate flex flex-col h-svh;
+    contain: layout;
   }
-  .page-content {
-    scrollbar-width: none;
-    -webkit-scrollbar-width: none;
+  ::view-transition-old(root) {
+    animation: 180ms ease both vt-leave;
+  }
+  ::view-transition-new(root) {
+    animation: 180ms ease both vt-enter;
+  }
+}
+
+@keyframes vt-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes vt-enter {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
   }
 }

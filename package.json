@@ -16,19 +16,22 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@dicebear/collection": "^9.3.2",
+    "@dicebear/core": "^9.3.2",
     "@noble/ciphers": "^2.1.1",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "@noble/post-quantum": "^0.5.4",
+    "@phosphor-icons/react": "^2.1.10",
     "@scure/base": "^2.0.0",
+    "clsx": "^2.1.1",
     "dexie": "^4.3.0",
     "dexie-react-hooks": "^4.2.0",
-    "framework7": "^9.0.3",
-    "framework7-react": "^9.0.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-use": "^17.6.0",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.2.1",
+    "wouter": "^3.9.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
