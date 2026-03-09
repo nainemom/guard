@@ -36,7 +36,7 @@ export const ChatBubble: FC<{
       )}
     >
       {header && <div className="text-xs opacity-70 mb-1">{header}</div>}
-      <div dir="auto" className="break-all whitespace-pre-wrap text-sm">
+      <div dir="auto" className="whitespace-normal wrap-anywhere text-sm">
         {children}
       </div>
       {footer && <div className="flex justify-end mt-1">{footer}</div>}

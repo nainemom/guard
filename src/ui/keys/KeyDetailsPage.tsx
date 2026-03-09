@@ -53,21 +53,6 @@ export const KeyDetailsPage: FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const r = entry.intersectionRatio;
-        el.style.opacity = `${r ** 2}`;
-        el.style.transform = `scale(${0.7 + r * 0.3})`;
-      },
-      { threshold: Array.from({ length: 21 }, (_, i) => i / 20) },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -209,10 +194,7 @@ export const KeyDetailsPage: FC = () => {
       {/* Message Feed */}
       <PageBody className="px-4 pb-4">
         {/* Key Info Card */}
-        <div
-          ref={cardRef}
-          className="flex flex-col items-center gap-3 pt-6 pb-4 will-change-[opacity,transform]"
-        >
+        <div className="flex flex-col items-center gap-3 pt-6 pb-4">
           <Avatar size={64} seed={key.name} />
           <div className="text-lg font-semibold text-text">{key.name}</div>
           <div className="flex flex-wrap items-center justify-center gap-2">

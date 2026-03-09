@@ -61,6 +61,7 @@ export const KeyCreatePage: FC = () => {
         <Input
           id="key-name-input"
           type="text"
+          autoFocus
           placeholder="e.g. My Personal Key"
           value={name}
           onChange={(e) => setName(e.target.value)}
