@@ -12,11 +12,10 @@ export const ListItem: FC<{
   return (
     <Tag
       className={clsx(
-        'flex items-center gap-3 px-4 py-2 min-h-18 w-full h-auto',
+        'flex items-center gap-3 p-3 min-h-18 w-full h-auto',
         '*:shrink-0',
         'outline-none bg-surface transition-colors',
-        onClick &&
-          'cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt focus-within:bg-surface-alt active:bg-surface',
+        'cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt focus-within:bg-surface-alt active:bg-surface',
         className,
       )}
       {...(onClick ? { type: 'button' as const, onClick } : {})}
