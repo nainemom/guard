@@ -1,0 +1,42 @@
+{
+  "1": {
+    "original": "+",
+    "encoded": "Kw"
+  },
+  "2": {
+    "original": "+�",
+    "encoded": "K7Q"
+  },
+  "4": {
+    "original": "+�=�",
+    "encoded": "K7Q9xg"
+  },
+  "8": {
+    "original": "+�=�O�a�",
+    "encoded": "K7Q9xk_YYeo"
+  },
+  "16": {
+    "original": "+�=�O�a�s��\u000e� �2",
+    "encoded": "K7Q9xk_YYepz_IUOlyCpMg"
+  },
+  "32": {
+    "original": "+�=�O�a�s��\u000e� �2�D�V�h�z\u0003�\u0015�'�9�",
+    "encoded": "K7Q9xk_YYepz_IUOlyCpMrtEzVbfaPF6A4wVniewOcI"
+  },
+  "64": {
+    "original": "+�=�O�a�s��\u000e� �2�D�V�h�z\u0003�\u0015�'�9�K�]�o��\n�\u001c�.�@�R�d�v��\u0011�#�5�G�Y�",
+    "encoded": "K7Q9xk_YYepz_IUOlyCpMrtEzVbfaPF6A4wVniewOcJL1F3mb_iBCpMcpS63QMlS22Ttdv-IEZojrDW-R9BZ4g"
+  },
+  "128": {
+    "original": "+�=�O�a�s��\u000e� �2�D�V�h�z\u0003�\u0015�'�9�K�]�o��\n�\u001c�.�@�R�d�v��\u0011�#�5�G�Y�k�}\u0006�\u0018�*�<�N�`�r��\r�\u001f�1�C�U�g�y\u0002�\u0014�&�8�J�\\�n��\t�\u001b�-�?�Q�c�u��\u0010�\"",
+    "encoded": "K7Q9xk_YYepz_IUOlyCpMrtEzVbfaPF6A4wVniewOcJL1F3mb_iBCpMcpS63QMlS22Ttdv-IEZojrDW-R9BZ4mv0fQaPGKEqszzFTtdg6XL7hA2WH6gxukPMVd5n8HkCixSdJq84wUrTXOVu94AJkhukLbY_yFHaY-x1_ocQmSI"
+  },
+  "256": {
+    "original": "+�=�O�a�s��\u000e� �2�D�V�h�z\u0003�\u0015�'�9�K�]�o��\n�\u001c�.�@�R�d�v��\u0011�#�5�G�Y�k�}\u0006�\u0018�*�<�N�`�r��\r�\u001f�1�C�U�g�y\u0002�\u0014�&�8�J�\\�n��\t�\u001b�-�?�Q�c�u��\u0010�\"�4�F�X�j�|\u0005�\u0017�)�;�M�_�q��\f�\u001e�0�B�T�f�x\u0001�\u0013�%�7�I�[�m�\b�\u001a�,�>�P�b�t��\u000f�!�3�E�W�i�{\u0004�\u0016�(�:�L�^�p��\u000b�\u001d�/�A�S�e�w\u0000�\u0012�$�6�H�Z�l�~\u0007�\u0019�",
+    "encoded": "K7Q9xk_YYepz_IUOlyCpMrtEzVbfaPF6A4wVniewOcJL1F3mb_iBCpMcpS63QMlS22Ttdv-IEZojrDW-R9BZ4mv0fQaPGKEqszzFTtdg6XL7hA2WH6gxukPMVd5n8HkCixSdJq84wUrTXOVu94AJkhukLbY_yFHaY-x1_ocQmSKrNL1Gz1jhavN8BY4XoCmyO8RN1l_ocfqDDJUepzC5QstU3WbveAGKE5wlrjfASdJb5G32fwiRGqMstT7HUNli63T9hg-YIaozvEXOV-Bp8nsEjRafKLE6w0zVXudw-YILlB2mL7hBylPcZe53AIkSmyStNr9I0VrjbPV-B5AZog"
+  },
+  "512": {
+    "original": "+�=�O�a�s��\u000e� �2�D�V�h�z\u0003�\u0015�'�9�K�]�o��\n�\u001c�.�@�R�d�v��\u0011�#�5�G�Y�k�}\u0006�\u0018�*�<�N�`�r��\r�\u001f�1�C�U�g�y\u0002�\u0014�&�8�J�\\�n��\t�\u001b�-�?�Q�c�u��\u0010�\"�4�F�X�j�|\u0005�\u0017�)�;�M�_�q��\f�\u001e�0�B�T�f�x\u0001�\u0013�%�7�I�[�m�\b�\u001a�,�>�P�b�t��\u000f�!�3�E�W�i�{\u0004�\u0016�(�:�L�^�p��\u000b�\u001d�/�A�S�e�w\u0000�\u0012�$�6�H�Z�l�~\u0007�\u0019�+�=�O�a�s��\u000e� �2�D�V�h�z\u0003�\u0015�'�9�K�]�o��\n�\u001c�.�@�R�d�v��\u0011�#�5�G�Y�k�}\u0006�\u0018�*�<�N�`�r��\r�\u001f�1�C�U�g�y\u0002�\u0014�&�8�J�\\�n��\t�\u001b�-�?�Q�c�u��\u0010�\"�4�F�X�j�|\u0005�\u0017�)�;�M�_�q��\f�\u001e�0�B�T�f�x\u0001�\u0013�%�7�I�[�m�\b�\u001a�,�>�P�b�t��\u000f�!�3�E�W�i�{\u0004�\u0016�(�:�L�^�p��\u000b�\u001d�/�A�S�e�w\u0000�\u0012�$�6�H�Z�l�~\u0007�\u0019�",
+    "encoded": "K7Q9xk_YYepz_IUOlyCpMrtEzVbfaPF6A4wVniewOcJL1F3mb_iBCpMcpS63QMlS22Ttdv-IEZojrDW-R9BZ4mv0fQaPGKEqszzFTtdg6XL7hA2WH6gxukPMVd5n8HkCixSdJq84wUrTXOVu94AJkhukLbY_yFHaY-x1_ocQmSKrNL1Gz1jhavN8BY4XoCmyO8RN1l_ocfqDDJUepzC5QstU3WbveAGKE5wlrjfASdJb5G32fwiRGqMstT7HUNli63T9hg-YIaozvEXOV-Bp8nsEjRafKLE6w0zVXudw-YILlB2mL7hBylPcZe53AIkSmyStNr9I0VrjbPV-B5AZoiu0PcZP2GHqc_yFDpcgqTK7RM1W32jxegOMFZ4nsDnCS9Rd5m_4gQqTHKUut0DJUttk7Xb_iBGaI6w1vkfQWeJr9H0GjxihKrM8xU7XYOly-4QNlh-oMbpDzFXeZ_B5AosUnSavOMFK01zlbveACZIbpC22P8hR2mPsdf6HEJkiqzS9Rs9Y4WrzfAWOF6ApsjvETdZf6HH6gwyVHqcwuULLVN1m73gBihOcJa43wEnSW-Rt9n8IkRqjLLU-x1DZYut0_YYPmCGqM7xFzlfgafJ7BI0WnyixOsNM1V7ncPmCC5Qdpi-4QcpT3GXudwCJEpskrTa_SNFa42z1fgeQGaI"
+  }
+}

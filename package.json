@@ -15,7 +15,8 @@
     "lint:ci": "biome ci",
     "lint:fix": "biome check --write --unsafe",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "update:codec-snapshots": "npx tsx ./src/codec/snapshot/generate.ts"
   },
   "dependencies": {
     "@dicebear/collection": "^9.3.2",
@@ -40,7 +41,7 @@
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
     "@tailwindcss/vite": "^4.2.1",
-    "@types/node": "^25.3.1",
+    "@types/node": "^25.4.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
