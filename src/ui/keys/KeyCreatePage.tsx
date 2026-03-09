@@ -1,19 +1,27 @@
 import { CheckCircle, Circle, SpinnerGap } from '@phosphor-icons/react';
 import { clsx } from 'clsx';
 import { type FC, useState } from 'react';
-import { useLocation } from 'wouter';
-import { generatePrivateKey, METHODS, type MethodCategory } from '@/crypto';
+import { useLocation, useParams } from 'wouter';
+import {
+  generatePrivateKey,
+  METHODS,
+  type MethodCategory,
+  parseKey,
+} from '@/crypto';
 import {
   Button,
+  Chip,
   Input,
   ListItem,
   Page,
   PageBody,
   PageHeader,
   PageToolbar,
+  Tabs,
 } from '@/ui/shared';
 import { db } from '../../db';
 import { sleep } from '../shared/sleep';
+import { KeyTypeChip } from './KeyTypeChip';
 import { MethodTypeChip } from './MethodTypeChip';
 
 const CATEGORY_ORDER: MethodCategory[] = [
@@ -40,20 +48,76 @@ const METHOD_GROUPS = Object.entries(METHODS).reduce(
   {} as Record<MethodCategory, string[]>,
 );
 
+const MODE_TABS = [
+  { id: 'generate', label: 'Generate' },
+  { id: 'import', label: 'Import' },
+];
+
 export const KeyCreatePage: FC = () => {
   const [, navigate] = useLocation();
+  const params = useParams();
+  const urlKey = params.key;
+  const [mode, setMode] = useState(urlKey ? 'import' : 'generate');
   const [name, setName] = useState('');
   const [method, setMethod] = useState('aes-256-gcm');
+  const [keyValue, setKeyValue] = useState(urlKey ?? '');
+  const [importError, setImportError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const isValid = name.trim().length > 0 && !!method;
+
+  // Try to parse imported key for preview
+  let parsedImport: ReturnType<typeof parseKey> | null = null;
+  try {
+    if (keyValue.trim()) parsedImport = parseKey(keyValue.trim());
+  } catch {
+    // invalid key — will show error on submit
+  }
+
+  const isGenerateValid = name.trim().length > 0 && !!method;
+  const isImportValid = name.trim().length > 0 && parsedImport !== null;
+
+  const handleGenerate = async () => {
+    setIsLoading(true);
+    try {
+      const privateKey = await generatePrivateKey(method);
+      await db.keys.add({ name: name.trim(), value: privateKey });
+      await sleep(2000);
+      navigate('/keys');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImport = async () => {
+    setImportError('');
+    try {
+      parseKey(keyValue.trim());
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'Invalid key');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await db.keys.add({ name: name.trim(), value: keyValue.trim() });
+      await sleep(500);
+      navigate('/keys');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Page>
-      {/* Navbar */}
-      <PageHeader backTo="/keys" title="Create New Key" />
+      <PageHeader backTo="/keys" title="New Key" />
 
-      {/* Content */}
       <PageBody className="p-4">
+        {/* Mode Tabs */}
+        <Tabs
+          items={MODE_TABS}
+          value={mode}
+          onChange={setMode}
+          className="mb-8"
+        />
+
         {/* Key Name */}
         <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
           Key Name
@@ -68,82 +132,114 @@ export const KeyCreatePage: FC = () => {
           className="mt-1 mb-8"
         />
 
-        {/* Encryption Type */}
-        <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
-          Encryption Type
-        </h2>
-        <div className="border border-border rounded-lg">
-          {CATEGORY_ORDER.map((category, i) => {
-            const methods = METHOD_GROUPS[category];
-            if (!methods?.length) return null;
-            return (
-              <div key={category}>
-                <div
-                  className={clsx(
-                    'px-4 py-2 bg-surface-alt text-xs font-semibold text-text-muted uppercase tracking-wide border-b border-border',
-                    i !== 0 && 'border-t',
-                  )}
-                >
-                  {CATEGORY_LABELS[category]}
-                </div>
-                {methods.map((key) => {
-                  const item = METHODS[key];
-                  return (
-                    <ListItem
-                      key={key}
-                      before={
-                        key === method ? (
-                          <CheckCircle
-                            className="text-primary"
-                            weight="fill"
-                            size={18}
-                          />
-                        ) : (
-                          <Circle className="text-text-muted" size={18} />
-                        )
-                      }
-                      after={<MethodTypeChip value={item.type} />}
-                      onClick={() => setMethod(key)}
+        {mode === 'generate' ? (
+          <>
+            {/* Encryption Type */}
+            <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
+              Encryption Type
+            </h2>
+            <div className="border border-border rounded-lg">
+              {CATEGORY_ORDER.map((category, i) => {
+                const methods = METHOD_GROUPS[category];
+                if (!methods?.length) return null;
+                return (
+                  <div key={category}>
+                    <div
+                      className={clsx(
+                        'px-4 py-2 bg-surface-alt text-xs font-semibold text-text-muted uppercase tracking-wide border-b border-border',
+                        i !== 0 && 'border-t',
+                      )}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-text">
-                          {item.name}
-                        </span>
-                      </div>
-                      <div className="text-xs text-text-secondary">
-                        {item.description}
-                      </div>
-                    </ListItem>
-                  );
-                })}
+                      {CATEGORY_LABELS[category]}
+                    </div>
+                    {methods.map((key) => {
+                      const item = METHODS[key];
+                      return (
+                        <ListItem
+                          key={key}
+                          before={
+                            key === method ? (
+                              <CheckCircle
+                                className="text-primary"
+                                weight="fill"
+                                size={18}
+                              />
+                            ) : (
+                              <Circle className="text-text-muted" size={18} />
+                            )
+                          }
+                          after={<MethodTypeChip value={item.type} />}
+                          onClick={() => setMethod(key)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm text-text">
+                              {item.name}
+                            </span>
+                          </div>
+                          <div className="text-xs text-text-secondary">
+                            {item.description}
+                          </div>
+                        </ListItem>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Key Value */}
+            <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
+              Key Value
+            </h2>
+            <Input
+              multiline
+              rows={3}
+              placeholder="Paste key string here..."
+              value={keyValue}
+              onInput={(e) => {
+                setKeyValue(e.currentTarget.value);
+                setImportError('');
+              }}
+              className="mt-1 font-mono text-xs min-h-64"
+            />
+
+            {/* Parsed preview */}
+            {parsedImport && (
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <Chip>{parsedImport.method.name}</Chip>
+                <MethodTypeChip value={parsedImport.method.type} />
+                <KeyTypeChip value={parsedImport.type} />
               </div>
-            );
-          })}
-        </div>
+            )}
+
+            {/* Error */}
+            {importError && (
+              <p className="text-error text-sm mt-3">{importError}</p>
+            )}
+          </>
+        )}
       </PageBody>
 
       {/* Bottom Toolbar */}
       <PageToolbar className="p-4">
         <Button
           className="w-full py-3"
-          disabled={!isValid || isLoading}
-          onClick={async () => {
-            setIsLoading(true);
-            try {
-              const privateKey = await generatePrivateKey(method);
-              await db.keys.add({
-                name: name.trim(),
-                value: privateKey,
-              });
-              await sleep(2000);
-              navigate('/keys');
-            } finally {
-              setIsLoading(false);
-            }
-          }}
+          disabled={
+            isLoading ||
+            (mode === 'generate' ? !isGenerateValid : !isImportValid)
+          }
+          onClick={mode === 'generate' ? handleGenerate : handleImport}
         >
           {isLoading && <SpinnerGap className="animate-spin" size={18} />}
-          {isLoading ? 'Generating Key...' : 'Create Key'}
+          {mode === 'generate'
+            ? isLoading
+              ? 'Generating Key...'
+              : 'Generate Key'
+            : isLoading
+              ? 'Importing Key...'
+              : 'Import Key'}
         </Button>
       </PageToolbar>
     </Page>

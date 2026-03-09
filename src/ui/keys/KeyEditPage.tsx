@@ -69,6 +69,11 @@ export const KeyEditPage: FC = () => {
     );
   }
 
+  const importUrl = (keyStr: string) => {
+    const base = `${window.location.origin}${window.location.pathname}`;
+    return `${base}#/keys/new/${encodeURIComponent(keyStr)}`;
+  };
+
   const handleSaveName = async () => {
     const trimmed = name.trim();
     if (!trimmed || trimmed === key.name) return;
@@ -122,7 +127,7 @@ export const KeyEditPage: FC = () => {
                 after={<KeyTypeChip value="public" />}
                 before={shareIcon('public', 18, 'text-text-muted')}
                 onClick={() =>
-                  publicKey && share({ text: publicKey }, 'public')
+                  publicKey && share({ text: importUrl(publicKey) }, 'public')
                 }
               >
                 <p className="font-medium text-sm text-text">
@@ -135,7 +140,7 @@ export const KeyEditPage: FC = () => {
               <ListItem
                 after={<KeyTypeChip value="private" />}
                 before={shareIcon('private', 18, 'text-text-muted')}
-                onClick={() => share({ text: key.value }, 'private')}
+                onClick={() => share({ text: importUrl(key.value) }, 'private')}
               >
                 <p className="font-medium text-sm text-text">
                   Share Private Key
@@ -149,7 +154,7 @@ export const KeyEditPage: FC = () => {
             <ListItem
               after={<KeyTypeChip value="private" />}
               before={shareIcon('key', 18, 'text-text-muted')}
-              onClick={() => share({ text: key.value }, 'key')}
+              onClick={() => share({ text: importUrl(key.value) }, 'key')}
             >
               <p className="font-medium text-sm text-text">Share Key</p>
               <p className="text-xs text-text-secondary">
