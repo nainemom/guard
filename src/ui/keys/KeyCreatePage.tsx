@@ -56,7 +56,7 @@ const MODE_TABS = [
 export const KeyCreatePage: FC = () => {
   const [, navigate] = useLocation();
   const params = useParams();
-  const urlKey = params.key;
+  const urlKey = params.key ? decodeURIComponent(params.key) : undefined;
   const [mode, setMode] = useState(urlKey ? 'import' : 'generate');
   const [name, setName] = useState('');
   const [method, setMethod] = useState('aes-256-gcm');

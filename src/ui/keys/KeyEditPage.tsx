@@ -94,11 +94,13 @@ export const KeyEditPage: FC = () => {
         {/* Avatar & Info */}
         <div className="flex flex-col items-center gap-3 pt-2 pb-6">
           <Avatar size={64} seed={name} />
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Chip>{parsed?.method.name}</Chip>
-            <MethodTypeChip value={parsed?.method.type} />
-            <KeyTypeChip value={parsed?.type} />
-          </div>
+          {parsed && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Chip>{parsed?.method.name}</Chip>
+              <MethodTypeChip value={parsed?.method.type} />
+              <KeyTypeChip value={parsed?.type} />
+            </div>
+          )}
         </div>
 
         {/* Key Name */}
