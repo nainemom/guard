@@ -68,6 +68,13 @@
   ::view-transition-new(root) {
     animation: 180ms ease both vt-enter;
   }
+  * {
+    scrollbar-width: none;
+    -webkit-scrollbar-width: none;
+  }
+  *:not(input):not(textarea) {
+    @apply select-none;
+  }
 }
 
 @keyframes vt-leave {
