@@ -1,4 +1,4 @@
-import { Key, Lock } from '@phosphor-icons/react';
+import { KeyIcon, LockIcon } from '@phosphor-icons/react';
 import type { ComponentProps, FC } from 'react';
 import type { KeyType } from '@/crypto';
 import { Chip } from '../shared/Chip';
@@ -11,10 +11,10 @@ export const KeyTypeChip: FC<
   <Chip {...props}>
     {value === 'private' && (
       <>
-        <Key size={16} />
+        <KeyIcon size={14} />
         {'/'}
       </>
     )}
-    <Lock size={16} />
+    <LockIcon size={14} />
   </Chip>
 );

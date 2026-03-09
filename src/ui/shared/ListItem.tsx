@@ -8,20 +8,22 @@ export const ListItem: FC<{
   after?: ReactNode;
   onClick?: () => void;
 }> = ({ before, children, after, className, onClick }) => {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <button
+    <Tag
       className={clsx(
-        'flex items-center gap-3 px-4 py-2 min-h-18 w-full h-auto cursor-pointer',
+        'flex items-center gap-3 px-4 py-2 min-h-18 w-full h-auto',
         '*:shrink-0',
-        'outline-none bg-surface hover:bg-surface-alt focus-visible:bg-surface-alt focus-within:bg-surface-alt active:bg-surface transition-colors',
+        'outline-none bg-surface transition-colors',
+        onClick &&
+          'cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt focus-within:bg-surface-alt active:bg-surface',
         className,
       )}
-      type="button"
-      onClick={onClick}
+      {...(onClick ? { type: 'button' as const, onClick } : {})}
     >
       {before}
       <div className="min-w-0 grow text-start flex-1">{children}</div>
       {after}
-    </button>
+    </Tag>
   );
 };

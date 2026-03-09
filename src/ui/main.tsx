@@ -6,6 +6,7 @@ import { useHashLocation } from 'wouter/use-hash-location';
 import { dbReady } from '@/db';
 import { KeyCreatePage } from './keys/KeyCreatePage';
 import { KeyDetailsPage } from './keys/KeyDetailsPage';
+import { KeyEditPage } from './keys/KeyEditPage';
 import { KeysListPage } from './keys/KeysListPage';
 import './main.css';
 
@@ -34,6 +35,7 @@ createRoot(root).render(
         <Switch>
           <Route path="/keys" component={KeysListPage} />
           <Route path="/keys/new" component={KeyCreatePage} />
+          <Route path="/keys/:id/edit" component={KeyEditPage} />
           <Route path="/keys/:id" component={KeyDetailsPage} />
           <Route path="/">
             <Redirect to="/keys" />

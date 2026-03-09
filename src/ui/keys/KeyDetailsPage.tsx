@@ -1,4 +1,12 @@
-import { Download, Key, Lock, SpinnerGap, Trash } from '@phosphor-icons/react';
+import {
+  CheckCircle,
+  CopySimple,
+  Download,
+  GearSix,
+  Key,
+  Lock,
+  SpinnerGap,
+} from '@phosphor-icons/react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { type FC, useEffect, useRef, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
@@ -10,13 +18,13 @@ import {
   Button,
   ChatBubble,
   Chip,
-  CopyButton,
   Input,
   LoadingSpinner,
   Page,
   PageBody,
   PageHeader,
   PageToolbar,
+  useCopy,
 } from '@/ui/shared';
 import { KeyTypeChip } from './KeyTypeChip';
 import { MethodTypeChip } from './MethodTypeChip';
@@ -51,6 +59,7 @@ export const KeyDetailsPage: FC = () => {
   const [input, setInput] = useState('');
   const [codec, setCodec] = useState<keyof typeof CODEC_METHODS>('base64');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { copiedKey, copy } = useCopy();
 
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -166,12 +175,6 @@ export const KeyDetailsPage: FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete "${key.name}"? This cannot be undone.`)) return;
-    await db.keys.delete(keyId);
-    navigate('/keys');
-  };
-
   return (
     <Page>
       {/* Navbar */}
@@ -183,10 +186,9 @@ export const KeyDetailsPage: FC = () => {
           <Button
             variant="ghost"
             iconOnly
-            className="text-error"
-            onClick={handleDelete}
+            onClick={() => navigate(`/keys/${keyId}/edit`)}
           >
-            <Trash size={20} />
+            <GearSix size={20} />
           </Button>
         }
       />
@@ -256,11 +258,17 @@ export const KeyDetailsPage: FC = () => {
                           <Download size={18} />
                         </Button>
                       ) : msg.output ? (
-                        <CopyButton
+                        <Button
                           variant="ghost"
                           className="text-primary p-1 rounded"
-                          value={msg.output ?? ''}
-                        />
+                          onClick={() => copy(msg.output ?? '', msg.id)}
+                        >
+                          {copiedKey === msg.id ? (
+                            <CheckCircle size={18} />
+                          ) : (
+                            <CopySimple size={18} />
+                          )}
+                        </Button>
                       ) : undefined
                     }
                   >
