@@ -1,4 +1,4 @@
-import { CheckCircle, CopySimple, Trash } from '@phosphor-icons/react';
+import { Trash } from '@phosphor-icons/react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { type FC, useEffect, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
@@ -14,7 +14,7 @@ import {
   Page,
   PageBody,
   PageHeader,
-  useCopy,
+  useShare,
 } from '@/ui/shared';
 import { KeyTypeChip } from './KeyTypeChip';
 import { MethodTypeChip } from './MethodTypeChip';
@@ -30,7 +30,7 @@ export const KeyEditPage: FC = () => {
 
   const [name, setName] = useState('');
   const [publicKey, setPublicKey] = useState<string>();
-  const { copiedKey, copy } = useCopy();
+  const { share, shareIcon } = useShare();
 
   const parsed = key ? parseKey(key.value) : null;
   const isAsymmetric = parsed?.method.type === 'asymmetric';
@@ -120,14 +120,10 @@ export const KeyEditPage: FC = () => {
             <>
               <ListItem
                 after={<KeyTypeChip value="public" />}
-                before={
-                  copiedKey === 'public' ? (
-                    <CheckCircle size={18} className="text-success" />
-                  ) : (
-                    <CopySimple size={18} className="text-text-muted" />
-                  )
+                before={shareIcon('public', 18, 'text-text-muted')}
+                onClick={() =>
+                  publicKey && share({ text: publicKey }, 'public')
                 }
-                onClick={() => publicKey && copy(publicKey, 'public')}
               >
                 <p className="font-medium text-sm text-text">
                   Share Public Key
@@ -138,14 +134,8 @@ export const KeyEditPage: FC = () => {
               </ListItem>
               <ListItem
                 after={<KeyTypeChip value="private" />}
-                before={
-                  copiedKey === 'private' ? (
-                    <CheckCircle size={18} className="text-success" />
-                  ) : (
-                    <CopySimple size={18} className="text-text-muted" />
-                  )
-                }
-                onClick={() => copy(key.value, 'private')}
+                before={shareIcon('private', 18, 'text-text-muted')}
+                onClick={() => share({ text: key.value }, 'private')}
               >
                 <p className="font-medium text-sm text-text">
                   Share Private Key
@@ -158,14 +148,8 @@ export const KeyEditPage: FC = () => {
           ) : (
             <ListItem
               after={<KeyTypeChip value="private" />}
-              before={
-                copiedKey === 'key' ? (
-                  <CheckCircle size={18} className="text-success" />
-                ) : (
-                  <CopySimple size={18} className="text-text-muted" />
-                )
-              }
-              onClick={() => copy(key.value, 'key')}
+              before={shareIcon('key', 18, 'text-text-muted')}
+              onClick={() => share({ text: key.value }, 'key')}
             >
               <p className="font-medium text-sm text-text">Share Key</p>
               <p className="text-xs text-text-secondary">

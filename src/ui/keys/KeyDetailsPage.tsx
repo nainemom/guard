@@ -1,12 +1,4 @@
-import {
-  CheckCircle,
-  CopySimple,
-  Download,
-  GearSix,
-  Key,
-  Lock,
-  SpinnerGap,
-} from '@phosphor-icons/react';
+import { GearSix, Key, Lock, SpinnerGap } from '@phosphor-icons/react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { type FC, useEffect, useRef, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
@@ -24,7 +16,7 @@ import {
   PageBody,
   PageHeader,
   PageToolbar,
-  useCopy,
+  useShare,
 } from '@/ui/shared';
 import { KeyTypeChip } from './KeyTypeChip';
 import { MethodTypeChip } from './MethodTypeChip';
@@ -59,7 +51,7 @@ export const KeyDetailsPage: FC = () => {
   const [input, setInput] = useState('');
   const [codec, setCodec] = useState<keyof typeof CODEC_METHODS>('base64');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { copiedKey, copy } = useCopy();
+  const { share, shareIcon } = useShare();
 
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -165,16 +157,6 @@ export const KeyDetailsPage: FC = () => {
     }
   };
 
-  const handleDownload = (bytes: Uint8Array, name: string) => {
-    const blob = new Blob([bytes.slice()]);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <Page>
       {/* Navbar */}
@@ -243,31 +225,23 @@ export const KeyDetailsPage: FC = () => {
                 ) : (
                   <ChatBubble
                     footer={
-                      msg.outputType === 'file' && msg.outputBytes ? (
+                      msg.output ? (
                         <Button
                           variant="ghost"
                           className="text-primary p-1 rounded"
-                          onClick={() => {
-                            if (!msg.outputBytes) return;
-                            return handleDownload(
-                              msg.outputBytes,
-                              `encrypted-${msg.id.slice(0, 8)}`,
-                            );
-                          }}
+                          onClick={() =>
+                            share(
+                              msg.outputType === 'file' && msg.outputBytes
+                                ? {
+                                    file: msg.outputBytes,
+                                    fileName: `encrypted-${msg.id.slice(0, 8)}`,
+                                  }
+                                : { text: msg.output ?? '' },
+                              msg.id,
+                            )
+                          }
                         >
-                          <Download size={18} />
-                        </Button>
-                      ) : msg.output ? (
-                        <Button
-                          variant="ghost"
-                          className="text-primary p-1 rounded"
-                          onClick={() => copy(msg.output ?? '', msg.id)}
-                        >
-                          {copiedKey === msg.id ? (
-                            <CheckCircle size={18} />
-                          ) : (
-                            <CopySimple size={18} />
-                          )}
+                          {shareIcon(msg.id)}
                         </Button>
                       ) : undefined
                     }
