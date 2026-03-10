@@ -50,3 +50,9 @@ console.log(
   '%cDO NOT PASTE ANYTHING HERE!',
   'font-family:system-ui;color:red;font-size:2rem;font-weight:bold',
 );
+
+if ('serviceWorker' in navigator) {
+  const { getSerwist } = await import('virtual:serwist');
+  const serwist = await getSerwist();
+  serwist?.register();
+}
