@@ -60,6 +60,7 @@
   }
   #app {
     @apply mx-auto max-w-xl sm:max-h-[calc(100svh-3rem)] sm:my-6 sm:rounded-xl! sm:shadow-2xl overflow-hidden isolate flex flex-col h-svh;
+    padding-top: env(titlebar-area-height, 0);
     contain: layout;
   }
   ::view-transition-old(root) {
@@ -89,4 +90,15 @@
     opacity: 0;
     transform: scale(1.04);
   }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@utility animate-in {
+  animation: 300ms ease both slide-in-up;
 }

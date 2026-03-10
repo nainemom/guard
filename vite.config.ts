@@ -4,9 +4,20 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
+import { version } from './package.json';
 
-export default defineConfig({
-  base: '/guard/',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/guard/' : '/',
+  build: {
+    cssCodeSplit: false,
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+        entryFileNames: `bundle-${version}.js`,
+        assetFileNames: `[name]-${version}[extname]`,
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -14,9 +25,8 @@ export default defineConfig({
       swSrc: 'src/sw.ts',
       swDest: 'sw.js',
       globDirectory: 'dist',
-      globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
+      globPatterns: ['**/*.{js,css,html,json,svg}'],
       injectionPoint: 'self.__SW_MANIFEST',
-      rollupFormat: 'iife',
     }),
   ],
   resolve: {
@@ -31,4 +41,4 @@ export default defineConfig({
       instances: [{ browser: 'chromium', headless: true }],
     },
   },
-});
+}));

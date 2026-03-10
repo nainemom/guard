@@ -4,6 +4,7 @@ export * from './ChatBubble';
 export * from './Chip';
 export * from './Icon';
 export * from './Input';
+export * from './InstallPrompt';
 export * from './ListItem';
 export * from './LoadingSpinner';
 export * from './Page';

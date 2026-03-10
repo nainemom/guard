@@ -8,6 +8,7 @@ import { KeyCreatePage } from './keys/KeyCreatePage';
 import { KeyDetailsPage } from './keys/KeyDetailsPage';
 import { KeyEditPage } from './keys/KeyEditPage';
 import { KeysListPage } from './keys/KeysListPage';
+import { InstallPrompt } from './shared';
 import './main.css';
 
 const DbGate: FC<{ children: ReactNode }> = ({ children }) => {
@@ -19,6 +20,7 @@ const root = document.querySelector<HTMLElement>('#app') as HTMLElement;
 
 createRoot(root).render(
   <Suspense>
+    <InstallPrompt />
     <DbGate>
       <Router
         hook={useHashLocation}
@@ -49,6 +51,10 @@ createRoot(root).render(
 console.log(
   '%cDO NOT PASTE ANYTHING HERE!',
   'font-family:system-ui;color:red;font-size:2rem;font-weight:bold',
+);
+console.log(
+  '%cThis app is fully local. All data stays on your device.\nNetwork access to external origins is blocked by CSP and Service Worker.',
+  'font-family:system-ui;color:green;font-size:0.9rem',
 );
 
 if ('serviceWorker' in navigator) {

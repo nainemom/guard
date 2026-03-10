@@ -9,13 +9,29 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Block all external network requests — this app is fully local.
+// Users can verify this in DevTools > Network or Console (CSP violations).
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) {
+    event.respondWith(
+      new Response('Blocked: Guard does not make external network requests.', {
+        status: 403,
+        statusText: 'Blocked by Guard',
+      }),
+    );
+  }
+});
+
+const precacheEntries = self.__SW_MANIFEST;
+
 const serwist = new Serwist({
-  precacheEntries: self.__SW_MANIFEST,
+  precacheEntries,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: false,
   precacheOptions: {
-    navigateFallback: '/guard/index.html',
+    ...(precacheEntries ? { navigateFallback: '/guard/index.html' } : {}),
   },
 });
 
