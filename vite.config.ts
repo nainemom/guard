@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
-import { version } from './package.json';
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/guard/' : '/',
@@ -12,9 +11,9 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: false,
     rollupOptions: {
       output: {
-        inlineDynamicImports: true,
-        entryFileNames: `bundle-${version}.js`,
-        assetFileNames: `[name]-${version}[extname]`,
+        entryFileNames: 'entry-[hash].js',
+        chunkFileNames: 'chunk-[name]-[hash].js',
+        assetFileNames: '[name]-[hash][extname]',
       },
     },
   },

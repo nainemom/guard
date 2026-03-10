@@ -57,17 +57,6 @@ Encrypted output can be encoded in multiple formats:
 
 Guard is a fully offline Progressive Web App. After the first visit, the service worker precaches everything — the app works without any network access.
 
-The production build outputs just a handful of files:
-
-```
-index.html       # App shell
-bundle-x.y.z.js  # All application code (single file)
-style-x.y.z.css  # All styles (single file)
-sw.js            # Service worker
-logo.svg         # App icon
-manifest.json    # PWA manifest
-```
-
 ## Tech Stack
 
 | Layer | Technology |
