@@ -88,7 +88,7 @@ export const persianEverydayCollection: SteganographyCollection = {
       ' با ',
       relationFemale,
       ' ',
-      nameFirstameFemale,
+      nameFirstameMale,
       ' ',
       ['رل زده', 'میان', 'میرن'],
     ],
