@@ -1,19 +1,22 @@
 import {
   ArrowRight01Icon,
+  DatabaseExportIcon,
+  DatabaseImportIcon,
   Key01Icon,
   PlusSignIcon,
 } from '@hugeicons/core-free-icons';
 import { useLiveQuery } from 'dexie-react-hooks';
-import type { FC } from 'react';
+import { type FC, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'wouter';
 import { parseKey } from '@/crypto';
-import { db } from '@/db';
+import { db, exportBackup, importBackup } from '@/db';
 import {
   Avatar,
   Button,
   Icon,
   ListItem,
   LoadingSpinner,
+  Menu,
   Page,
   PageBody,
   PageHeader,
@@ -24,11 +27,68 @@ export const KeysListPage: FC = () => {
   const keys = useLiveQuery(() => db.keys.toArray())?.sort(
     (a, b) => a.createdAt - b.createdAt,
   );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBackup = useCallback(async () => {
+    const blob = await exportBackup();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'guard-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const handleRestore = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      e.target.value = '';
+      try {
+        await importBackup(file);
+      } catch {
+        // Invalid or incompatible backup file
+      }
+    },
+    [],
+  );
 
   return (
     <Page>
       {/* Navbar */}
-      <PageHeader title="Guard" subtitle="List of your keys" />
+      <PageHeader
+        title="Guard"
+        subtitle="List of your keys"
+        after={
+          <>
+            <Menu
+              items={useMemo(
+                () => [
+                  {
+                    label: 'Backup keys',
+                    icon: <Icon icon={DatabaseExportIcon} size={18} />,
+                    onClick: handleBackup,
+                    disabled: !keys || keys.length === 0,
+                  },
+                  {
+                    label: 'Restore backup',
+                    icon: <Icon icon={DatabaseImportIcon} size={18} />,
+                    onClick: () => fileInputRef.current?.click(),
+                  },
+                ],
+                [handleBackup, keys],
+              )}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleRestore}
+            />
+          </>
+        }
+      />
 
       {/* Content */}
       <PageBody>

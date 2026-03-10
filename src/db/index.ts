@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import { exportDB, importInto } from 'dexie-export-import';
 
 export interface Key {
   id: string;
@@ -32,5 +33,9 @@ db.keys.hook('updating', () => {
 });
 
 export const dbReady = db.open();
+
+export const exportBackup = () => exportDB(db);
+export const importBackup = (file: Blob) =>
+  importInto(db, file, { overwriteValues: false });
 
 export { db };

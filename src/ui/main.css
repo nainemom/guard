@@ -102,3 +102,10 @@
 @utility animate-in {
   animation: 300ms ease both slide-in-up;
 }
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}

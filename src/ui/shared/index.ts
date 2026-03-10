@@ -7,6 +7,7 @@ export * from './Input';
 export * from './InstallPrompt';
 export * from './ListItem';
 export * from './LoadingSpinner';
+export * from './Menu';
 export * from './Page';
 export * from './PageBody';
 export * from './PageHeader';
