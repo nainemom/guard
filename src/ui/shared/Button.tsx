@@ -18,7 +18,7 @@ export const Button: FC<
     {...props}
     className={clsx(
       'inline-flex items-center justify-center gap-2 font-medium cursor-pointer disabled:opacity-40 transition-colors',
-      iconOnly ? 'rounded-full size-10 shrink-0' : 'rounded-lg',
+      iconOnly ? 'rounded-full shrink-0' : 'rounded-lg',
       'outline-none border',
       variant === 'primary' &&
         'bg-primary border-primary hover:bg-primary-hover focus-visible:bg-primary-hover active:bg-primary text-on-primary',

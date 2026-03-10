@@ -14,5 +14,6 @@ export * from './PageHeader';
 export * from './PageToolbar';
 export * from './sleep';
 export * from './Tabs';
+export * from './Toast';
 export * from './useShare';
 export * from './useStale';

@@ -1,7 +1,8 @@
 import { Cancel01Icon, Download04Icon } from '@hugeicons/core-free-icons';
-import { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSessionStorage } from 'react-use';
 import { Icon } from './Icon';
+import { useToast } from './Toast';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -33,6 +34,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
 type PromptMode = 'none' | 'native' | 'ios-hint' | 'android-hint';
 
 export const InstallPrompt: FC = () => {
+  const toast = useToast();
+  const toastIdRef = useRef<string | null>(null);
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(earlyPromptEvent);
   const [mode, setMode] = useState<PromptMode>(() => {
@@ -41,10 +44,33 @@ export const InstallPrompt: FC = () => {
   });
   const [dismissed, setDismissed] = useSessionStorage(DISMISSED_KEY, false);
 
+  const dismissToast = useCallback(() => {
+    if (toastIdRef.current) {
+      toast.dismiss(toastIdRef.current);
+      toastIdRef.current = null;
+    }
+  }, [toast]);
+
+  const handleDismiss = useCallback(() => {
+    setDismissed(true);
+    setDeferredPrompt(null);
+    setMode('none');
+    dismissToast();
+  }, [setDismissed, dismissToast]);
+
+  const handleInstall = useCallback(async () => {
+    if (!deferredPrompt) return;
+    const { outcome } = await deferredPrompt.prompt();
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      earlyPromptEvent = null;
+      dismissToast();
+    }
+  }, [deferredPrompt, dismissToast]);
+
   useEffect(() => {
     if (isStandalone() || dismissed) return;
 
-    // Watch for standalone mode changes (e.g. user installs while viewing)
     const standaloneMq = window.matchMedia('(display-mode: standalone)');
     const wcoMq = window.matchMedia('(display-mode: window-controls-overlay)');
     const onStandalone = () => {
@@ -61,7 +87,6 @@ export const InstallPrompt: FC = () => {
       };
     }
 
-    // If we already have the event, use it
     if (earlyPromptEvent) {
       setDeferredPrompt(earlyPromptEvent);
       setMode('native');
@@ -77,8 +102,6 @@ export const InstallPrompt: FC = () => {
     };
     earlyListeners.add(handler);
 
-    // If beforeinstallprompt doesn't fire within 3s on Android,
-    // show a manual hint (covers Firefox, Samsung Internet, etc.)
     let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
     if (isAndroid()) {
       fallbackTimer = setTimeout(() => {
@@ -96,67 +119,62 @@ export const InstallPrompt: FC = () => {
     };
   }, [dismissed]);
 
-  const handleInstall = useCallback(async () => {
-    if (!deferredPrompt) return;
-    const { outcome } = await deferredPrompt.prompt();
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      earlyPromptEvent = null;
+  useEffect(() => {
+    if (dismissed || mode === 'none') {
+      dismissToast();
+      return;
     }
-  }, [deferredPrompt]);
 
-  const handleDismiss = useCallback(() => {
-    setDismissed(true);
-    setDeferredPrompt(null);
-    setMode('none');
-  }, [setDismissed]);
+    const isClickable = mode === 'native';
 
-  if (dismissed || mode === 'none') return null;
-
-  const isClickable = mode === 'native';
-
-  return (
-    <div className="fixed bottom-6 left-4 right-4 mx-auto max-w-sm z-50 rounded-2xl shadow-2xl animate-in bg-surface border border-border flex items-center">
-      {isClickable ? (
+    toastIdRef.current = toast.show(
+      <div className="flex items-center">
+        {isClickable ? (
+          <button
+            type="button"
+            onClick={handleInstall}
+            className="flex-1 flex items-center gap-4 p-4 text-left cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
+              <Icon icon={Download04Icon} size={22} className="text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text">Install Guard</p>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Tap to add to your home screen
+              </p>
+            </div>
+          </button>
+        ) : (
+          <div className="flex-1 flex items-center gap-4 p-4">
+            <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
+              <Icon icon={Download04Icon} size={22} className="text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text">Install Guard</p>
+              <p className="text-xs text-text-secondary mt-0.5">
+                {mode === 'ios-hint' ? (
+                  <>Tap share, then &ldquo;Add to Home Screen&rdquo;</>
+                ) : (
+                  <>Tap menu, then &ldquo;Install app&rdquo;</>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
         <button
           type="button"
-          onClick={handleInstall}
-          className="flex-1 flex items-center gap-4 p-4 text-left cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={handleDismiss}
+          className="shrink-0 p-1.5 mr-3 rounded-full text-text-muted hover:text-text transition-colors cursor-pointer"
         >
-          <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
-            <Icon icon={Download04Icon} size={22} className="text-primary" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text">Install Guard</p>
-            <p className="text-xs text-text-secondary mt-0.5">
-              Tap to add to your home screen
-            </p>
-          </div>
+          <Icon icon={Cancel01Icon} size={16} />
         </button>
-      ) : (
-        <div className="flex-1 flex items-center gap-4 p-4">
-          <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
-            <Icon icon={Download04Icon} size={22} className="text-primary" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text">Install Guard</p>
-            <p className="text-xs text-text-secondary mt-0.5">
-              {mode === 'ios-hint' ? (
-                <>Tap share, then &ldquo;Add to Home Screen&rdquo;</>
-              ) : (
-                <>Tap menu, then &ldquo;Install app&rdquo;</>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={handleDismiss}
-        className="shrink-0 p-1.5 mr-3 rounded-full text-text-muted hover:text-text transition-colors cursor-pointer"
-      >
-        <Icon icon={Cancel01Icon} size={16} />
-      </button>
-    </div>
-  );
+      </div>,
+      0,
+    );
+
+    return dismissToast;
+  }, [mode, dismissed, toast, handleInstall, handleDismiss, dismissToast]);
+
+  return null;
 };

@@ -6,9 +6,8 @@ import { useHashLocation } from 'wouter/use-hash-location';
 import { dbReady } from '@/db';
 import { KeyCreatePage } from './keys/KeyCreatePage';
 import { KeyDetailsPage } from './keys/KeyDetailsPage';
-import { KeyEditPage } from './keys/KeyEditPage';
 import { KeysListPage } from './keys/KeysListPage';
-import { InstallPrompt } from './shared';
+import { InstallPrompt, ToastProvider } from './shared';
 import './main.css';
 
 const DbGate: FC<{ children: ReactNode }> = ({ children }) => {
@@ -20,31 +19,32 @@ const root = document.querySelector<HTMLElement>('#app') as HTMLElement;
 
 createRoot(root).render(
   <Suspense>
-    <InstallPrompt />
-    <DbGate>
-      <Router
-        hook={useHashLocation}
-        aroundNav={(nav, to, opts) => {
-          if (!document.startViewTransition) {
-            nav(to, opts);
-            return;
-          }
-          document.startViewTransition(() => {
-            flushSync(() => nav(to, opts));
-          });
-        }}
-      >
-        <Switch>
-          <Route path="/keys" component={KeysListPage} />
-          <Route path="/keys/new/:key?" component={KeyCreatePage} />
-          <Route path="/keys/:id/edit" component={KeyEditPage} />
-          <Route path="/keys/:id" component={KeyDetailsPage} />
-          <Route path="/">
-            <Redirect to="/keys" />
-          </Route>
-        </Switch>
-      </Router>
-    </DbGate>
+    <ToastProvider>
+      <InstallPrompt />
+      <DbGate>
+        <Router
+          hook={useHashLocation}
+          aroundNav={(nav, to, opts) => {
+            if (!document.startViewTransition) {
+              nav(to, opts);
+              return;
+            }
+            document.startViewTransition(() => {
+              flushSync(() => nav(to, opts));
+            });
+          }}
+        >
+          <Switch>
+            <Route path="/keys" component={KeysListPage} />
+            <Route path="/keys/new/:key?" component={KeyCreatePage} />
+            <Route path="/keys/:id" component={KeyDetailsPage} />
+            <Route path="/">
+              <Redirect to="/keys" />
+            </Route>
+          </Switch>
+        </Router>
+      </DbGate>
+    </ToastProvider>
   </Suspense>,
 );
 
