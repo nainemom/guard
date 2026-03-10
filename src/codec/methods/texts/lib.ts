@@ -172,16 +172,6 @@ function canParseSentenceAt(
  * "mixed-radix" representation where each digit's base depends on
  * the size of the word list or template list at that position.
  */
-function getTemplateCapacity(template: (string | string[])[]): bigint {
-  let cap = 1n;
-  for (const element of template) {
-    if (typeof element !== 'string') {
-      cap *= BigInt(element.length);
-    }
-  }
-  return cap;
-}
-
 export function encode(
   data: Uint8Array,
   collection: SteganographyCollection,
@@ -194,16 +184,18 @@ export function encode(
   const trailingZeros = countTrailingZeros(data);
   const stripped = data.slice(0, data.length - trailingZeros);
 
+  // Prepend the trailing zero count so the decoder can restore them
+  const payload = new Uint8Array(stripped.length + 1);
+  payload[0] = trailingZeros;
+  payload.set(stripped, 1);
+
   // Turn the whole byte array into a single big number
-  let n = bytesToBigInt(stripped);
+  let n = bytesToBigInt(payload);
 
   const hasConj = conjuctions.length > 0;
   const conjCount = hasConj ? BigInt(conjuctions.length) : 0n;
   const hasFinishers = finishers.length > 0;
   const finisherCount = hasFinishers ? BigInt(finishers.length) : 0n;
-
-  // Calculate capacities
-  const templateCaps = templates.map(getTemplateCapacity);
 
   // Consume finisher index first (least-significant bits).
   // It will be appended at the very end of the output.
@@ -215,7 +207,7 @@ export function encode(
 
   const parts: string[] = [];
   let isFirstSentence = true;
-  let lastTemplateIndex = -1;
+  let sentenceIndex = 0;
 
   // Keep generating sentences until the entire number is consumed
   while (n > 0n) {
@@ -226,62 +218,38 @@ export function encode(
       parts.push(conjuctions[conjIndex]);
     }
 
-    // Pick which template to use based on remaining size
-    let templateIndex = -1;
+    // Pick template deterministically: rotate starting point for variety,
+    // but verify the decoder would identify the same template (no ambiguity).
+    let encoded: { sentence: string; n: bigint } | null = null;
+    for (let offset = 0; offset < templates.length; offset++) {
+      const ti = (sentenceIndex + offset) % templates.length;
+      const result = encodeSentence(n, templates[ti]);
 
-    // If n fits entirely in some templates, pick the smallest capacity among them
-    const fittingIndices: number[] = [];
-    for (let i = 0; i < templates.length; i++) {
-      if (templateCaps[i] >= n) {
-        fittingIndices.push(i);
-      }
-    }
-
-    if (fittingIndices.length > 0) {
-      // Sort by capacity ascending
-      fittingIndices.sort((a, b) => {
-        const diff = templateCaps[a] - templateCaps[b];
-        return diff < 0n ? -1 : diff > 0n ? 1 : 0;
-      });
-      templateIndex = fittingIndices[0];
-    } else {
-      // Not fitting: choose weighted random to maximize efficiency while adding variety
-      const candidates: number[] = [];
-      for (let i = 0; i < templates.length; i++) {
-        if (i !== lastTemplateIndex) candidates.push(i);
-      }
-      // If no candidates (e.g. only 1 template exists), use all
-      if (candidates.length === 0) {
-        for (let i = 0; i < templates.length; i++) candidates.push(i);
-      }
-
-      // Weighted random using log(capacity)
-      // This favors larger templates (shorter output) but allows smaller ones (randomness)
-      const weights = candidates.map((i) => {
-        const cap = Number(templateCaps[i]);
-        return cap > 1 ? Math.log(cap) : 0;
-      });
-
-      const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-      let r = Math.random() * totalWeight;
-
-      templateIndex = candidates[candidates.length - 1]; // Default fallback
-      for (let k = 0; k < candidates.length; k++) {
-        r -= weights[k];
-        if (r <= 0) {
-          templateIndex = candidates[k];
+      // Check: would any lower-index template also parse this sentence?
+      let ambiguous = false;
+      for (let t = 0; t < ti; t++) {
+        if (tryParsePrefix(result.sentence, templates[t], 0, 0, []) !== null) {
+          ambiguous = true;
           break;
         }
       }
+
+      if (!ambiguous) {
+        encoded = result;
+        break;
+      }
     }
 
-    lastTemplateIndex = templateIndex;
+    // Template 0 is always unambiguous (no lower-index template exists),
+    // so this fallback should never be needed, but just in case:
+    if (!encoded) {
+      encoded = encodeSentence(n, templates[0]);
+    }
 
-    // Fill the template with words, consuming more digits from n
-    const result = encodeSentence(n, templates[templateIndex]);
-    parts.push(result.sentence);
-    n = result.n;
+    parts.push(encoded.sentence);
+    n = encoded.n;
     isFirstSentence = false;
+    sentenceIndex++;
   }
 
   if (hasFinishers) {
@@ -418,8 +386,8 @@ export function decode(
       n = n * conjCount + BigInt(conjIndices[i]);
     }
 
-    const { templateIndex, wordIndices } = parsedSentences[i];
-    const template = templates[templateIndex];
+    const { wordIndices } = parsedSentences[i];
+    const template = templates[parsedSentences[i].templateIndex];
 
     // Collect word-list slots from the template (skip literal strings)
     const wordSlots: { listSize: number; wordIndex: number }[] = [];
@@ -458,7 +426,7 @@ export function decode(
   // Reconstruct the original data by appending the trailing zeros back
   const result = new Uint8Array(strippedData.length + trailingZeros);
   result.set(strippedData);
-  return bytes;
+  return result;
 }
 
 export const createSteganographyHandler = (

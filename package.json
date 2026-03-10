@@ -15,7 +15,7 @@
     "lint:fix": "biome check --write --unsafe",
     "test": "vitest run",
     "test:watch": "vitest",
-    "update:codec-snapshots": "npx tsx ./src/codec/snapshot/generate.ts"
+    "generate:codec-snapshots": "npx tsx ./src/codec/snapshot/generate.ts"
   },
   "dependencies": {
     "@dicebear/collection": "^9.3.2",
