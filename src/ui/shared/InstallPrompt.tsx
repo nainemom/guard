@@ -44,16 +44,31 @@ export const InstallPrompt: FC = () => {
   useEffect(() => {
     if (isStandalone() || dismissed) return;
 
+    // Watch for standalone mode changes (e.g. user installs while viewing)
+    const standaloneMq = window.matchMedia('(display-mode: standalone)');
+    const wcoMq = window.matchMedia('(display-mode: window-controls-overlay)');
+    const onStandalone = () => {
+      if (standaloneMq.matches || wcoMq.matches) setMode('none');
+    };
+    standaloneMq.addEventListener('change', onStandalone);
+    wcoMq.addEventListener('change', onStandalone);
+
     if (isIos()) {
       setMode('ios-hint');
-      return;
+      return () => {
+        standaloneMq.removeEventListener('change', onStandalone);
+        wcoMq.removeEventListener('change', onStandalone);
+      };
     }
 
     // If we already have the event, use it
     if (earlyPromptEvent) {
       setDeferredPrompt(earlyPromptEvent);
       setMode('native');
-      return;
+      return () => {
+        standaloneMq.removeEventListener('change', onStandalone);
+        wcoMq.removeEventListener('change', onStandalone);
+      };
     }
 
     const handler = (e: BeforeInstallPromptEvent) => {
@@ -76,6 +91,8 @@ export const InstallPrompt: FC = () => {
     return () => {
       earlyListeners.delete(handler);
       clearTimeout(fallbackTimer);
+      standaloneMq.removeEventListener('change', onStandalone);
+      wcoMq.removeEventListener('change', onStandalone);
     };
   }, [dismissed]);
 
