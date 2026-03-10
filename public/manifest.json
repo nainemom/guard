@@ -1,0 +1,20 @@
+{
+  "name": "Guard - Encrypt and Decrypt Messages",
+  "short_name": "Guard",
+  "description": "Encrypt and Decrypt Messages Locally",
+  "theme_color": "#171717",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "portrait",
+  "scope": "./",
+  "start_url": "./",
+  "id": "/",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
