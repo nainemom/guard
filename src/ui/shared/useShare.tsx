@@ -1,11 +1,16 @@
-import { CheckCircle, CopySimple, ShareNetwork } from '@phosphor-icons/react';
+import {
+  CheckmarkCircle02Icon,
+  Copy01Icon,
+  Share01Icon,
+} from '@hugeicons/core-free-icons';
 import { type ReactNode, useCallback, useRef, useState } from 'react';
+import { Icon } from './Icon';
 
 const canNativeShare =
   typeof navigator.share === 'function' &&
   navigator.canShare?.({ text: 'test' });
 
-const IdleIcon = canNativeShare ? ShareNetwork : CopySimple;
+const idleIcon = canNativeShare ? Share01Icon : Copy01Icon;
 
 type ShareData = { text: string } | { file: Uint8Array; fileName: string };
 
@@ -65,9 +70,15 @@ export const useShare = () => {
 
   const shareIcon = (key: string, size = 18, className?: string): ReactNode => {
     if (sharedKey === key) {
-      return <CheckCircle size={size} className="text-success" />;
+      return (
+        <Icon
+          icon={CheckmarkCircle02Icon}
+          size={size}
+          className="text-success"
+        />
+      );
     }
-    return <IdleIcon size={size} className={className} />;
+    return <Icon icon={idleIcon} size={size} className={className} />;
   };
 
   return { share, shareIcon };

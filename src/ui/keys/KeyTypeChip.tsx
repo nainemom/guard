@@ -1,20 +1,21 @@
-import { KeyIcon, LockIcon } from '@phosphor-icons/react';
+import { LockKeyIcon, SquareLock01Icon } from '@hugeicons/core-free-icons';
 import type { ComponentProps, FC } from 'react';
-import type { KeyType } from '@/crypto';
-import { Chip } from '../shared';
+import { Chip, Icon } from '../shared';
 
 export const KeyTypeChip: FC<
   Omit<ComponentProps<typeof Chip>, 'children'> & {
-    value: KeyType;
+    value: 'key' | 'key+lock' | 'lock';
   }
 > = ({ value, ...props }) => (
   <Chip {...props}>
-    {value === 'private' && (
+    {value === 'lock' && <Icon icon={SquareLock01Icon} size={16} />}
+    {value === 'key+lock' && (
       <>
-        <KeyIcon size={14} />
-        {'/'}
+        <Icon icon={LockKeyIcon} size={16} />
+        <span>{'+'}</span>
+        <Icon icon={SquareLock01Icon} size={16} />
       </>
     )}
-    <LockIcon size={14} />
+    {value === 'key' && <Icon icon={LockKeyIcon} size={16} />}
   </Chip>
 );

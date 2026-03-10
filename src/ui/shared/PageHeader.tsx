@@ -1,7 +1,8 @@
-import { ArrowLeft } from '@phosphor-icons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { clsx } from 'clsx';
 import type { FC, ReactNode } from 'react';
 import { Link } from 'wouter';
+import { Icon } from './Icon';
 
 interface HeaderProps {
   title: string;
@@ -27,7 +28,7 @@ export const PageHeader: FC<HeaderProps> = ({
           'transition-colors text-text-secondary bg-surface hover:bg-surface-alt focus-within:bg-surface-alt active:bg-surface',
         )}
       >
-        <ArrowLeft size={24} />
+        <Icon icon={ArrowLeft01Icon} size={24} />
       </Link>
     )}
     {before}

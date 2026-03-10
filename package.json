@@ -21,11 +21,12 @@
   "dependencies": {
     "@dicebear/collection": "^9.3.2",
     "@dicebear/core": "^9.3.2",
+    "@hugeicons/core-free-icons": "^4.0.0",
+    "@hugeicons/react": "^1.1.6",
     "@noble/ciphers": "^2.1.1",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "@noble/post-quantum": "^0.5.4",
-    "@phosphor-icons/react": "^2.1.10",
     "@scure/base": "^2.0.0",
     "clsx": "^2.1.1",
     "dexie": "^4.3.0",

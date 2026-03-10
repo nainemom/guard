@@ -3,7 +3,13 @@ import type { ButtonHTMLAttributes, FC } from 'react';
 
 export const Button: FC<
   ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: 'primary' | 'success' | 'error' | 'ghost' | 'outline';
+    variant?:
+      | 'primary'
+      | 'success'
+      | 'error'
+      | 'ghost'
+      | 'outline'
+      | 'error_ghost';
     iconOnly?: boolean;
   }
 > = ({ variant = 'primary', iconOnly, className, ...props }) => (
@@ -22,6 +28,8 @@ export const Button: FC<
         'bg-error border-error hover:bg-error/80 focus-visible:bg-error/80 active:bg-error text-on-error',
       variant === 'ghost' &&
         'bg-transparent border-transparent hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-transparent text-text-secondary',
+      variant === 'error_ghost' &&
+        'bg-transparent border-transparent hover:bg-error/10 focus-visible:bg-error/10 active:bg-error/20 text-error',
       variant === 'outline' &&
         'bg-transparent border-border hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-transparent text-text-secondary',
       className,

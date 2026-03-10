@@ -1,4 +1,9 @@
-import { GearSix, Key, Lock, SpinnerGap } from '@phosphor-icons/react';
+import {
+  Key01Icon,
+  Loading03Icon,
+  Settings01Icon,
+  SquareLock01Icon,
+} from '@hugeicons/core-free-icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { type FC, useEffect, useRef, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
@@ -10,6 +15,7 @@ import {
   Button,
   ChatBubble,
   Chip,
+  Icon,
   Input,
   LoadingSpinner,
   Page,
@@ -19,7 +25,6 @@ import {
   useShare,
 } from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
-import { MethodTypeChip } from './MethodTypeChip';
 
 const codecEntries = Object.entries(CODEC_METHODS) as [
   keyof typeof CODEC_METHODS,
@@ -170,7 +175,7 @@ export const KeyDetailsPage: FC = () => {
             iconOnly
             onClick={() => navigate(`/keys/${keyId}/edit`)}
           >
-            <GearSix size={20} />
+            <Icon icon={Settings01Icon} size={20} />
           </Button>
         }
       />
@@ -183,8 +188,15 @@ export const KeyDetailsPage: FC = () => {
           <div className="text-lg font-semibold text-text">{key.name}</div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Chip>{parsed.method.name}</Chip>
-            <MethodTypeChip value={parsed.method.type} />
-            <KeyTypeChip value={parsed.type} />
+            <KeyTypeChip
+              value={
+                parsed.method.type === 'asymmetric'
+                  ? parsed.type === 'public'
+                    ? 'lock'
+                    : 'key+lock'
+                  : 'key'
+              }
+            />
           </div>
         </div>
 
@@ -213,7 +225,8 @@ export const KeyDetailsPage: FC = () => {
                 {/* Result — left bubble */}
                 {msg.status === 'processing' ? (
                   <ChatBubble className="py-3">
-                    <SpinnerGap
+                    <Icon
+                      icon={Loading03Icon}
                       className="animate-spin text-text-muted"
                       size={20}
                     />
@@ -296,7 +309,7 @@ export const KeyDetailsPage: FC = () => {
               disabled={!input.trim() || isProcessing}
               onClick={() => handleSubmit('decrypt')}
             >
-              <Key size={20} />
+              <Icon icon={Key01Icon} size={22} />
             </Button>
           )}
           <Button
@@ -304,7 +317,7 @@ export const KeyDetailsPage: FC = () => {
             disabled={!input.trim() || isProcessing}
             onClick={() => handleSubmit('encrypt')}
           >
-            <Lock size={20} />
+            <Icon icon={SquareLock01Icon} size={22} />
           </Button>
         </div>
       </PageToolbar>

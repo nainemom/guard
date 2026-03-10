@@ -1,4 +1,4 @@
-import { Trash } from '@phosphor-icons/react';
+import { Delete01Icon } from '@hugeicons/core-free-icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { type FC, useEffect, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
@@ -8,6 +8,7 @@ import {
   Avatar,
   Button,
   Chip,
+  Icon,
   Input,
   ListItem,
   LoadingSpinner,
@@ -17,7 +18,6 @@ import {
   useShare,
 } from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
-import { MethodTypeChip } from './MethodTypeChip';
 
 export const KeyEditPage: FC = () => {
   const [, params] = useRoute('/keys/:id/edit');
@@ -96,9 +96,16 @@ export const KeyEditPage: FC = () => {
           <Avatar size={64} seed={name} />
           {parsed && (
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <Chip>{parsed?.method.name}</Chip>
-              <MethodTypeChip value={parsed?.method.type} />
-              <KeyTypeChip value={parsed?.type} />
+              <Chip>{parsed.method.name}</Chip>
+              <KeyTypeChip
+                value={
+                  parsed.method.type === 'asymmetric'
+                    ? parsed.type === 'public'
+                      ? 'lock'
+                      : 'key+lock'
+                    : 'key'
+                }
+              />
             </div>
           )}
         </div>
@@ -126,39 +133,41 @@ export const KeyEditPage: FC = () => {
           {isAsymmetric ? (
             <>
               <ListItem
-                after={<KeyTypeChip value="public" />}
+                after={<KeyTypeChip value="lock" />}
                 before={shareIcon('public', 18, 'text-text-muted')}
                 onClick={() =>
                   publicKey && share({ text: importUrl(publicKey) }, 'public')
                 }
               >
-                <p className="font-medium text-sm text-text">
-                  Share Public Key
+                <p className="font-medium text-sm text-text mb-1">
+                  Share Lock (Public Key)
                 </p>
                 <p className="text-xs text-text-secondary">
                   Give this to others so they can encrypt messages for you
                 </p>
               </ListItem>
               <ListItem
-                after={<KeyTypeChip value="private" />}
+                after={<KeyTypeChip value="key" />}
                 before={shareIcon('private', 18, 'text-text-muted')}
                 onClick={() => share({ text: importUrl(key.value) }, 'private')}
               >
-                <p className="font-medium text-sm text-text">
-                  Share Private Key
+                <p className="font-medium text-sm text-text mb-1">
+                  Share Lock + Key (Private Key)
                 </p>
                 <p className="text-xs text-text-secondary">
-                  Only you should have this — it decrypts your messages
+                  Anyone with this key can encrypt and decrypt messages
                 </p>
               </ListItem>
             </>
           ) : (
             <ListItem
-              after={<KeyTypeChip value="private" />}
+              after={<KeyTypeChip value="key" />}
               before={shareIcon('key', 18, 'text-text-muted')}
               onClick={() => share({ text: importUrl(key.value) }, 'key')}
             >
-              <p className="font-medium text-sm text-text">Share Key</p>
+              <p className="font-medium text-sm text-text mb-1">
+                Share Lock + Key (Private Key)
+              </p>
               <p className="text-xs text-text-secondary">
                 Anyone with this key can encrypt and decrypt messages
               </p>
@@ -167,8 +176,12 @@ export const KeyEditPage: FC = () => {
         </div>
 
         {/* Delete */}
-        <Button variant="error" className="w-full py-3" onClick={handleDelete}>
-          <Trash size={18} />
+        <Button
+          variant="error_ghost"
+          className="w-full h-10 text-sm"
+          onClick={handleDelete}
+        >
+          <Icon icon={Delete01Icon} size={16} />
           Delete Key
         </Button>
       </PageBody>

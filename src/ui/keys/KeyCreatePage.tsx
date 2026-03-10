@@ -1,4 +1,8 @@
-import { CheckCircle, Circle, SpinnerGap } from '@phosphor-icons/react';
+import {
+  CheckmarkCircle02Icon,
+  CircleIcon,
+  Loading03Icon,
+} from '@hugeicons/core-free-icons';
 import { clsx } from 'clsx';
 import { type FC, useState } from 'react';
 import { useLocation, useParams } from 'wouter';
@@ -12,6 +16,7 @@ import { db } from '@/db';
 import {
   Button,
   Chip,
+  Icon,
   Input,
   ListItem,
   Page,
@@ -22,7 +27,6 @@ import {
   Tabs,
 } from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
-import { MethodTypeChip } from './MethodTypeChip';
 
 const CATEGORY_ORDER: MethodCategory[] = [
   'standard',
@@ -65,15 +69,15 @@ export const KeyCreatePage: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Try to parse imported key for preview
-  let parsedImport: ReturnType<typeof parseKey> | null = null;
+  let parsed: ReturnType<typeof parseKey> | null = null;
   try {
-    if (keyValue.trim()) parsedImport = parseKey(keyValue.trim());
+    if (keyValue.trim()) parsed = parseKey(keyValue.trim());
   } catch {
     // invalid key — will show error on submit
   }
 
   const isGenerateValid = name.trim().length > 0 && !!method;
-  const isImportValid = name.trim().length > 0 && parsedImport !== null;
+  const isImportValid = name.trim().length > 0 && parsed !== null;
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -159,16 +163,26 @@ export const KeyCreatePage: FC = () => {
                           key={key}
                           before={
                             key === method ? (
-                              <CheckCircle
+                              <Icon
+                                icon={CheckmarkCircle02Icon}
                                 className="text-primary"
-                                weight="fill"
                                 size={18}
                               />
                             ) : (
-                              <Circle className="text-text-muted" size={18} />
+                              <Icon
+                                icon={CircleIcon}
+                                className="text-text-muted"
+                                size={18}
+                              />
                             )
                           }
-                          after={<MethodTypeChip value={item.type} />}
+                          after={
+                            <KeyTypeChip
+                              value={
+                                item.type === 'symmetric' ? 'key' : 'key+lock'
+                              }
+                            />
+                          }
                           onClick={() => setMethod(key)}
                         >
                           <div className="flex items-center gap-2">
@@ -206,11 +220,18 @@ export const KeyCreatePage: FC = () => {
             />
 
             {/* Parsed preview */}
-            {parsedImport && (
+            {parsed && (
               <div className="flex flex-wrap items-center gap-2 mt-3">
-                <Chip>{parsedImport.method.name}</Chip>
-                <MethodTypeChip value={parsedImport.method.type} />
-                <KeyTypeChip value={parsedImport.type} />
+                <Chip>{parsed.method.name}</Chip>
+                <KeyTypeChip
+                  value={
+                    parsed.method.type === 'asymmetric'
+                      ? parsed.type === 'public'
+                        ? 'lock'
+                        : 'key+lock'
+                      : 'key'
+                  }
+                />
               </div>
             )}
 
@@ -232,7 +253,9 @@ export const KeyCreatePage: FC = () => {
           }
           onClick={mode === 'generate' ? handleGenerate : handleImport}
         >
-          {isLoading && <SpinnerGap className="animate-spin" size={18} />}
+          {isLoading && (
+            <Icon icon={Loading03Icon} className="animate-spin" size={18} />
+          )}
           {mode === 'generate'
             ? isLoading
               ? 'Generating Key...'
