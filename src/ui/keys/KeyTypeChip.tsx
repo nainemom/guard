@@ -1,7 +1,7 @@
 import { KeyIcon, LockIcon } from '@phosphor-icons/react';
 import type { ComponentProps, FC } from 'react';
 import type { KeyType } from '@/crypto';
-import { Chip } from '../shared/Chip';
+import { Chip } from '../shared';
 
 export const KeyTypeChip: FC<
   Omit<ComponentProps<typeof Chip>, 'children'> & {

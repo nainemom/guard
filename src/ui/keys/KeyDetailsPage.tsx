@@ -17,7 +17,7 @@ import {
   PageHeader,
   PageToolbar,
   useShare,
-} from '@/ui/shared';
+} from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
 import { MethodTypeChip } from './MethodTypeChip';
 

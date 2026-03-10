@@ -1,6 +1,6 @@
 import type { ComponentProps, FC } from 'react';
 import type { MethodHandler } from '@/crypto';
-import { Chip } from '@/ui/shared';
+import { Chip } from '../shared';
 
 export const MethodTypeChip: FC<
   Omit<ComponentProps<typeof Chip>, 'children'> & {

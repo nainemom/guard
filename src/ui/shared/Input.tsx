@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
 import {
+  type FC,
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
   useCallback,
@@ -19,12 +20,12 @@ type InputProps =
       autoGrow?: never;
     } & InputHTMLAttributes<HTMLInputElement>);
 
-export const Input = ({
+export const Input: FC<InputProps> = ({
   multiline,
   autoGrow,
   className,
   ...props
-}: InputProps) => {
+}) => {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   const initialHeight = useRef<number>(0);

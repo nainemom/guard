@@ -12,7 +12,7 @@ import {
   Page,
   PageBody,
   PageHeader,
-} from '@/ui/shared';
+} from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
 
 export const KeysListPage: FC = () => {

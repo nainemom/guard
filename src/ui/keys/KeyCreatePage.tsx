@@ -8,6 +8,7 @@ import {
   type MethodCategory,
   parseKey,
 } from '@/crypto';
+import { db } from '@/db';
 import {
   Button,
   Chip,
@@ -17,10 +18,9 @@ import {
   PageBody,
   PageHeader,
   PageToolbar,
+  sleep,
   Tabs,
-} from '@/ui/shared';
-import { db } from '../../db';
-import { sleep } from '../shared/sleep';
+} from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
 import { MethodTypeChip } from './MethodTypeChip';
 

@@ -1,6 +1,8 @@
 import { base64 } from './methods/base64';
 import { emoji, persianEveryday } from './methods/texts';
 
+export type { MethodHandler } from './types';
+
 export const METHODS = {
   persianEveryday,
   emoji,

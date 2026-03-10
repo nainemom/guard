@@ -9,5 +9,7 @@ export * from './Page';
 export * from './PageBody';
 export * from './PageHeader';
 export * from './PageToolbar';
+export * from './sleep';
 export * from './Tabs';
 export * from './useShare';
+export * from './useStale';
