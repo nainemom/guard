@@ -12,6 +12,7 @@ export * from './Page';
 export * from './PageBody';
 export * from './PageHeader';
 export * from './PageToolbar';
+export * from './Popover';
 export * from './sleep';
 export * from './Tabs';
 export * from './Toast';

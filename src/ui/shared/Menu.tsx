@@ -1,15 +1,9 @@
 import { MoreVerticalIcon } from '@hugeicons/core-free-icons';
 import { clsx } from 'clsx';
-import {
-  type FC,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import type { FC, ReactNode } from 'react';
 import { Button } from './Button';
 import { Icon } from './Icon';
+import { Popover } from './Popover';
 
 interface MenuItem {
   label: string;
@@ -25,54 +19,16 @@ type MenuEntry = MenuItem | 'divider';
 export const Menu: FC<{
   items: MenuEntry[];
 }> = ({ items }) => {
-  const [open, setOpen] = useState(false);
-  const [closing, setClosing] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  const close = useCallback(() => {
-    setClosing(true);
-    setTimeout(() => {
-      setOpen(false);
-      setClosing(false);
-    }, 120);
-  }, []);
-
-  const toggle = useCallback(() => {
-    if (open) {
-      close();
-    } else {
-      setOpen(true);
-    }
-  }, [open, close]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        close();
-      }
-    };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, [open, close]);
-
   return (
-    <div ref={menuRef} className="relative">
-      <Button variant="ghost" iconOnly onClick={toggle} className="size-10">
-        <Icon icon={MoreVerticalIcon} size={20} />
-      </Button>
-      {open && (
-        <div
-          className={clsx(
-            'absolute end-0 top-full mt-1 z-50 rounded-lg border border-border bg-surface shadow-lg origin-top-right',
-            items.some((e) => e !== 'divider' && e.description)
-              ? 'min-w-64'
-              : 'min-w-40',
-            closing
-              ? 'animate-[menu-out_120ms_ease-in_forwards]'
-              : 'animate-[menu-in_150ms_ease-out]',
-          )}
-        >
+    <Popover
+      trigger={
+        <Button variant="ghost" iconOnly className="size-10">
+          <Icon icon={MoreVerticalIcon} size={20} />
+        </Button>
+      }
+    >
+      {(close) => (
+        <div className="min-w-64">
           {items.map((entry, i) => {
             if (entry === 'divider') {
               return (
@@ -119,6 +75,6 @@ export const Menu: FC<{
           })}
         </div>
       )}
-    </div>
+    </Popover>
   );
 };
