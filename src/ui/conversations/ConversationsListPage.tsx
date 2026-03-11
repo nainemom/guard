@@ -2,20 +2,17 @@ import {
   ArrowRight01Icon,
   CloudIcon,
   CloudOffIcon,
-  Key01Icon,
   Loading03Icon,
+  MailAtSign01Icon,
   PlusSignIcon,
   UserIcon,
 } from '@hugeicons/core-free-icons';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useState } from 'react';
 import { Link } from 'wouter';
-import { parseKey } from '@/crypto';
 import { db } from '@/db';
 import {
-  getLastSyncTime,
   getUserProfile,
-  sync,
   connect as syncConnect,
   disconnect as syncDisconnect,
   isConnected as syncIsConnected,
@@ -24,6 +21,7 @@ import {
 import {
   Avatar,
   Button,
+  Chip,
   Icon,
   ListItem,
   LoadingSpinner,
@@ -33,38 +31,18 @@ import {
   Popover,
   useToast,
 } from '../shared';
-import { KeyTypeChip } from './KeyTypeChip';
 
-const formatRelativeTime = (timestamp: number): string => {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-};
-
-export const KeysListPage: FC = () => {
-  const keys = useLiveQuery(() => db.keys.toArray())?.sort(
-    (a, b) => a.createdAt - b.createdAt,
+export const ConversationsListPage: FC = () => {
+  const conversations = useLiveQuery(() =>
+    db.conversations
+      .filter((c) => !c.deletedAt)
+      .sortBy('updatedAt')
+      .then((arr) => arr.reverse()),
   );
-  const [syncing, setSyncing] = useState(false);
   const [connected, setConnected] = useState(syncIsConnected);
   const [profile, setProfile] = useState<UserProfile | null>(getUserProfile);
-  const [lastSyncLabel, setLastSyncLabel] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const toast = useToast();
-
-  useEffect(() => {
-    const update = () => {
-      const t = getLastSyncTime();
-      setLastSyncLabel(t ? formatRelativeTime(t) : null);
-    };
-    update();
-    const interval = setInterval(update, 30_000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleConnect = useCallback(
     async (close: () => void) => {
@@ -73,7 +51,7 @@ export const KeysListPage: FC = () => {
         await syncConnect();
         setConnected(true);
         setProfile(getUserProfile());
-        toast.show('Connected to Google Drive');
+        toast.show('Connected to Google');
         close();
       } catch {
         toast.show('Connection failed');
@@ -89,29 +67,17 @@ export const KeysListPage: FC = () => {
       syncDisconnect();
       setConnected(false);
       setProfile(null);
-      toast.show('Disconnected from Google Drive');
+      toast.show('Disconnected');
       close();
     },
     [toast],
   );
 
-  const handleSync = useCallback(async () => {
-    try {
-      setSyncing(true);
-      await sync();
-      toast.show('Synced with Google Drive');
-    } catch {
-      toast.show('Sync failed');
-    } finally {
-      setSyncing(false);
-    }
-  }, [toast]);
-
   return (
     <Page>
       <PageHeader
         title="Guard"
-        subtitle="List of your keys"
+        subtitle="Conversations"
         after={
           <Popover
             trigger={
@@ -152,37 +118,11 @@ export const KeysListPage: FC = () => {
                           {profile.name}
                         </span>
                         <span className="text-xs text-text-muted">
-                          Google Drive
+                          {profile.email}
                         </span>
                       </div>
                     </div>
                   )}
-                  <button
-                    type="button"
-                    disabled={syncing}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt disabled:opacity-40 disabled:cursor-default"
-                    onClick={handleSync}
-                  >
-                    <span className="shrink-0">
-                      {syncing ? (
-                        <Icon
-                          icon={Loading03Icon}
-                          size={18}
-                          className="animate-spin"
-                        />
-                      ) : (
-                        <Icon icon={CloudIcon} size={18} />
-                      )}
-                    </span>
-                    <div className="flex flex-col">
-                      <span>Sync now</span>
-                      {lastSyncLabel && (
-                        <span className="text-xs text-text-muted">
-                          Last synced {lastSyncLabel}
-                        </span>
-                      )}
-                    </div>
-                  </button>
                   <div className="my-1 border-t border-border-light" />
                   <button
                     type="button"
@@ -209,7 +149,7 @@ export const KeysListPage: FC = () => {
                       Not connected
                     </p>
                     <p className="text-xs text-text-muted mt-1">
-                      Sign in to sync your keys across devices
+                      Sign in with Google to send and receive encrypted messages
                     </p>
                   </div>
                   <Button
@@ -226,7 +166,7 @@ export const KeysListPage: FC = () => {
                     ) : (
                       <Icon icon={CloudIcon} size={16} />
                     )}
-                    Connect Google Drive
+                    Connect Google
                   </Button>
                 </div>
               )
@@ -236,61 +176,66 @@ export const KeysListPage: FC = () => {
       />
 
       <PageBody>
-        {!keys ? (
+        {!conversations ? (
           <LoadingSpinner />
-        ) : keys.length === 0 ? (
+        ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 px-6 pb-16 max-w-96 mx-auto text-center">
             <div className="rounded-full bg-border-light p-5 mb-4">
-              <Icon icon={Key01Icon} className="text-text-muted" size={40} />
+              <Icon
+                icon={MailAtSign01Icon}
+                className="text-text-muted"
+                size={40}
+              />
             </div>
             <p className="text-text font-medium text-lg">
-              You don't have any keys yet
+              No conversations yet
             </p>
             <p className="text-text-muted text-sm mt-1">
-              Create your first key by tapping the + button below to get started
-              with encryption
+              Create a conversation to start exchanging encrypted messages via
+              Gmail
             </p>
           </div>
         ) : (
           <div className="divide-y divide-border-light">
-            {keys.map((key) => {
-              const parsed = parseKey(key.value);
-              return (
-                <Link key={key.id} to={`/keys/${key.id}`} className="contents">
-                  <ListItem
-                    before={<Avatar size={48} seed={key.name} />}
-                    after={
-                      <>
-                        <KeyTypeChip
-                          value={
-                            parsed.method.type === 'asymmetric'
-                              ? parsed.type === 'public'
-                                ? 'lock'
-                                : 'key+lock'
-                              : 'key'
-                          }
-                        />
-                        <Icon
-                          icon={ArrowRight01Icon}
-                          className="text-text-muted"
-                          size={20}
-                        />
-                      </>
-                    }
-                  >
-                    <p className="font-medium truncate text-text">{key.name}</p>
-                    <p className="text-sm text-text-secondary">
-                      {parsed.method.name}
-                    </p>
-                  </ListItem>
-                </Link>
-              );
-            })}
+            {conversations.map((conv) => (
+              <Link key={conv.id} to={`/${conv.id}`} className="contents">
+                <ListItem
+                  before={<Avatar size={48} seed={conv.friendId} />}
+                  after={
+                    <>
+                      <Chip
+                        className={
+                          conv.status === 'ready'
+                            ? 'bg-success/15 text-success'
+                            : 'bg-primary/15 text-primary'
+                        }
+                      >
+                        {conv.status}
+                      </Chip>
+                      <Icon
+                        icon={ArrowRight01Icon}
+                        className="text-text-muted"
+                        size={20}
+                      />
+                    </>
+                  }
+                >
+                  <p className="font-medium truncate text-text">
+                    {conv.friendId}
+                  </p>
+                  <p className="text-sm text-text-secondary">
+                    {conv.status === 'pending'
+                      ? 'Waiting for key exchange'
+                      : 'Encrypted'}
+                  </p>
+                </ListItem>
+              </Link>
+            ))}
           </div>
         )}
       </PageBody>
 
-      <Link to="/keys/new" className="fixed bottom-6 right-6 contents">
+      <Link to="/new" className="fixed bottom-6 right-6 contents">
         <Button iconOnly className="fixed bottom-6 right-6 size-14 shadow-lg">
           <Icon icon={PlusSignIcon} size={24} />
         </Button>

@@ -1,6 +1,7 @@
 /// <reference path="./gis.d.ts" />
 
-const SCOPES = 'https://www.googleapis.com/auth/drive.appdata openid profile';
+const SCOPES =
+  'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly openid profile email';
 const FILENAME = 'guard-sync.json';
 const TOKEN_KEY = 'guard-gdrive-token';
 const FILE_ID_KEY = 'guard-gdrive-file-id';
@@ -9,6 +10,7 @@ const PROFILE_KEY = 'guard-gdrive-profile';
 export interface UserProfile {
   name: string;
   picture: string;
+  email: string;
 }
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
@@ -47,7 +49,11 @@ const fetchUserProfile = async (): Promise<void> => {
       const data = await res.json();
       localStorage.setItem(
         PROFILE_KEY,
-        JSON.stringify({ name: data.name, picture: data.picture }),
+        JSON.stringify({
+          name: data.name,
+          picture: data.picture,
+          email: data.email,
+        }),
       );
     }
   } catch {
@@ -78,7 +84,10 @@ export const connect = async (): Promise<void> => {
   });
 };
 
-const apiFetch = async (url: string, init?: RequestInit): Promise<Response> => {
+export const apiFetch = async (
+  url: string,
+  init?: RequestInit,
+): Promise<Response> => {
   const token = getToken();
   if (!token) throw new Error('Not connected');
   const res = await fetch(url, {

@@ -1,37 +1,47 @@
 import Dexie, { type EntityTable } from 'dexie';
 
-export interface Key {
+export interface Conversation {
   id: string;
-  name: string;
-  value: string;
+  token: string;
+  channel: 'gmail';
+  friendId: string;
+  myPrivateKey: string;
+  myPublicKey: string;
+  friendPublicKey?: string;
+  status: 'pending' | 'ready';
+  deletedAt?: number;
   createdAt: number;
   updatedAt: number;
 }
 
-export interface Message {
+export interface DirectMessage {
   id: string;
-  keyId: string;
-  operation: 'encrypt' | 'decrypt';
-  codec: string;
-  input: string;
-  status: 'done' | 'error';
-  outputType?: 'string' | 'file';
-  output?: string;
-  error?: string;
+  conversationId: string;
+  direction: 'sent' | 'received';
+  text: string;
+  externalId?: string;
   createdAt: number;
 }
 
 const db = new Dexie('guard', {
   autoOpen: true,
 }) as Dexie & {
-  keys: EntityTable<Key, 'id', Pick<Key, 'name' | 'value'>>;
-  messages: EntityTable<
-    Message,
+  conversations: EntityTable<
+    Conversation,
     'id',
-    Pick<Message, 'keyId' | 'operation' | 'codec' | 'input'>
+    Pick<
+      Conversation,
+      'channel' | 'friendId' | 'myPrivateKey' | 'myPublicKey' | 'token'
+    >
+  >;
+  directMessages: EntityTable<
+    DirectMessage,
+    'id',
+    Pick<DirectMessage, 'conversationId' | 'direction' | 'text'>
   >;
 };
 
+// Legacy schema versions (for migration from previous app versions)
 db.version(1).stores({
   keys: '&id, name, value, createdAt, updatedAt',
 });
@@ -41,29 +51,43 @@ db.version(2).stores({
   messages: '&id, keyId, createdAt',
 });
 
-// Auto-generate id, createdAt, updatedAt on insert (skip if already set, e.g. from sync)
-db.keys.hook('creating', (_primaryKey, obj) => {
+db.version(3).stores({
+  keys: '&id, name, value, createdAt, updatedAt',
+  messages: '&id, keyId, createdAt',
+  contacts: '&id, email, myKeyId, createdAt, updatedAt',
+  chatMessages: '&id, contactId, externalId, createdAt',
+});
+
+// Current schema — removes legacy tables, adds conversations
+db.version(4).stores({
+  keys: null,
+  messages: null,
+  contacts: null,
+  chatMessages: null,
+  conversations: '&id, token, channel, friendId, status, createdAt, updatedAt',
+  directMessages: '&id, conversationId, externalId, createdAt',
+});
+
+db.conversations.hook('creating', (_primaryKey, obj) => {
   const now = Date.now();
   obj.id ??= crypto.randomUUID();
+  obj.token ??= crypto.randomUUID();
   obj.createdAt ??= now;
   obj.updatedAt ??= now;
 });
 
-// Auto-update updatedAt on save (skip if update already includes updatedAt, e.g. from sync)
-db.keys.hook('updating', (modifications) => {
+db.conversations.hook('updating', (modifications) => {
   if (modifications.updatedAt === undefined) {
     return { updatedAt: Date.now() };
   }
   return {};
 });
 
-// Cascade delete messages when a key is deleted
-db.keys.hook('deleting', (primaryKey) => {
-  db.messages.where('keyId').equals(primaryKey).delete();
+db.conversations.hook('deleting', (primaryKey) => {
+  db.directMessages.where('conversationId').equals(primaryKey).delete();
 });
 
-// Auto-generate id, createdAt on insert (skip if already set, e.g. from sync)
-db.messages.hook('creating', (_primaryKey, obj) => {
+db.directMessages.hook('creating', (_primaryKey, obj) => {
   obj.id ??= crypto.randomUUID();
   obj.createdAt ??= Date.now();
 });

@@ -10,8 +10,8 @@ interface SyncTable {
 
 // Add tables to sync here:
 const syncTables: SyncTable[] = [
-  { table: db.keys, idField: 'id', updatedAtField: 'updatedAt' },
-  { table: db.messages, idField: 'id', updatedAtField: 'createdAt' },
+  { table: db.conversations, idField: 'id', updatedAtField: 'updatedAt' },
+  { table: db.directMessages, idField: 'id', updatedAtField: 'createdAt' },
 ];
 
 type SyncData = {
@@ -77,13 +77,13 @@ const mergeTable = async (
 };
 
 export const sync = async (): Promise<void> => {
-  if (!gdrive.isConnected()) return;
+  if (!gdrive.isConnected() || _syncing) return;
+  _syncing = true;
 
   try {
     const raw = await gdrive.read();
     const parsed = raw ? JSON.parse(raw) : {};
 
-    // Migrate old format { keys: [...], syncedAt } → { tables: { keys: [...] }, syncedAt }
     const remoteTables: Record<string, any[]> = parsed.tables ?? {};
     for (const { table } of syncTables) {
       if (!remoteTables[table.name] && Array.isArray(parsed[table.name])) {
@@ -106,13 +106,17 @@ export const sync = async (): Promise<void> => {
   } catch (e) {
     console.error('[sync]', e);
     throw e;
+  } finally {
+    _syncing = false;
   }
 };
 
-// Auto-sync: debounced on DB changes
+// Auto-sync: debounced on DB changes, suppressed during sync
 let syncTimer: ReturnType<typeof setTimeout> | undefined;
+let _syncing = false;
 
 const debouncedSync = () => {
+  if (_syncing) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     if (gdrive.isConnected()) sync();

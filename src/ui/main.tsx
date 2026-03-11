@@ -5,9 +5,10 @@ import { Redirect, Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { dbReady } from '@/db';
 import { initAutoSync } from '@/sync';
-import { KeyCreatePage } from './keys/KeyCreatePage';
-import { KeyDetailsPage } from './keys/KeyDetailsPage';
-import { KeysListPage } from './keys/KeysListPage';
+import { ConversationChatPage } from './conversations/ConversationChatPage';
+import { ConversationCreatePage } from './conversations/ConversationCreatePage';
+import { ConversationJoinPage } from './conversations/ConversationJoinPage';
+import { ConversationsListPage } from './conversations/ConversationsListPage';
 import { InstallPrompt, ToastProvider } from './shared';
 import './main.css';
 
@@ -36,11 +37,12 @@ createRoot(root).render(
           }}
         >
           <Switch>
-            <Route path="/keys" component={KeysListPage} />
-            <Route path="/keys/new/:key?" component={KeyCreatePage} />
-            <Route path="/keys/:id" component={KeyDetailsPage} />
-            <Route path="/">
-              <Redirect to="/keys" />
+            <Route path="/" component={ConversationsListPage} />
+            <Route path="/new" component={ConversationCreatePage} />
+            <Route path="/join/:data" component={ConversationJoinPage} />
+            <Route path="/:id" component={ConversationChatPage} />
+            <Route>
+              <Redirect to="/" />
             </Route>
           </Switch>
         </Router>
