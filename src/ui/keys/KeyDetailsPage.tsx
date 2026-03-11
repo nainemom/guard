@@ -1,7 +1,6 @@
 import {
   Delete01Icon,
   Key01Icon,
-  Loading03Icon,
   Share01Icon,
   SquareLock01Icon,
 } from '@hugeicons/core-free-icons';
@@ -49,22 +48,15 @@ const MessageBubble: FC<{
         <>
           {msg.operation === 'encrypt' ? 'Encrypt' : 'Decrypt'}
           {' · '}
-          {CODEC_METHODS[msg.codec].name}
+          {CODEC_METHODS[msg.codec as keyof typeof CODEC_METHODS]?.name ??
+            msg.codec}
         </>
       }
     >
       {msg.input}
     </ChatBubble>
 
-    {msg.status === 'processing' ? (
-      <ChatBubble className="py-3">
-        <Icon
-          icon={Loading03Icon}
-          className="animate-spin text-text-muted"
-          size={20}
-        />
-      </ChatBubble>
-    ) : msg.status === 'error' ? (
+    {msg.status === 'error' ? (
       <ChatBubble variant="error" header="Error">
         {msg.error}
       </ChatBubble>
@@ -204,16 +196,7 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
             <MessageBubble
               key={msg.id}
               msg={msg}
-              onShare={() =>
-                share(
-                  msg.outputType === 'file' && msg.outputBytes
-                    ? {
-                        file: msg.outputBytes,
-                        fileName: `encrypted-${msg.id.slice(0, 8)}`,
-                      }
-                    : { text: msg.output ?? '' },
-                )
-              }
+              onShare={() => share({ text: msg.output ?? '' })}
             />
           ))}
         </div>

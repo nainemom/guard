@@ -11,6 +11,7 @@ interface SyncTable {
 // Add tables to sync here:
 const syncTables: SyncTable[] = [
   { table: db.keys, idField: 'id', updatedAtField: 'updatedAt' },
+  { table: db.messages, idField: 'id', updatedAtField: 'createdAt' },
 ];
 
 type SyncData = {

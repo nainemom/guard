@@ -1,5 +1,4 @@
 import {
-  Alert02Icon,
   Cancel01Icon,
   Edit02Icon,
   Tick01Icon,
@@ -93,12 +92,6 @@ export const KeyInfoCard: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
               : 'key'
           }
         />
-      </div>
-      <div className="flex items-center justify-center gap-1.5 text-text-muted mt-1">
-        <Icon icon={Alert02Icon} size={14} className="shrink-0" />
-        <p className="text-sm">
-          Messages are not saved and will be lost on refresh.
-        </p>
       </div>
     </div>
   );
