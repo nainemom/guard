@@ -82,6 +82,13 @@ const scheduleSave = () => {
   saveTimer = setTimeout(save, 2000);
 };
 
+const syncConnectionState = () => {
+  store.setState({
+    connected: gdrive.isConnected(),
+    profile: gdrive.getUserProfile(),
+  });
+};
+
 const save = async () => {
   if (!gdrive.isConnected()) return;
   if (isSaving) {
@@ -96,6 +103,7 @@ const save = async () => {
     store.setState({ lastSyncTime: Date.now() });
   } catch (e) {
     console.error('[db]', e);
+    syncConnectionState();
   } finally {
     isSaving = false;
     if (saveQueued) {
@@ -233,6 +241,11 @@ export const useLastSyncTime = () => store((s) => s.lastSyncTime);
 
 export const initDb = async (): Promise<void> => {
   if (gdrive.isConnected()) {
-    await load();
+    try {
+      await load();
+    } catch {
+      // Token expired or network error — start with empty data
+      syncConnectionState();
+    }
   }
 };

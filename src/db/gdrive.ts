@@ -6,6 +6,8 @@ const TOKEN_KEY = 'guard-gdrive-token';
 const FILE_ID_KEY = 'guard-gdrive-file-id';
 const PROFILE_KEY = 'guard-gdrive-profile';
 
+const REFRESH_TIMEOUT = 5000;
+
 export interface UserProfile {
   name: string;
   picture: string;
@@ -42,7 +44,9 @@ const loadGIS = (): Promise<void> =>
 
 const fetchUserProfile = async (): Promise<void> => {
   try {
-    const res = await apiFetch('https://www.googleapis.com/oauth2/v3/userinfo');
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
     if (res.ok) {
       const data = await res.json();
       localStorage.setItem(
@@ -78,17 +82,66 @@ export const connect = async (): Promise<void> => {
   });
 };
 
-const apiFetch = async (url: string, init?: RequestInit): Promise<Response> => {
+// Silent refresh: request a new token without UI via prompt: ''
+let refreshPromise: Promise<boolean> | null = null;
+
+const doRefresh = async (): Promise<boolean> => {
+  try {
+    await loadGIS();
+    return new Promise<boolean>((resolve) => {
+      const timeout = setTimeout(() => resolve(false), REFRESH_TIMEOUT);
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        scope: SCOPES,
+        callback: async (response) => {
+          clearTimeout(timeout);
+          if (response.error) {
+            resolve(false);
+            return;
+          }
+          localStorage.setItem(TOKEN_KEY, response.access_token);
+          await fetchUserProfile();
+          resolve(true);
+        },
+        error_callback: () => {
+          clearTimeout(timeout);
+          resolve(false);
+        },
+      });
+      client.requestAccessToken({ prompt: '' });
+    });
+  } catch {
+    return false;
+  }
+};
+
+const tryRefresh = (): Promise<boolean> => {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = doRefresh().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+};
+
+const rawFetch = (url: string, init?: RequestInit): Promise<Response> => {
   const token = getToken();
   if (!token) throw new Error('Not connected');
-  const res = await fetch(url, {
+  return fetch(url, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
       ...init?.headers,
     },
   });
+};
+
+const apiFetch = async (url: string, init?: RequestInit): Promise<Response> => {
+  const res = await rawFetch(url, init);
   if (res.status === 401) {
+    const refreshed = await tryRefresh();
+    if (refreshed) {
+      return rawFetch(url, init);
+    }
     disconnect();
     throw new Error('Session expired');
   }
