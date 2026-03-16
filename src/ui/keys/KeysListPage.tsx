@@ -48,7 +48,7 @@ const formatRelativeTime = (timestamp: number): string => {
 
 export const KeysListPage: FC = () => {
   const keys = useLiveQuery(() => db.keys.toArray())?.sort(
-    (a, b) => a.createdAt - b.createdAt,
+    (a, b) => a.updatedAt - b.updatedAt,
   );
   const [syncing, setSyncing] = useState(false);
   const [connected, setConnected] = useState(syncIsConnected);

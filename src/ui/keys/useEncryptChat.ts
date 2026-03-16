@@ -11,7 +11,7 @@ export const useEncryptChat = (
   codecMethods: typeof CODEC_METHODS,
 ) => {
   const messages = useLiveQuery(
-    () => db.messages.where('keyId').equals(key.id).sortBy('createdAt'),
+    () => db.messages.where('keyId').equals(key.id).sortBy('updatedAt'),
     [key.id],
   );
   const [input, setInput] = useState('');
