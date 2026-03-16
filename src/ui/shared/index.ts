@@ -1,7 +1,6 @@
 export * from './Avatar';
 export * from './Button';
 export * from './ButtonGroup';
-export * from './ChatBubble';
 export * from './Chip';
 export * from './Icon';
 export * from './Input';

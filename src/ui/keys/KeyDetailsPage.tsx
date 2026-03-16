@@ -1,4 +1,5 @@
 import {
+  Alert01Icon,
   Delete01Icon,
   Key01Icon,
   MoreVerticalIcon,
@@ -13,7 +14,6 @@ import { db, type Key, useRow } from '@/db';
 import {
   Button,
   ButtonGroup,
-  ChatBubble,
   Icon,
   Input,
   Page,
@@ -25,7 +25,7 @@ import {
   useShare,
 } from '../shared';
 import { KeyInfoCard } from './KeyInfoCard';
-import { type Message, useEncryptChat } from './useEncryptChat';
+import { type Result, useEncrypt } from './useEncryptChat';
 
 const codecEntries = Object.entries(CODEC_METHODS) as [
   keyof typeof CODEC_METHODS,
@@ -37,49 +37,77 @@ const importUrl = (keyStr: string) => {
   return `${base}#/keys/new/${encodeURIComponent(keyStr)}`;
 };
 
-const MessageBubble: FC<{
-  msg: Message;
-  onShare: () => void;
-}> = ({ msg, onShare }) => (
-  <div className="flex flex-col gap-3">
-    <ChatBubble
-      position="end"
-      header={
-        <>
-          {msg.operation === 'encrypt' ? 'Encrypt' : 'Decrypt'}
-          {' · '}
-          {CODEC_METHODS[msg.codec as keyof typeof CODEC_METHODS]?.name ??
-            msg.codec}
-        </>
-      }
-    >
-      {msg.input}
-    </ChatBubble>
+const ResultCard: FC<{ result: Result; onShare: () => void }> = ({
+  result,
+  onShare,
+}) => {
+  const codecName =
+    CODEC_METHODS[result.codec as keyof typeof CODEC_METHODS]?.name ??
+    result.codec;
+  const isEncrypt = result.operation === 'encrypt';
 
-    {msg.status === 'error' ? (
-      <ChatBubble variant="error" header="Error">
-        {msg.error}
-      </ChatBubble>
-    ) : (
-      <ChatBubble
-        footer={
-          msg.output ? (
-            <Button
-              variant="ghost"
-              className="text-primary p-1 rounded"
-              iconOnly
-              onClick={onShare}
+  return (
+    <div className="flex flex-col gap-4 mt-4">
+      {/* Input */}
+      <div>
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2 px-1">
+          Your text
+        </h3>
+        <div className="rounded-xl border border-border p-3">
+          <p
+            dir="auto"
+            className="text-sm wrap-anywhere text-text whitespace-pre-wrap line-clamp-3"
+          >
+            {result.input}
+          </p>
+        </div>
+      </div>
+
+      {/* Arrow + operation label */}
+      <div className="flex items-center gap-2 px-1">
+        <Icon
+          icon={isEncrypt ? SquareLock01Icon : Key01Icon}
+          size="sm"
+          className="text-primary"
+        />
+        <span className="text-xs font-medium text-primary">
+          {isEncrypt ? 'Encrypted' : 'Decrypted'} with {codecName}
+        </span>
+      </div>
+
+      {/* Output */}
+      <div>
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2 px-1">
+          Result
+        </h3>
+        {result.error ? (
+          <div className="rounded-xl border border-error/20 bg-error-light p-3 flex items-start gap-2">
+            <Icon
+              icon={Alert01Icon}
+              size="sm"
+              className="text-error shrink-0 mt-0.5"
+            />
+            <p className="text-sm text-error">{result.error}</p>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex flex-col gap-2">
+            <p
+              dir="auto"
+              className="text-sm wrap-anywhere select-all text-text whitespace-pre-wrap font-mono"
             >
-              <Icon icon={shareIcon} size="sm" />
-            </Button>
-          ) : undefined
-        }
-      >
-        <span className="text-text">{msg.output}</span>
-      </ChatBubble>
-    )}
-  </div>
-);
+              {result.output}
+            </p>
+            <div className="flex justify-end">
+              <Button variant="ghost" iconOnly size="sm" onClick={onShare}>
+                <Icon icon={shareIcon} size="sm" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const KeyDetailsPage: FC = () => {
   const [, params] = useRoute('/keys/:id');
@@ -197,23 +225,27 @@ export const KeyDetailsPage: FC = () => {
 
 const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
   const { share } = useShare();
-  const chat = useEncryptChat(keyRecord, CODEC_METHODS);
+  const enc = useEncrypt(keyRecord, CODEC_METHODS);
 
   return (
     <>
       <PageBody className="px-4 pb-4">
         <KeyInfoCard keyRecord={keyRecord} />
 
-        <div className="flex flex-col gap-3">
-          {chat.messages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              msg={msg}
-              onShare={() => share({ text: msg.output ?? '' })}
-            />
-          ))}
-        </div>
-        <div ref={chat.scrollAnchorRef} />
+        {enc.result ? (
+          <ResultCard
+            result={enc.result}
+            onShare={() =>
+              enc.result?.output && share({ text: enc.result.output })
+            }
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-text-muted text-sm">
+              Enter text below to encrypt or decrypt
+            </p>
+          </div>
+        )}
       </PageBody>
 
       <PageToolbar className="bg-surface">
@@ -221,8 +253,8 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
           {codecEntries.map(([id, method]) => (
             <Button
               key={id}
-              variant={chat.codec === id ? 'primary' : 'outline'}
-              onClick={() => chat.setCodec(id)}
+              variant={enc.codec === id ? 'primary' : 'outline'}
+              onClick={() => enc.setCodec(id)}
               size="sm"
               className="shrink-0"
             >
@@ -238,30 +270,30 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
             rows={1}
             className="flex-1 rounded-xl"
             placeholder="Type your message..."
-            value={chat.input}
-            onInput={(e) => chat.setInput(e.currentTarget.value)}
+            value={enc.input}
+            onInput={(e) => enc.setInput(e.currentTarget.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                chat.submit('encrypt');
+                enc.submit('encrypt');
               }
             }}
           />
           <ButtonGroup>
-            {chat.canDecrypt && (
+            {enc.canDecrypt && (
               <Button
                 iconOnly
                 variant="success"
-                disabled={!chat.input.trim() || chat.isProcessing}
-                onClick={() => chat.submit('decrypt')}
+                disabled={!enc.input || enc.isProcessing}
+                onClick={() => enc.submit('decrypt')}
               >
                 <Icon icon={Key01Icon} size="lg" />
               </Button>
             )}
             <Button
               iconOnly
-              disabled={!chat.input.trim() || chat.isProcessing}
-              onClick={() => chat.submit('encrypt')}
+              disabled={!enc.input || enc.isProcessing}
+              onClick={() => enc.submit('encrypt')}
             >
               <Icon icon={SquareLock01Icon} size="lg" />
             </Button>

@@ -14,17 +14,6 @@ export interface Key extends BaseEntity {
   value: string;
 }
 
-export interface Message extends BaseEntity {
-  keyId: string;
-  operation: 'encrypt' | 'decrypt';
-  codec: string;
-  input: string;
-  status: 'done' | 'error';
-  outputType?: 'string' | 'file';
-  output?: string;
-  error?: string;
-}
-
 export type { UserProfile } from './gdrive';
 
 // --- Table registry ---
@@ -32,23 +21,13 @@ export type { UserProfile } from './gdrive';
 
 interface Tables {
   keys: Key;
-  messages: Message;
 }
 
 type TableName = keyof Tables;
 
 const emptyTables = (): { [K in TableName]: Tables[K][] } => ({
   keys: [],
-  messages: [],
 });
-
-/** When a row is deleted, cascade-delete rows in dependent tables
- *  where `foreignKey` matches the deleted row's id. */
-const CASCADE_DELETES: Partial<
-  Record<TableName, { table: TableName; foreignKey: string }[]>
-> = {
-  keys: [{ table: 'messages', foreignKey: 'keyId' }],
-};
 
 // --- Store ---
 
@@ -168,21 +147,12 @@ export const db = {
   },
 
   remove: (table: TableName, id: string): void => {
-    store.setState((state) => {
-      const tables = { ...state.tables } as Record<TableName, BaseEntity[]>;
-      tables[table] = tables[table].filter((r) => r.id !== id);
-
-      const cascades = CASCADE_DELETES[table];
-      if (cascades) {
-        for (const { table: dep, foreignKey } of cascades) {
-          tables[dep] = tables[dep].filter(
-            (r) => (r as unknown as Record<string, unknown>)[foreignKey] !== id,
-          );
-        }
-      }
-
-      return { tables: tables as StoreState['tables'] };
-    });
+    store.setState((state) => ({
+      tables: {
+        ...state.tables,
+        [table]: state.tables[table].filter((r) => r.id !== id),
+      },
+    }));
     scheduleSave();
   },
 

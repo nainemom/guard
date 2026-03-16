@@ -1,28 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { type METHODS as CODEC_METHODS, decode, encode } from '@/codec';
 import { decrypt, encrypt, getPublicKey, parseKey } from '@/crypto';
-import { db, type Key, type Message, useTable } from '@/db';
+import type { Key } from '@/db';
 
-export type { Message };
+export interface Result {
+  operation: 'encrypt' | 'decrypt';
+  codec: string;
+  input: string;
+  output?: string;
+  error?: string;
+}
 
-export const useEncryptChat = (
-  key: Key,
-  codecMethods: typeof CODEC_METHODS,
-) => {
-  const filter = useCallback((m: Message) => m.keyId === key.id, [key.id]);
-  const filtered = useTable('messages', filter);
-  const messages = useMemo(
-    () => [...filtered].sort((a, b) => a.updatedAt - b.updatedAt),
-    [filtered],
-  );
+export const useEncrypt = (key: Key, _codecMethods: typeof CODEC_METHODS) => {
   const [input, setInput] = useState('');
   const [codec, setCodec] = useState<keyof typeof CODEC_METHODS>('base64');
   const [isProcessing, setIsProcessing] = useState(false);
-  const scrollAnchorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
+  const [result, setResult] = useState<Result | null>(null);
 
   const parsed = parseKey(key.value);
   const canDecrypt =
@@ -30,69 +23,45 @@ export const useEncryptChat = (
 
   const submit = useCallback(
     async (operation: 'encrypt' | 'decrypt') => {
-      if (!input.trim() || isProcessing) return;
+      if (!input || isProcessing) return;
 
-      const codecMethod = codecMethods[codec];
-      const trimmedInput = input.trim();
-
+      const rawInput = input;
       setInput('');
       setIsProcessing(true);
-
-      const delay = new Promise((r) => setTimeout(r, 300));
 
       try {
         let output: string;
 
         if (operation === 'encrypt') {
-          const contentBytes = new TextEncoder().encode(trimmedInput);
+          const contentBytes = new TextEncoder().encode(rawInput);
           const encryptKey =
             parsed.method.type === 'asymmetric' && parsed.type === 'private'
               ? await getPublicKey(key.value)
               : key.value;
           const encrypted = await encrypt(contentBytes, encryptKey);
-          const encoded = await encode(encrypted, codec);
-
-          if (codecMethod.output === 'file') {
-            const bytes = encoded as unknown as Uint8Array;
-            output = `${codecMethod.name} file (${bytes.length} bytes)`;
-          } else {
-            output = String(encoded);
-          }
+          output = String(await encode(encrypted, codec));
         } else {
-          const decoded = await decode(trimmedInput, codec);
+          const decoded = await decode(rawInput, codec);
           const decrypted = await decrypt(decoded, key.value);
           output = new TextDecoder().decode(decrypted);
         }
 
-        await delay;
-        db.add('messages', {
-          keyId: key.id,
-          operation,
-          codec,
-          input: trimmedInput,
-          status: 'done' as const,
-          outputType: operation === 'decrypt' ? 'string' : codecMethod.output,
-          output,
-        });
+        setResult({ operation, codec, input: rawInput, output });
       } catch (e) {
-        await delay;
-        db.add('messages', {
-          keyId: key.id,
+        setResult({
           operation,
           codec,
-          input: trimmedInput,
-          status: 'error' as const,
+          input: rawInput,
           error: e instanceof Error ? e.message : `${operation} failed`,
         });
       } finally {
         setIsProcessing(false);
       }
     },
-    [input, isProcessing, codec, codecMethods, parsed, key.value, key.id],
+    [input, isProcessing, codec, parsed, key.value],
   );
 
   return {
-    messages,
     input,
     setInput,
     codec,
@@ -100,6 +69,6 @@ export const useEncryptChat = (
     isProcessing,
     canDecrypt,
     submit,
-    scrollAnchorRef,
+    result,
   };
 };
