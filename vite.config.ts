@@ -1,3 +1,4 @@
+import { existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { serwist } from '@serwist/vite';
 import tailwindcss from '@tailwindcss/vite';
@@ -38,6 +39,19 @@ export default defineConfig(({ mode }) => ({
       enabled: true,
       provider: playwright(),
       instances: [{ browser: 'chromium', headless: true }],
+      commands: {
+        snapshotExists(_ctx: unknown, method: string) {
+          return existsSync(
+            resolve(__dirname, `src/codec/snapshot/${method}.json`),
+          );
+        },
+        writeSnapshot(_ctx: unknown, method: string, content: string) {
+          writeFileSync(
+            resolve(__dirname, `src/codec/snapshot/${method}.json`),
+            `${content}\n`,
+          );
+        },
+      },
     },
   },
 }));

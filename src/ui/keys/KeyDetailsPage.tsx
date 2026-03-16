@@ -3,6 +3,7 @@ import {
   Attachment01Icon,
   Cancel01Icon,
   Delete01Icon,
+  Download04Icon,
   File01Icon,
   Key01Icon,
   MoreVerticalIcon,
@@ -28,11 +29,59 @@ import {
   useShare,
 } from '../shared';
 import { KeyInfoCard } from './KeyInfoCard';
-import { type Result, useEncrypt } from './useEncryptChat';
+import { formatFileSize, type Result, useEncrypt } from './useEncryptChat';
 
 const importUrl = (codec: string, keyStr: string) => {
   const base = `${window.location.origin}${window.location.pathname}`;
   return `${base}#/keys/new/${codec}/${encodeURIComponent(keyStr)}`;
+};
+
+const shareResult = (
+  result: Result,
+  share: (
+    data: { text: string } | { file: Uint8Array; fileName: string },
+  ) => void,
+) => {
+  if (result.outputFile) {
+    result.outputFile
+      .arrayBuffer()
+      .then((buf) =>
+        share({ file: new Uint8Array(buf), fileName: result.outputFile?.name }),
+      );
+  } else if (result.output) {
+    share({ text: result.output });
+  }
+};
+
+const FilePreview: FC<{ file: File }> = ({ file }) => {
+  const [src, setSrc] = useState<string>();
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  if (!src) return null;
+
+  if (file.type.startsWith('image/')) {
+    return (
+      <img
+        src={src}
+        alt={file.name}
+        className="rounded-lg max-w-full max-h-48 object-contain"
+      />
+    );
+  }
+
+  if (file.type.startsWith('audio/')) {
+    return (
+      // biome-ignore lint/a11y/useMediaCaption: encrypted audio has no captions
+      <audio src={src} controls className="w-full" />
+    );
+  }
+
+  return null;
 };
 
 const ResultCard: FC<{
@@ -50,14 +99,22 @@ const ResultCard: FC<{
           {result.inputType === 'file' ? 'Your file' : 'Your text'}
         </h3>
         <div className="rounded-xl border border-border p-3">
-          {result.inputType === 'file' ? (
-            <div className="flex items-center gap-2 text-text">
-              <Icon
-                icon={File01Icon}
-                size="sm"
-                className="text-text-muted shrink-0"
-              />
-              <span className="text-sm truncate">{result.inputLabel}</span>
+          {result.inputFile ? (
+            <div className="flex flex-col gap-2">
+              <FilePreview file={result.inputFile} />
+              <div className="flex items-center gap-2 text-text">
+                <Icon
+                  icon={File01Icon}
+                  size="sm"
+                  className="text-text-muted shrink-0"
+                />
+                <span className="text-sm truncate flex-1">
+                  {result.inputFile.name}
+                </span>
+                <span className="text-xs text-text-muted shrink-0">
+                  {formatFileSize(result.inputFile.size)}
+                </span>
+              </div>
             </div>
           ) : (
             <p
@@ -98,16 +155,42 @@ const ResultCard: FC<{
           </div>
         ) : (
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex flex-col gap-2">
-            <p
-              dir="auto"
-              className="text-sm wrap-anywhere select-all text-text whitespace-pre-wrap font-mono"
-            >
-              {result.output}
-            </p>
-            <div className="flex justify-end">
-              <Button variant="ghost" iconOnly size="sm" onClick={onShare}>
-                <Icon icon={shareIcon} size="sm" />
-              </Button>
+            {result.output ? (
+              <p
+                dir="auto"
+                className="text-sm wrap-anywhere select-all text-text whitespace-pre-wrap font-mono"
+              >
+                {result.output}
+              </p>
+            ) : result.outputFile ? (
+              <div className="flex flex-col gap-2">
+                <FilePreview file={result.outputFile} />
+                <div className="flex items-center gap-2 text-text">
+                  <Icon
+                    icon={File01Icon}
+                    size="sm"
+                    className="text-primary shrink-0"
+                  />
+                  <span className="text-sm truncate flex-1">
+                    {result.outputFile.name}
+                  </span>
+                  <span className="text-xs text-text-muted shrink-0">
+                    {formatFileSize(result.outputFile.size)}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+            <div className="flex justify-end gap-1">
+              {result.outputFile && (
+                <Button variant="ghost" iconOnly size="sm" onClick={onShare}>
+                  <Icon icon={Download04Icon} size="sm" />
+                </Button>
+              )}
+              {result.output && (
+                <Button variant="ghost" iconOnly size="sm" onClick={onShare}>
+                  <Icon icon={shareIcon} size="sm" />
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -263,9 +346,7 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
           <ResultCard
             result={enc.result}
             codecName={codecName}
-            onShare={() =>
-              enc.result?.output && share({ text: enc.result.output })
-            }
+            onShare={() => enc.result && shareResult(enc.result, share)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">
@@ -331,7 +412,7 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
             </>
           )}
           <ButtonGroup>
-            {enc.canDecrypt && !enc.file && (
+            {enc.canDecrypt && (
               <Button
                 iconOnly
                 variant="success"

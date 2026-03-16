@@ -9,6 +9,17 @@ const generateBytes = (len: number) => {
   return arr;
 };
 
+const dataUrlToFile = (dataUrl: string): File => {
+  const [header, base64] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)?.[1] ?? 'application/octet-stream';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new File([bytes], 'snapshot.png', { type: mime });
+};
+
 const vectorFiles = import.meta.glob<Snapshots>('./snapshot/*.json', {
   eager: true,
   import: 'default',
@@ -29,7 +40,10 @@ for (const method of Object.keys(METHODS) as (keyof typeof METHODS)[]) {
       const bytes = generateBytes(Number(size));
 
       it(`decodes ${size} bytes from snapshot`, async () => {
-        expect(await decode(encoded, method)).toEqual(bytes);
+        const input = encoded.startsWith('data:')
+          ? dataUrlToFile(encoded)
+          : encoded;
+        expect(await decode(input, method)).toEqual(bytes);
       });
 
       it(`encodes then decodes ${size} bytes`, async () => {

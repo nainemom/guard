@@ -15,10 +15,11 @@
     "lint:fix": "biome check --write --unsafe",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate:codec-snapshots": "npx tsx ./src/codec/snapshot/generate.ts"
+    "generate:codec-snapshots": "vitest run src/codec/snapshot/generate.test.ts"
   },
   "dependencies": {
     "@dicebear/collection": "^9.3.2",
+    "@dicebear/converter": "^9.4.0",
     "@dicebear/core": "^9.3.2",
     "@hugeicons/core-free-icons": "^4.0.0",
     "@hugeicons/react": "^1.1.6",
