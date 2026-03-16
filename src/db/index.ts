@@ -12,6 +12,7 @@ export interface BaseEntity {
 export interface Key extends BaseEntity {
   name: string;
   value: string;
+  codec: string;
 }
 
 export type { UserProfile } from './gdrive';
@@ -102,6 +103,11 @@ const load = async () => {
     if (remote) {
       tables[name] = remote;
     }
+  }
+
+  // Migrate old keys without codec
+  for (const row of tables.keys) {
+    if (!(row as Key).codec) (row as Key).codec = 'base64';
   }
 
   store.setState({

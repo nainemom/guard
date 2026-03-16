@@ -6,6 +6,7 @@ import {
 import { clsx } from 'clsx';
 import { type FC, useState } from 'react';
 import { useLocation, useParams } from 'wouter';
+import { METHODS as CODEC_METHODS } from '@/codec';
 import {
   generatePrivateKey,
   METHODS,
@@ -52,33 +53,43 @@ const METHOD_GROUPS = Object.entries(METHODS).reduce(
   {} as Record<MethodCategory, string[]>,
 );
 
+const codecEntries = Object.entries(CODEC_METHODS) as [
+  keyof typeof CODEC_METHODS,
+  (typeof CODEC_METHODS)[keyof typeof CODEC_METHODS],
+][];
+
 export const KeyCreatePage: FC = () => {
   const [, navigate] = useLocation();
   const params = useParams();
+  const urlCodec = params.codec ?? '';
   const urlKey = params.key ? decodeURIComponent(params.key) : undefined;
-  const [mode, setMode] = useState(urlKey ? 'import' : 'generate');
+  const isImport = !!urlKey;
+
   const [name, setName] = useState('');
   const [method, setMethod] = useState('aes-256-gcm');
-  const [keyValue, setKeyValue] = useState(urlKey ?? '');
+  const [codec, setCodec] = useState<string>(
+    urlCodec in CODEC_METHODS ? urlCodec : 'base64',
+  );
   const [importError, setImportError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Try to parse imported key for preview
   let parsed: ReturnType<typeof parseKey> | null = null;
   try {
-    if (keyValue.trim()) parsed = parseKey(keyValue.trim());
+    if (urlKey?.trim()) parsed = parseKey(urlKey.trim());
   } catch {
     // invalid key — will show error on submit
   }
 
-  const isGenerateValid = name.trim().length > 0 && !!method;
-  const isImportValid = name.trim().length > 0 && parsed !== null;
+  const isValid = isImport
+    ? name.trim().length > 0 && parsed !== null
+    : name.trim().length > 0 && !!method;
 
   const handleGenerate = async () => {
     setIsLoading(true);
     try {
       const privateKey = await generatePrivateKey(method);
-      db.add('keys', { name: name.trim(), value: privateKey });
+      db.add('keys', { name: name.trim(), value: privateKey, codec });
       navigate('/keys');
     } finally {
       setIsLoading(false);
@@ -86,16 +97,17 @@ export const KeyCreatePage: FC = () => {
   };
 
   const handleImport = async () => {
+    if (!urlKey) return;
     setImportError('');
     try {
-      parseKey(keyValue.trim());
+      parseKey(urlKey.trim());
     } catch (e) {
       setImportError(e instanceof Error ? e.message : 'Invalid key');
       return;
     }
     setIsLoading(true);
     try {
-      db.add('keys', { name: name.trim(), value: keyValue.trim() });
+      db.add('keys', { name: name.trim(), value: urlKey.trim(), codec });
       await sleep(500);
       navigate('/keys');
     } finally {
@@ -105,30 +117,9 @@ export const KeyCreatePage: FC = () => {
 
   return (
     <Page>
-      <PageHeader backTo="/keys" title="New Key" />
+      <PageHeader backTo="/keys" title={isImport ? 'Import Key' : 'New Key'} />
 
       <PageBody className="p-4">
-        <ButtonGroup contained role="tablist" className="w-full mb-8 shrink-0">
-          <Button
-            role="tab"
-            aria-selected={mode === 'generate'}
-            variant={mode === 'generate' ? 'primary' : 'ghost'}
-            className="flex-1"
-            onClick={() => setMode('generate')}
-          >
-            Generate
-          </Button>
-          <Button
-            role="tab"
-            aria-selected={mode === 'import'}
-            variant={mode === 'import' ? 'primary' : 'ghost'}
-            className="flex-1"
-            onClick={() => setMode('import')}
-          >
-            Import
-          </Button>
-        </ButtonGroup>
-
         {/* Key Name */}
         <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
           Key Name
@@ -143,7 +134,55 @@ export const KeyCreatePage: FC = () => {
           className="mt-1 mb-8"
         />
 
-        {mode === 'generate' ? (
+        {/* Codec */}
+        {!isImport && (
+          <>
+            <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
+              Output Format
+            </h2>
+            <ButtonGroup contained className="w-full mb-8 shrink-0">
+              {codecEntries.map(([id, entry]) => (
+                <Button
+                  key={id}
+                  variant={codec === id ? 'primary' : 'ghost'}
+                  className="flex-1"
+                  onClick={() => setCodec(id)}
+                  size="md"
+                >
+                  {entry.name}
+                </Button>
+              ))}
+            </ButtonGroup>
+          </>
+        )}
+
+        {isImport ? (
+          <>
+            {/* Import preview */}
+            {parsed && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Chip>{parsed.method.name}</Chip>
+                <Chip>
+                  {CODEC_METHODS[codec as keyof typeof CODEC_METHODS]?.name ??
+                    codec}
+                </Chip>
+                <KeyTypeChip
+                  value={
+                    parsed.method.type === 'asymmetric'
+                      ? parsed.type === 'public'
+                        ? 'lock'
+                        : 'key+lock'
+                      : 'key'
+                  }
+                />
+              </div>
+            )}
+
+            {importError && (
+              <p className="text-error text-sm mt-3">{importError}</p>
+            )}
+          </>
+        ) : (
           <>
             {/* Encryption Type */}
             <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
@@ -206,45 +245,6 @@ export const KeyCreatePage: FC = () => {
               })}
             </div>
           </>
-        ) : (
-          <>
-            {/* Key Value */}
-            <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
-              Key Value
-            </h2>
-            <Input
-              multiline
-              rows={3}
-              placeholder="Paste key string here..."
-              value={keyValue}
-              onInput={(e) => {
-                setKeyValue(e.currentTarget.value);
-                setImportError('');
-              }}
-              className="mt-1 font-mono text-xs min-h-64"
-            />
-
-            {/* Parsed preview */}
-            {parsed && (
-              <div className="flex flex-wrap items-center gap-2 mt-3">
-                <Chip>{parsed.method.name}</Chip>
-                <KeyTypeChip
-                  value={
-                    parsed.method.type === 'asymmetric'
-                      ? parsed.type === 'public'
-                        ? 'lock'
-                        : 'key+lock'
-                      : 'key'
-                  }
-                />
-              </div>
-            )}
-
-            {/* Error */}
-            {importError && (
-              <p className="text-error text-sm mt-3">{importError}</p>
-            )}
-          </>
         )}
       </PageBody>
 
@@ -253,20 +253,17 @@ export const KeyCreatePage: FC = () => {
         <Button
           size="lg"
           className="w-full"
-          disabled={
-            isLoading ||
-            (mode === 'generate' ? !isGenerateValid : !isImportValid)
-          }
-          onClick={mode === 'generate' ? handleGenerate : handleImport}
+          disabled={isLoading || !isValid}
+          onClick={isImport ? handleImport : handleGenerate}
         >
           {isLoading && <Icon icon={Loading03Icon} className="animate-spin" />}
-          {mode === 'generate'
+          {isImport
             ? isLoading
-              ? 'Generating Key...'
-              : 'Generate Key'
-            : isLoading
               ? 'Importing Key...'
-              : 'Import Key'}
+              : 'Import Key'
+            : isLoading
+              ? 'Generating Key...'
+              : 'Generate Key'}
         </Button>
       </PageToolbar>
     </Page>

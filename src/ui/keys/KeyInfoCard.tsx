@@ -4,6 +4,7 @@ import {
   Tick01Icon,
 } from '@hugeicons/core-free-icons';
 import { type FC, useCallback, useRef, useState } from 'react';
+import { METHODS as CODEC_METHODS } from '@/codec';
 import { parseKey } from '@/crypto';
 import { db, type Key } from '@/db';
 import { Avatar, Button, Chip, Icon } from '../shared';
@@ -85,6 +86,10 @@ export const KeyInfoCard: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
       )}
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Chip>{parsed.method.name}</Chip>
+        <Chip>
+          {CODEC_METHODS[keyRecord.codec as keyof typeof CODEC_METHODS]?.name ??
+            keyRecord.codec}
+        </Chip>
         <KeyTypeChip
           value={
             parsed.method.type === 'asymmetric'

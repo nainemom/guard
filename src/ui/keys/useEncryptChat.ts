@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { type METHODS as CODEC_METHODS, decode, encode } from '@/codec';
+import { decode, encode } from '@/codec';
 import { decrypt, encrypt, getPublicKey, parseKey } from '@/crypto';
 import type { Key } from '@/db';
 
@@ -11,21 +11,20 @@ const formatFileSize = (bytes: number): string => {
 
 export interface Result {
   operation: 'encrypt' | 'decrypt';
-  codec: string;
   inputLabel: string;
   inputType: 'text' | 'file';
   output?: string;
   error?: string;
 }
 
-export const useEncrypt = (key: Key, _codecMethods: typeof CODEC_METHODS) => {
+export const useEncrypt = (key: Key) => {
   const [input, setInput] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [codec, setCodec] = useState<keyof typeof CODEC_METHODS>('base64');
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
   const parsed = parseKey(key.value);
+  const codec = (key.codec ?? 'base64') as Parameters<typeof encode>[1];
   const canDecrypt =
     parsed.method.type === 'symmetric' || parsed.type === 'private';
 
@@ -78,11 +77,10 @@ export const useEncrypt = (key: Key, _codecMethods: typeof CODEC_METHODS) => {
           output = new TextDecoder().decode(decrypted);
         }
 
-        setResult({ operation, codec, inputLabel, inputType, output });
+        setResult({ operation, inputLabel, inputType, output });
       } catch (e) {
         setResult({
           operation,
-          codec,
           inputLabel,
           inputType,
           error: e instanceof Error ? e.message : `${operation} failed`,
@@ -99,8 +97,6 @@ export const useEncrypt = (key: Key, _codecMethods: typeof CODEC_METHODS) => {
     setInput: updateInput,
     file,
     attachFile,
-    codec,
-    setCodec,
     isProcessing,
     hasInput,
     canDecrypt,

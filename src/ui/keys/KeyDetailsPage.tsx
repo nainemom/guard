@@ -30,23 +30,16 @@ import {
 import { KeyInfoCard } from './KeyInfoCard';
 import { type Result, useEncrypt } from './useEncryptChat';
 
-const codecEntries = Object.entries(CODEC_METHODS) as [
-  keyof typeof CODEC_METHODS,
-  (typeof CODEC_METHODS)[keyof typeof CODEC_METHODS],
-][];
-
-const importUrl = (keyStr: string) => {
+const importUrl = (codec: string, keyStr: string) => {
   const base = `${window.location.origin}${window.location.pathname}`;
-  return `${base}#/keys/new/${encodeURIComponent(keyStr)}`;
+  return `${base}#/keys/new/${codec}/${encodeURIComponent(keyStr)}`;
 };
 
-const ResultCard: FC<{ result: Result; onShare: () => void }> = ({
-  result,
-  onShare,
-}) => {
-  const codecName =
-    CODEC_METHODS[result.codec as keyof typeof CODEC_METHODS]?.name ??
-    result.codec;
+const ResultCard: FC<{
+  result: Result;
+  codecName: string;
+  onShare: () => void;
+}> = ({ result, codecName, onShare }) => {
   const isEncrypt = result.operation === 'encrypt';
 
   return (
@@ -149,6 +142,7 @@ export const KeyDetailsPage: FC = () => {
 
   const parsed = key ? parseKey(key.value) : null;
   const isAsymmetric = parsed?.method.type === 'asymmetric';
+  const codec = key?.codec ?? 'base64';
 
   if (!keyId) return null;
 
@@ -187,7 +181,8 @@ export const KeyDetailsPage: FC = () => {
                     className="flex items-center gap-3 w-full px-3 py-2 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt disabled:opacity-40 disabled:cursor-default"
                     onClick={() => {
                       close();
-                      if (publicKey) share({ text: importUrl(publicKey) });
+                      if (publicKey)
+                        share({ text: importUrl(codec, publicKey) });
                     }}
                   >
                     <Icon icon={Share01Icon} className="shrink-0" />
@@ -204,7 +199,7 @@ export const KeyDetailsPage: FC = () => {
                   className="flex items-center gap-3 w-full px-3 py-2 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt"
                   onClick={() => {
                     close();
-                    if (key) share({ text: importUrl(key.value) });
+                    share({ text: importUrl(codec, key.value) });
                   }}
                 >
                   <Icon icon={Share01Icon} className="shrink-0" />
@@ -239,8 +234,12 @@ export const KeyDetailsPage: FC = () => {
 
 const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
   const { share } = useShare();
-  const enc = useEncrypt(keyRecord, CODEC_METHODS);
+  const enc = useEncrypt(keyRecord);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const codecName =
+    CODEC_METHODS[keyRecord.codec as keyof typeof CODEC_METHODS]?.name ??
+    keyRecord.codec;
 
   const handleFilePick = useCallback(() => {
     fileInputRef.current?.click();
@@ -263,6 +262,7 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
         {enc.result ? (
           <ResultCard
             result={enc.result}
+            codecName={codecName}
             onShare={() =>
               enc.result?.output && share({ text: enc.result.output })
             }
@@ -277,20 +277,6 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
       </PageBody>
 
       <PageToolbar className="bg-surface">
-        <ButtonGroup className="px-3 pt-3">
-          {codecEntries.map(([id, method]) => (
-            <Button
-              key={id}
-              variant={enc.codec === id ? 'primary' : 'outline'}
-              onClick={() => enc.setCodec(id)}
-              size="sm"
-              className="shrink-0"
-            >
-              {method.name}
-            </Button>
-          ))}
-        </ButtonGroup>
-
         <input
           ref={fileInputRef}
           type="file"
