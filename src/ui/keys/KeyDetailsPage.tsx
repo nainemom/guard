@@ -1,12 +1,15 @@
 import {
   Alert01Icon,
+  Attachment01Icon,
+  Cancel01Icon,
   Delete01Icon,
+  File01Icon,
   Key01Icon,
   MoreVerticalIcon,
   Share01Icon,
   SquareLock01Icon,
 } from '@hugeicons/core-free-icons';
-import { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { METHODS as CODEC_METHODS } from '@/codec';
 import { getPublicKey, parseKey } from '@/crypto';
@@ -51,19 +54,30 @@ const ResultCard: FC<{ result: Result; onShare: () => void }> = ({
       {/* Input */}
       <div>
         <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2 px-1">
-          Your text
+          {result.inputType === 'file' ? 'Your file' : 'Your text'}
         </h3>
         <div className="rounded-xl border border-border p-3">
-          <p
-            dir="auto"
-            className="text-sm wrap-anywhere text-text whitespace-pre-wrap line-clamp-3"
-          >
-            {result.input}
-          </p>
+          {result.inputType === 'file' ? (
+            <div className="flex items-center gap-2 text-text">
+              <Icon
+                icon={File01Icon}
+                size="sm"
+                className="text-text-muted shrink-0"
+              />
+              <span className="text-sm truncate">{result.inputLabel}</span>
+            </div>
+          ) : (
+            <p
+              dir="auto"
+              className="text-sm wrap-anywhere text-text whitespace-pre-wrap line-clamp-3"
+            >
+              {result.inputLabel}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Arrow + operation label */}
+      {/* Operation label */}
       <div className="flex items-center gap-2 px-1">
         <Icon
           icon={isEncrypt ? SquareLock01Icon : Key01Icon}
@@ -226,6 +240,20 @@ export const KeyDetailsPage: FC = () => {
 const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
   const { share } = useShare();
   const enc = useEncrypt(keyRecord, CODEC_METHODS);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFilePick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const f = e.target.files?.[0];
+      if (f) enc.attachFile(f);
+      e.target.value = '';
+    },
+    [enc.attachFile],
+  );
 
   return (
     <>
@@ -242,7 +270,7 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-text-muted text-sm">
-              Enter text below to encrypt or decrypt
+              Enter text or attach a file to encrypt or decrypt
             </p>
           </div>
         )}
@@ -263,28 +291,65 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
           ))}
         </ButtonGroup>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
         <div className="flex items-start gap-3 p-3">
-          <Input
-            multiline
-            autoGrow={120}
-            rows={1}
-            className="flex-1 rounded-xl"
-            placeholder="Type your message..."
-            value={enc.input}
-            onInput={(e) => enc.setInput(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                enc.submit('encrypt');
-              }
-            }}
-          />
+          {enc.file ? (
+            <div className="flex items-center gap-2 px-3 h-10 rounded-xl bg-surface-alt border border-border flex-1 min-w-0">
+              <Icon
+                icon={File01Icon}
+                size="sm"
+                className="text-text-muted shrink-0"
+              />
+              <span className="text-sm text-text truncate flex-1">
+                {enc.file.name}
+              </span>
+              <button
+                type="button"
+                className="shrink-0 text-text-muted hover:text-text transition-colors cursor-pointer"
+                onClick={() => enc.attachFile(null)}
+              >
+                <Icon icon={Cancel01Icon} size="sm" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                iconOnly
+                onClick={handleFilePick}
+                className="shrink-0"
+              >
+                <Icon icon={Attachment01Icon} />
+              </Button>
+              <Input
+                multiline
+                autoGrow={120}
+                rows={1}
+                className="flex-1 rounded-xl"
+                placeholder="Type your message..."
+                value={enc.input}
+                onInput={(e) => enc.setInput(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    enc.submit('encrypt');
+                  }
+                }}
+              />
+            </>
+          )}
           <ButtonGroup>
-            {enc.canDecrypt && (
+            {enc.canDecrypt && !enc.file && (
               <Button
                 iconOnly
                 variant="success"
-                disabled={!enc.input || enc.isProcessing}
+                disabled={!enc.hasInput || enc.isProcessing}
                 onClick={() => enc.submit('decrypt')}
               >
                 <Icon icon={Key01Icon} size="lg" />
@@ -292,7 +357,7 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
             )}
             <Button
               iconOnly
-              disabled={!enc.input || enc.isProcessing}
+              disabled={!enc.hasInput || enc.isProcessing}
               onClick={() => enc.submit('encrypt')}
             >
               <Icon icon={SquareLock01Icon} size="lg" />
