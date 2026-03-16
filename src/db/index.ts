@@ -1,5 +1,5 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
-import { shallow } from 'zustand/shallow';
 import * as gdrive from './gdrive';
 
 // --- Base types ---
@@ -168,7 +168,7 @@ export const db = {
       if (cascades) {
         for (const { table: dep, foreignKey } of cascades) {
           tables[dep] = tables[dep].filter(
-            (r) => (r as Record<string, unknown>)[foreignKey] !== id,
+            (r) => (r as unknown as Record<string, unknown>)[foreignKey] !== id,
           );
         }
       }
@@ -201,20 +201,15 @@ export const db = {
 
 /**
  * Subscribe to all rows in a table. Re-renders when rows are added, removed, or updated.
- * Pass an optional `filter` to subscribe only to matching rows — the component
- * won't re-render when unrelated rows in the same table change.
+ * Pass an optional `filter` to narrow the result — filtering is memoized so the
+ * component only recomputes when the underlying table data changes.
  */
 export function useTable<K extends TableName>(
   name: K,
   filter?: (row: Tables[K]) => boolean,
 ): Tables[K][] {
-  return store(
-    (state) => {
-      const rows = state.tables[name];
-      return filter ? rows.filter(filter) : rows;
-    },
-    filter ? shallow : undefined,
-  );
+  const rows = store((state) => state.tables[name]);
+  return useMemo(() => (filter ? rows.filter(filter) : rows), [rows, filter]);
 }
 
 /**
