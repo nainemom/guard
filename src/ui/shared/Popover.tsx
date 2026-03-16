@@ -1,5 +1,7 @@
 import {
+  cloneElement,
   type FC,
+  type ReactElement,
   type ReactNode,
   useCallback,
   useEffect,
@@ -8,10 +10,13 @@ import {
 } from 'react';
 import { tv } from 'tailwind-variants';
 
+const CLOSE_DURATION = 120;
+
 const panel = tv({
   base: 'absolute end-0 top-full mt-1 z-50 rounded-lg border border-border bg-surface shadow-lg origin-top-right',
   variants: {
     closing: {
+      // Duration must match CLOSE_DURATION
       true: 'animate-[menu-out_120ms_ease-in_forwards]',
       false: 'animate-[menu-in_150ms_ease-out]',
     },
@@ -19,7 +24,7 @@ const panel = tv({
 });
 
 export const Popover: FC<{
-  trigger: ReactNode;
+  trigger: ReactElement;
   children: (close: () => void) => ReactNode;
 }> = ({ trigger, children }) => {
   const [open, setOpen] = useState(false);
@@ -31,7 +36,7 @@ export const Popover: FC<{
     setTimeout(() => {
       setOpen(false);
       setClosing(false);
-    }, 120);
+    }, CLOSE_DURATION);
   }, []);
 
   const toggle = useCallback(() => {
@@ -55,13 +60,7 @@ export const Popover: FC<{
 
   return (
     <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={toggle}
-        className="appearance-none bg-transparent border-none p-0 m-0"
-      >
-        {trigger}
-      </button>
+      {cloneElement(trigger, { onClick: toggle })}
       {open && <div className={panel({ closing })}>{children(close)}</div>}
     </div>
   );

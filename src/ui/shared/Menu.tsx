@@ -17,20 +17,15 @@ interface MenuItem {
 type MenuEntry = MenuItem | 'divider';
 
 const menuItem = tv({
-  base: 'flex items-center gap-3 w-full px-3 text-sm text-start transition-colors cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface disabled:opacity-40 disabled:cursor-default',
+  base: 'flex items-center gap-3 w-full px-3 py-2 text-sm text-start transition-colors cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface disabled:opacity-40 disabled:cursor-default',
   variants: {
     danger: {
       true: 'text-error',
       false: 'text-text',
     },
-    hasDescription: {
-      true: 'py-2.5',
-      false: 'py-2',
-    },
   },
   defaultVariants: {
     danger: false,
-    hasDescription: false,
   },
 });
 
@@ -73,7 +68,6 @@ export const Menu: FC<{
                 disabled={entry.disabled}
                 className={menuItem({
                   danger: entry.danger,
-                  hasDescription: !!entry.description,
                 })}
                 onClick={() => {
                   close();

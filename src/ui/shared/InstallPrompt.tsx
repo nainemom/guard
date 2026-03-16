@@ -1,5 +1,12 @@
 import { Cancel01Icon, Download04Icon } from '@hugeicons/core-free-icons';
-import { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type FC,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSessionStorage } from 'react-use';
 import { Icon } from './Icon';
 import { useToast } from './Toast';
@@ -32,6 +39,18 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 type PromptMode = 'none' | 'native' | 'ios-hint' | 'android-hint';
+
+const PromptContent: FC<{ subtitle: ReactNode }> = ({ subtitle }) => (
+  <>
+    <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
+      <Icon icon={Download04Icon} size={22} className="text-primary" />
+    </div>
+    <div className="min-w-0">
+      <p className="text-sm font-semibold text-text">Install Guard</p>
+      <p className="text-xs text-text-secondary mt-0.5">{subtitle}</p>
+    </div>
+  </>
+);
 
 export const InstallPrompt: FC = () => {
   const toast = useToast();
@@ -127,6 +146,14 @@ export const InstallPrompt: FC = () => {
 
     const isClickable = mode === 'native';
 
+    const subtitle = isClickable ? (
+      'Tap to add to your home screen'
+    ) : mode === 'ios-hint' ? (
+      <>Tap share, then &ldquo;Add to Home Screen&rdquo;</>
+    ) : (
+      <>Tap menu, then &ldquo;Install app&rdquo;</>
+    );
+
     toastIdRef.current = toast.show(
       <div className="flex items-center">
         {isClickable ? (
@@ -135,31 +162,11 @@ export const InstallPrompt: FC = () => {
             onClick={handleInstall}
             className="flex-1 flex items-center gap-4 p-4 text-left cursor-pointer active:scale-[0.98] transition-transform"
           >
-            <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
-              <Icon icon={Download04Icon} size={22} className="text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-text">Install Guard</p>
-              <p className="text-xs text-text-secondary mt-0.5">
-                Tap to add to your home screen
-              </p>
-            </div>
+            <PromptContent subtitle={subtitle} />
           </button>
         ) : (
           <div className="flex-1 flex items-center gap-4 p-4">
-            <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
-              <Icon icon={Download04Icon} size={22} className="text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-text">Install Guard</p>
-              <p className="text-xs text-text-secondary mt-0.5">
-                {mode === 'ios-hint' ? (
-                  <>Tap share, then &ldquo;Add to Home Screen&rdquo;</>
-                ) : (
-                  <>Tap menu, then &ldquo;Install app&rdquo;</>
-                )}
-              </p>
-            </div>
+            <PromptContent subtitle={subtitle} />
           </div>
         )}
         <button

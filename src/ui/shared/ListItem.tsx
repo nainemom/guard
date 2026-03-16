@@ -6,8 +6,12 @@ const listItem = tv({
     'flex items-center gap-3 p-3 min-h-18 w-full h-auto',
     '*:shrink-0',
     'outline-none bg-surface transition-colors',
-    'cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface',
   ],
+  variants: {
+    interactive: {
+      true: 'cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface',
+    },
+  },
 });
 
 export const ListItem: FC<{
@@ -20,7 +24,7 @@ export const ListItem: FC<{
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag
-      className={listItem({ className })}
+      className={listItem({ interactive: !!onClick, className })}
       {...(onClick ? { type: 'button' as const, onClick } : {})}
     >
       {before}
