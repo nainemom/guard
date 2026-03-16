@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import {
   createContext,
   type FC,
@@ -59,9 +58,7 @@ export const ToastProvider: FC<{ children: ReactNode }> = ({ children }) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={clsx(
-              'pointer-events-auto rounded-2xl shadow-2xl bg-surface border border-border animate-in',
-            )}
+            className="pointer-events-auto rounded-2xl shadow-2xl bg-surface border border-border animate-in"
           >
             {typeof toast.content === 'string' ? (
               <p className="px-4 py-3 text-sm text-text text-center">

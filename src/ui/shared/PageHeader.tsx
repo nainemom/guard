@@ -1,5 +1,4 @@
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
-import { clsx } from 'clsx';
 import type { FC, ReactNode } from 'react';
 import { Link } from 'wouter';
 import { Icon } from './Icon';
@@ -23,10 +22,7 @@ export const PageHeader: FC<HeaderProps> = ({
     {backTo && (
       <Link
         to={backTo}
-        className={clsx(
-          '-ms-2 size-10 flex items-center justify-center rounded-full',
-          'transition-colors text-text-secondary bg-surface hover:bg-surface-alt focus-within:bg-surface-alt active:bg-surface',
-        )}
+        className="-ms-2 size-10 flex items-center justify-center rounded-full transition-colors text-text-secondary bg-surface hover:bg-surface-alt focus-within:bg-surface-alt active:bg-surface"
       >
         <Icon icon={ArrowLeft01Icon} size={24} />
       </Link>

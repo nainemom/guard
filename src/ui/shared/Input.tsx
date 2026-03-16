@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import {
   type FC,
   type InputHTMLAttributes,
@@ -6,9 +5,16 @@ import {
   useCallback,
   useRef,
 } from 'react';
+import { tv } from 'tailwind-variants';
 
-const baseClasses =
-  'block w-full rounded-lg border border-border bg-surface text-text px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors';
+const input = tv({
+  base: 'block w-full rounded-lg border border-border bg-surface text-text px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors',
+  variants: {
+    multiline: {
+      true: 'resize-none',
+    },
+  },
+});
 
 type InputProps =
   | ({
@@ -60,7 +66,7 @@ export const Input: FC<InputProps> = ({
         {...rest}
         value={value}
         onInput={autoGrow ? handleInput : onInput}
-        className={clsx(baseClasses, 'resize-none', className)}
+        className={input({ multiline: true, className })}
       />
     );
   }
@@ -68,7 +74,7 @@ export const Input: FC<InputProps> = ({
     <input
       dir="auto"
       {...(props as InputHTMLAttributes<HTMLInputElement>)}
-      className={clsx(baseClasses, className)}
+      className={input({ className })}
     />
   );
 };

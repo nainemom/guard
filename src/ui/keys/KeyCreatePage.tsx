@@ -245,7 +245,8 @@ export const KeyCreatePage: FC = () => {
       {/* Bottom Toolbar */}
       <PageToolbar className="p-4">
         <Button
-          className="w-full py-3"
+          size="lg"
+          className="w-full"
           disabled={
             isLoading ||
             (mode === 'generate' ? !isGenerateValid : !isImportValid)

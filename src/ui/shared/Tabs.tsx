@@ -1,5 +1,19 @@
-import { clsx } from 'clsx';
 import type { FC } from 'react';
+import { tv } from 'tailwind-variants';
+
+const tabs = tv({
+  base: 'inline-flex w-full rounded-lg bg-surface-alt p-1 gap-1',
+});
+
+const tab = tv({
+  base: 'flex-1 rounded-md px-4 py-2 text-sm font-medium cursor-pointer transition-colors outline-none',
+  variants: {
+    selected: {
+      true: 'bg-primary text-on-primary shadow-sm',
+      false: 'text-text-muted hover:text-text',
+    },
+  },
+});
 
 export const Tabs: FC<{
   items: { id: string; label: string }[];
@@ -7,22 +21,14 @@ export const Tabs: FC<{
   onChange: (id: string) => void;
   className?: string;
 }> = ({ items, value, onChange, className }) => (
-  <div
-    className={clsx(
-      'inline-flex w-full rounded-lg bg-surface-alt p-1 gap-1',
-      className,
-    )}
-  >
+  <div role="tablist" className={tabs({ className })}>
     {items.map((item) => (
       <button
         key={item.id}
         type="button"
-        className={clsx(
-          'flex-1 rounded-md px-4 py-2 text-sm font-medium cursor-pointer transition-colors outline-none',
-          value === item.id
-            ? 'bg-primary text-on-primary shadow-sm'
-            : 'text-text-muted hover:text-text',
-        )}
+        role="tab"
+        aria-selected={value === item.id}
+        className={tab({ selected: value === item.id })}
         onClick={() => onChange(item.id)}
       >
         {item.label}

@@ -1,6 +1,6 @@
 import { MoreVerticalIcon } from '@hugeicons/core-free-icons';
-import { clsx } from 'clsx';
 import type { FC, ReactNode } from 'react';
+import { tv } from 'tailwind-variants';
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { Popover } from './Popover';
@@ -16,13 +16,41 @@ interface MenuItem {
 
 type MenuEntry = MenuItem | 'divider';
 
+const menuItem = tv({
+  base: 'flex items-center gap-3 w-full px-3 text-sm text-start transition-colors cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface disabled:opacity-40 disabled:cursor-default',
+  variants: {
+    danger: {
+      true: 'text-error',
+      false: 'text-text',
+    },
+    hasDescription: {
+      true: 'py-2.5',
+      false: 'py-2',
+    },
+  },
+  defaultVariants: {
+    danger: false,
+    hasDescription: false,
+  },
+});
+
+const menuItemDescription = tv({
+  base: 'text-xs font-normal',
+  variants: {
+    danger: {
+      true: 'text-error/60',
+      false: 'text-text-muted',
+    },
+  },
+});
+
 export const Menu: FC<{
   items: MenuEntry[];
 }> = ({ items }) => {
   return (
     <Popover
       trigger={
-        <Button variant="ghost" iconOnly className="size-10">
+        <Button variant="ghost" iconOnly>
           <Icon icon={MoreVerticalIcon} size={20} />
         </Button>
       }
@@ -43,14 +71,10 @@ export const Menu: FC<{
                 key={entry.label}
                 type="button"
                 disabled={entry.disabled}
-                className={clsx(
-                  'flex items-center gap-3 w-full px-3 text-sm text-start',
-                  entry.description ? 'py-2.5' : 'py-2',
-                  'transition-colors cursor-pointer',
-                  'hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface',
-                  'disabled:opacity-40 disabled:cursor-default',
-                  entry.danger ? 'text-error' : 'text-text',
-                )}
+                className={menuItem({
+                  danger: entry.danger,
+                  hasDescription: !!entry.description,
+                })}
                 onClick={() => {
                   close();
                   entry.onClick();
@@ -61,10 +85,7 @@ export const Menu: FC<{
                   <span>{entry.label}</span>
                   {entry.description && (
                     <span
-                      className={clsx(
-                        'text-xs font-normal',
-                        entry.danger ? 'text-error/60' : 'text-text-muted',
-                      )}
+                      className={menuItemDescription({ danger: entry.danger })}
                     >
                       {entry.description}
                     </span>

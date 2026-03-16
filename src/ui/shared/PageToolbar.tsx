@@ -1,10 +1,11 @@
 import type { FC, ReactNode } from 'react';
+import { tv } from 'tailwind-variants';
+
+const pageToolbar = tv({
+  base: 'shrink-0 border-t border-border',
+});
 
 export const PageToolbar: FC<{ children: ReactNode; className?: string }> = ({
   children,
   className,
-}) => (
-  <div className={`shrink-0 border-t border-border ${className ?? ''}`}>
-    {children}
-  </div>
-);
+}) => <div className={pageToolbar({ className })}>{children}</div>;

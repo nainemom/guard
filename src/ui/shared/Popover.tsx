@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import {
   type FC,
   type ReactNode,
@@ -7,6 +6,17 @@ import {
   useRef,
   useState,
 } from 'react';
+import { tv } from 'tailwind-variants';
+
+const panel = tv({
+  base: 'absolute end-0 top-full mt-1 z-50 rounded-lg border border-border bg-surface shadow-lg origin-top-right',
+  variants: {
+    closing: {
+      true: 'animate-[menu-out_120ms_ease-in_forwards]',
+      false: 'animate-[menu-in_150ms_ease-out]',
+    },
+  },
+});
 
 export const Popover: FC<{
   trigger: ReactNode;
@@ -52,18 +62,7 @@ export const Popover: FC<{
       >
         {trigger}
       </button>
-      {open && (
-        <div
-          className={clsx(
-            'absolute end-0 top-full mt-1 z-50 rounded-lg border border-border bg-surface shadow-lg origin-top-right',
-            closing
-              ? 'animate-[menu-out_120ms_ease-in_forwards]'
-              : 'animate-[menu-in_150ms_ease-out]',
-          )}
-        >
-          {children(close)}
-        </div>
-      )}
+      {open && <div className={panel({ closing })}>{children(close)}</div>}
     </div>
   );
 };

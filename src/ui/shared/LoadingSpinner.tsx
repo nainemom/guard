@@ -1,13 +1,17 @@
 import { Loading03Icon } from '@hugeicons/core-free-icons';
-import { clsx } from 'clsx';
 import type { FC } from 'react';
+import { tv } from 'tailwind-variants';
 import { Icon } from './Icon';
+
+const spinner = tv({
+  base: 'flex items-center justify-center flex-1',
+});
 
 export const LoadingSpinner: FC<{
   size?: number;
   className?: string;
 }> = ({ size = 36, className }) => (
-  <div className={clsx('flex items-center justify-center flex-1', className)}>
+  <div className={spinner({ className })}>
     <Icon
       icon={Loading03Icon}
       className="animate-spin text-text-muted"

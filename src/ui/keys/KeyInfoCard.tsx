@@ -51,16 +51,17 @@ export const KeyInfoCard: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
           <Button
             variant="ghost"
             iconOnly
+            size="sm"
             onClick={() => setEditing(false)}
-            className="size-7"
           >
             <Icon icon={Cancel01Icon} size={14} />
           </Button>
           <Button
             variant="ghost"
             iconOnly
+            size="sm"
             onClick={save}
-            className="size-7 text-success"
+            className="text-success"
           >
             <Icon icon={Tick01Icon} size={14} />
           </Button>
@@ -70,12 +71,7 @@ export const KeyInfoCard: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
           <span className="text-lg font-semibold text-text">
             {keyRecord.name}
           </span>
-          <Button
-            variant="ghost"
-            iconOnly
-            onClick={startEdit}
-            className="size-7"
-          >
+          <Button variant="ghost" iconOnly size="sm" onClick={startEdit}>
             <Icon icon={Edit02Icon} size={14} />
           </Button>
         </div>

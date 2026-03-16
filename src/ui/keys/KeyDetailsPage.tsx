@@ -225,7 +225,6 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
               variant="success"
               disabled={!chat.input.trim() || chat.isProcessing}
               onClick={() => chat.submit('decrypt')}
-              className="size-10"
             >
               <Icon icon={Key01Icon} size={22} />
             </Button>
@@ -234,7 +233,6 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
             iconOnly
             disabled={!chat.input.trim() || chat.isProcessing}
             onClick={() => chat.submit('encrypt')}
-            className="size-10"
           >
             <Icon icon={SquareLock01Icon} size={22} />
           </Button>

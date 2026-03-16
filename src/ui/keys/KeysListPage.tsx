@@ -276,7 +276,7 @@ export const KeysListPage: FC = () => {
       </PageBody>
 
       <Link to="/keys/new" className="fixed bottom-6 right-6 contents">
-        <Button iconOnly className="fixed bottom-6 right-6 size-14 shadow-lg">
+        <Button iconOnly size="lg" className="fixed bottom-6 right-6 shadow-lg">
           <Icon icon={PlusSignIcon} size={24} />
         </Button>
       </Link>
