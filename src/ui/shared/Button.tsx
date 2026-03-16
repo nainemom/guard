@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, FC } from 'react';
 import { tv } from 'tailwind-variants';
 
 const button = tv({
-  base: 'inline-flex items-center justify-center gap-2 font-medium cursor-pointer disabled:opacity-40 transition-colors outline-none border',
+  base: 'inline-flex items-center justify-center gap-2 font-medium cursor-pointer disabled:opacity-40 transition-colors outline-none border rounded-lg',
   variants: {
     variant: {
       primary:
@@ -19,22 +19,22 @@ const button = tv({
         'bg-transparent border-border hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-transparent text-text-secondary',
     },
     iconOnly: {
-      true: 'rounded-full shrink-0',
-      false: 'rounded-lg',
+      true: '',
+      false: '',
     },
     size: {
-      sm: '',
-      md: '',
-      lg: '',
+      sm: 'h-6',
+      md: 'h-10',
+      lg: 'h-14',
     },
   },
   compoundVariants: [
-    { iconOnly: true, size: 'sm', class: 'size-7' },
-    { iconOnly: true, size: 'md', class: 'size-10' },
-    { iconOnly: true, size: 'lg', class: 'size-14' },
-    { iconOnly: false, size: 'sm', class: 'px-3 py-1.5 text-xs' },
-    { iconOnly: false, size: 'md', class: 'px-4 py-2 text-sm' },
-    { iconOnly: false, size: 'lg', class: 'px-4 py-3 text-sm' },
+    { iconOnly: true, size: 'sm', class: 'w-6' },
+    { iconOnly: true, size: 'md', class: 'w-10' },
+    { iconOnly: true, size: 'lg', class: 'w-14' },
+    { iconOnly: false, size: 'sm', class: 'px-2 text-xs' },
+    { iconOnly: false, size: 'md', class: 'px-3 text-sm' },
+    { iconOnly: false, size: 'lg', class: 'px-4 text-sm' },
   ],
   defaultVariants: {
     variant: 'primary',

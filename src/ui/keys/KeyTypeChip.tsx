@@ -8,14 +8,14 @@ export const KeyTypeChip: FC<
   }
 > = ({ value, ...props }) => (
   <Chip {...props}>
-    {value === 'lock' && <Icon icon={SquareLock01Icon} size={16} />}
+    {value === 'lock' && <Icon icon={SquareLock01Icon} size="sm" />}
     {value === 'key+lock' && (
       <>
-        <Icon icon={LockKeyIcon} size={16} />
+        <Icon icon={LockKeyIcon} size="sm" />
         <span>{'+'}</span>
-        <Icon icon={SquareLock01Icon} size={16} />
+        <Icon icon={SquareLock01Icon} size="sm" />
       </>
     )}
-    {value === 'key' && <Icon icon={LockKeyIcon} size={16} />}
+    {value === 'key' && <Icon icon={LockKeyIcon} size="sm" />}
   </Chip>
 );

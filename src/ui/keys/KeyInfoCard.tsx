@@ -53,26 +53,33 @@ export const KeyInfoCard: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
             iconOnly
             size="sm"
             onClick={() => setEditing(false)}
+            className="shrink-0"
           >
-            <Icon icon={Cancel01Icon} size={14} />
+            <Icon icon={Cancel01Icon} size="sm" />
           </Button>
           <Button
             variant="ghost"
             iconOnly
             size="sm"
             onClick={save}
-            className="text-success"
+            className="shrink-0"
           >
-            <Icon icon={Tick01Icon} size={14} />
+            <Icon icon={Tick01Icon} size="sm" />
           </Button>
         </div>
       ) : (
-        <div className="flex items-center gap-1 border-b-2 border-transparent py-1">
+        <div className="flex items-center gap-2 border-b-2 border-transparent py-1">
           <span className="text-lg font-semibold text-text">
             {keyRecord.name}
           </span>
-          <Button variant="ghost" iconOnly size="sm" onClick={startEdit}>
-            <Icon icon={Edit02Icon} size={14} />
+          <Button
+            variant="ghost"
+            iconOnly
+            size="sm"
+            onClick={startEdit}
+            className="shrink-0"
+          >
+            <Icon icon={Edit02Icon} size="sm" />
           </Button>
         </div>
       )}

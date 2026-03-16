@@ -8,7 +8,7 @@ import {
 import { tv } from 'tailwind-variants';
 
 const input = tv({
-  base: 'block w-full rounded-lg border border-border bg-surface text-text px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors',
+  base: 'block w-full rounded-lg border border-border bg-surface text-text px-3 py-2 min-h-10 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors',
   variants: {
     multiline: {
       true: 'resize-none',

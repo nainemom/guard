@@ -8,14 +8,13 @@ const spinner = tv({
 });
 
 export const LoadingSpinner: FC<{
-  size?: number;
   className?: string;
-}> = ({ size = 36, className }) => (
+}> = ({ className }) => (
   <div className={spinner({ className })}>
     <Icon
       icon={Loading03Icon}
       className="animate-spin text-text-muted"
-      size={size}
+      size="xl"
     />
   </div>
 );

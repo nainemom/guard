@@ -1,24 +1,26 @@
 import {
   Delete01Icon,
   Key01Icon,
+  MoreVerticalIcon,
   Share01Icon,
   SquareLock01Icon,
 } from '@hugeicons/core-free-icons';
-import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { METHODS as CODEC_METHODS } from '@/codec';
 import { getPublicKey, parseKey } from '@/crypto';
 import { db, type Key, useRow } from '@/db';
 import {
   Button,
+  ButtonGroup,
   ChatBubble,
   Icon,
   Input,
-  Menu,
   Page,
   PageBody,
   PageHeader,
   PageToolbar,
+  Popover,
   shareIcon,
   useShare,
 } from '../shared';
@@ -39,7 +41,7 @@ const MessageBubble: FC<{
   msg: Message;
   onShare: () => void;
 }> = ({ msg, onShare }) => (
-  <div className="flex flex-col gap-1">
+  <div className="flex flex-col gap-3">
     <ChatBubble
       position="end"
       header={
@@ -65,9 +67,10 @@ const MessageBubble: FC<{
             <Button
               variant="ghost"
               className="text-primary p-1 rounded"
+              iconOnly
               onClick={onShare}
             >
-              <Icon icon={shareIcon} size={18} />
+              <Icon icon={shareIcon} size="sm" />
             </Button>
           ) : undefined
         }
@@ -102,44 +105,8 @@ export const KeyDetailsPage: FC = () => {
     navigate('/keys');
   }, [key, keyId, navigate]);
 
-  const menuItems = useMemo(() => {
-    const parsed = key ? parseKey(key.value) : null;
-    const isAsymmetric = parsed?.method.type === 'asymmetric';
-
-    return [
-      ...(isAsymmetric
-        ? [
-            {
-              label: 'Share Lock',
-              description: 'Others can encrypt messages for you',
-              icon: <Icon icon={Share01Icon} size={18} />,
-              onClick: () => publicKey && share({ text: importUrl(publicKey) }),
-              disabled: !publicKey,
-            },
-            {
-              label: 'Share Key',
-              description: 'Anyone with this can encrypt and decrypt',
-              icon: <Icon icon={Share01Icon} size={18} />,
-              onClick: () => key && share({ text: importUrl(key.value) }),
-            },
-          ]
-        : [
-            {
-              label: 'Share Key',
-              description: 'Anyone with this can encrypt and decrypt',
-              icon: <Icon icon={Share01Icon} size={18} />,
-              onClick: () => key && share({ text: importUrl(key.value) }),
-            },
-          ]),
-      'divider' as const,
-      {
-        label: 'Delete',
-        icon: <Icon icon={Delete01Icon} size={18} />,
-        onClick: handleDelete,
-        danger: true,
-      },
-    ];
-  }, [key, publicKey, share, handleDelete]);
+  const parsed = key ? parseKey(key.value) : null;
+  const isAsymmetric = parsed?.method.type === 'asymmetric';
 
   if (!keyId) return null;
 
@@ -161,7 +128,67 @@ export const KeyDetailsPage: FC = () => {
       <PageHeader
         backTo="/keys"
         title={key.name}
-        after={<Menu items={menuItems} />}
+        after={
+          <Popover
+            trigger={
+              <Button variant="ghost" iconOnly>
+                <Icon icon={MoreVerticalIcon} size="lg" />
+              </Button>
+            }
+          >
+            {(close) => (
+              <div className="min-w-64">
+                {isAsymmetric && (
+                  <button
+                    type="button"
+                    disabled={!publicKey}
+                    className="flex items-center gap-3 w-full px-3 py-2 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt disabled:opacity-40 disabled:cursor-default"
+                    onClick={() => {
+                      close();
+                      if (publicKey) share({ text: importUrl(publicKey) });
+                    }}
+                  >
+                    <Icon icon={Share01Icon} className="shrink-0" />
+                    <div className="flex flex-col">
+                      <span>Share Lock</span>
+                      <span className="text-xs text-text-muted">
+                        Others can encrypt messages for you
+                      </span>
+                    </div>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="flex items-center gap-3 w-full px-3 py-2 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt"
+                  onClick={() => {
+                    close();
+                    if (key) share({ text: importUrl(key.value) });
+                  }}
+                >
+                  <Icon icon={Share01Icon} className="shrink-0" />
+                  <div className="flex flex-col">
+                    <span>Share Key</span>
+                    <span className="text-xs text-text-muted">
+                      Anyone with this can encrypt and decrypt
+                    </span>
+                  </div>
+                </button>
+                <div className="my-1 border-t border-border-light" />
+                <button
+                  type="button"
+                  className="flex items-center gap-3 w-full px-3 py-2 text-sm text-error text-start transition-colors cursor-pointer hover:bg-surface-alt"
+                  onClick={() => {
+                    close();
+                    handleDelete();
+                  }}
+                >
+                  <Icon icon={Delete01Icon} className="shrink-0" />
+                  <span>Delete</span>
+                </button>
+              </div>
+            )}
+          </Popover>
+        }
       />
       <KeyDetailsContent keyRecord={key} />
     </Page>
@@ -190,20 +217,21 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
       </PageBody>
 
       <PageToolbar className="bg-surface">
-        <div className="flex gap-1 overflow-x-auto px-4 pt-2">
+        <ButtonGroup className="px-3 pt-3">
           {codecEntries.map(([id, method]) => (
             <Button
               key={id}
               variant={chat.codec === id ? 'primary' : 'outline'}
               onClick={() => chat.setCodec(id)}
-              className="shrink-0 px-2 py-0.5 rounded-full text-xs font-medium"
+              size="sm"
+              className="shrink-0"
             >
               {method.name}
             </Button>
           ))}
-        </div>
+        </ButtonGroup>
 
-        <div className="flex items-start gap-2 p-3">
+        <div className="flex items-start gap-3 p-3">
           <Input
             multiline
             autoGrow={120}
@@ -219,23 +247,25 @@ const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
               }
             }}
           />
-          {chat.canDecrypt && (
+          <ButtonGroup>
+            {chat.canDecrypt && (
+              <Button
+                iconOnly
+                variant="success"
+                disabled={!chat.input.trim() || chat.isProcessing}
+                onClick={() => chat.submit('decrypt')}
+              >
+                <Icon icon={Key01Icon} size="lg" />
+              </Button>
+            )}
             <Button
               iconOnly
-              variant="success"
               disabled={!chat.input.trim() || chat.isProcessing}
-              onClick={() => chat.submit('decrypt')}
+              onClick={() => chat.submit('encrypt')}
             >
-              <Icon icon={Key01Icon} size={22} />
+              <Icon icon={SquareLock01Icon} size="lg" />
             </Button>
-          )}
-          <Button
-            iconOnly
-            disabled={!chat.input.trim() || chat.isProcessing}
-            onClick={() => chat.submit('encrypt')}
-          >
-            <Icon icon={SquareLock01Icon} size={22} />
-          </Button>
+          </ButtonGroup>
         </div>
       </PageToolbar>
     </>

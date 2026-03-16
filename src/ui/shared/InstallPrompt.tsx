@@ -43,7 +43,7 @@ type PromptMode = 'none' | 'native' | 'ios-hint' | 'android-hint';
 const PromptContent: FC<{ subtitle: ReactNode }> = ({ subtitle }) => (
   <>
     <div className="shrink-0 rounded-full bg-primary/10 p-2.5">
-      <Icon icon={Download04Icon} size={22} className="text-primary" />
+      <Icon icon={Download04Icon} size="lg" className="text-primary" />
     </div>
     <div className="min-w-0">
       <p className="text-sm font-semibold text-text">Install Guard</p>
@@ -174,7 +174,7 @@ export const InstallPrompt: FC = () => {
           onClick={handleDismiss}
           className="shrink-0 p-1.5 mr-3 rounded-full text-text-muted hover:text-text transition-colors cursor-pointer"
         >
-          <Icon icon={Cancel01Icon} size={16} />
+          <Icon icon={Cancel01Icon} size="sm" />
         </button>
       </div>,
       0,

@@ -58,7 +58,9 @@ export const ChatBubble: FC<{
       <div dir="auto" className="whitespace-normal wrap-anywhere text-sm">
         {children}
       </div>
-      {footer && <div className="flex justify-end mt-1">{footer}</div>}
+      {footer && (
+        <div className="flex justify-end mt-1 -mx-3 -mb-2">{footer}</div>
+      )}
     </div>
   </div>
 );

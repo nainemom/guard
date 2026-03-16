@@ -15,6 +15,7 @@ import {
 import { db } from '@/db';
 import {
   Button,
+  ButtonGroup,
   Chip,
   Icon,
   Input,
@@ -24,7 +25,6 @@ import {
   PageHeader,
   PageToolbar,
   sleep,
-  Tabs,
 } from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
 
@@ -51,11 +51,6 @@ const METHOD_GROUPS = Object.entries(METHODS).reduce(
   },
   {} as Record<MethodCategory, string[]>,
 );
-
-const MODE_TABS = [
-  { id: 'generate', label: 'Generate' },
-  { id: 'import', label: 'Import' },
-];
 
 export const KeyCreatePage: FC = () => {
   const [, navigate] = useLocation();
@@ -113,13 +108,26 @@ export const KeyCreatePage: FC = () => {
       <PageHeader backTo="/keys" title="New Key" />
 
       <PageBody className="p-4">
-        {/* Mode Tabs */}
-        <Tabs
-          items={MODE_TABS}
-          value={mode}
-          onChange={setMode}
-          className="mb-8"
-        />
+        <ButtonGroup contained role="tablist" className="w-full mb-8 shrink-0">
+          <Button
+            role="tab"
+            aria-selected={mode === 'generate'}
+            variant={mode === 'generate' ? 'primary' : 'ghost'}
+            className="flex-1"
+            onClick={() => setMode('generate')}
+          >
+            Generate
+          </Button>
+          <Button
+            role="tab"
+            aria-selected={mode === 'import'}
+            variant={mode === 'import' ? 'primary' : 'ghost'}
+            className="flex-1"
+            onClick={() => setMode('import')}
+          >
+            Import
+          </Button>
+        </ButtonGroup>
 
         {/* Key Name */}
         <h2 className="text-sm font-semibold text-text-muted tracking-wide mb-2">
@@ -165,13 +173,11 @@ export const KeyCreatePage: FC = () => {
                               <Icon
                                 icon={CheckmarkCircle02Icon}
                                 className="text-primary"
-                                size={18}
                               />
                             ) : (
                               <Icon
                                 icon={CircleIcon}
                                 className="text-text-muted"
-                                size={18}
                               />
                             )
                           }
@@ -253,9 +259,7 @@ export const KeyCreatePage: FC = () => {
           }
           onClick={mode === 'generate' ? handleGenerate : handleImport}
         >
-          {isLoading && (
-            <Icon icon={Loading03Icon} className="animate-spin" size={18} />
-          )}
+          {isLoading && <Icon icon={Loading03Icon} className="animate-spin" />}
           {mode === 'generate'
             ? isLoading
               ? 'Generating Key...'

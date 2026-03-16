@@ -1,6 +1,7 @@
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import type { FC, ReactNode } from 'react';
 import { Link } from 'wouter';
+import { Button } from './Button';
 import { Icon } from './Icon';
 
 interface HeaderProps {
@@ -20,11 +21,10 @@ export const PageHeader: FC<HeaderProps> = ({
 }) => (
   <header className="flex items-center gap-3 px-4 border-b border-border shrink-0 h-14">
     {backTo && (
-      <Link
-        to={backTo}
-        className="-ms-2 size-10 flex items-center justify-center rounded-full transition-colors text-text-secondary bg-surface hover:bg-surface-alt focus-within:bg-surface-alt active:bg-surface"
-      >
-        <Icon icon={ArrowLeft01Icon} size={24} />
+      <Link to={backTo} asChild>
+        <Button iconOnly className="-ms-2" variant="ghost">
+          <Icon icon={ArrowLeft01Icon} size="lg" />
+        </Button>
       </Link>
     )}
     {before}

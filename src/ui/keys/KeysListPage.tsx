@@ -116,7 +116,6 @@ export const KeysListPage: FC = () => {
                 >
                   <Icon
                     icon={connected ? CloudIcon : UserIcon}
-                    size={18}
                     className="text-text-muted"
                   />
                 </button>
@@ -152,13 +151,9 @@ export const KeysListPage: FC = () => {
                   >
                     <span className="shrink-0">
                       {syncing ? (
-                        <Icon
-                          icon={Loading03Icon}
-                          size={18}
-                          className="animate-spin"
-                        />
+                        <Icon icon={Loading03Icon} className="animate-spin" />
                       ) : (
-                        <Icon icon={CloudIcon} size={18} />
+                        <Icon icon={CloudIcon} />
                       )}
                     </span>
                     <div className="flex flex-col">
@@ -177,7 +172,7 @@ export const KeysListPage: FC = () => {
                     onClick={() => handleDisconnect(close)}
                   >
                     <span className="shrink-0">
-                      <Icon icon={CloudOffIcon} size={18} />
+                      <Icon icon={CloudOffIcon} />
                     </span>
                     <span>Disconnect</span>
                   </button>
@@ -187,7 +182,7 @@ export const KeysListPage: FC = () => {
                   <div className="rounded-full bg-border-light p-3">
                     <Icon
                       icon={UserIcon}
-                      size={24}
+                      size="lg"
                       className="text-text-muted"
                     />
                   </div>
@@ -207,11 +202,11 @@ export const KeysListPage: FC = () => {
                     {syncing ? (
                       <Icon
                         icon={Loading03Icon}
-                        size={16}
+                        size="sm"
                         className="animate-spin"
                       />
                     ) : (
-                      <Icon icon={CloudIcon} size={16} />
+                      <Icon icon={CloudIcon} size="sm" />
                     )}
                     Connect Google Drive
                   </Button>
@@ -226,7 +221,7 @@ export const KeysListPage: FC = () => {
         {keys.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 px-6 pb-16 max-w-96 mx-auto text-center">
             <div className="rounded-full bg-border-light p-5 mb-4">
-              <Icon icon={Key01Icon} className="text-text-muted" size={40} />
+              <Icon icon={Key01Icon} className="text-text-muted" size="xl" />
             </div>
             <p className="text-text font-medium text-lg">
               You don't have any keys yet
@@ -241,7 +236,7 @@ export const KeysListPage: FC = () => {
             {keys.map((key) => {
               const parsed = parseKey(key.value);
               return (
-                <Link key={key.id} to={`/keys/${key.id}`} className="contents">
+                <Link key={key.id} to={`/keys/${key.id}`} asChild>
                   <ListItem
                     before={<Avatar size={48} seed={key.name} />}
                     after={
@@ -258,7 +253,6 @@ export const KeysListPage: FC = () => {
                         <Icon
                           icon={ArrowRight01Icon}
                           className="text-text-muted"
-                          size={20}
                         />
                       </>
                     }
@@ -277,7 +271,7 @@ export const KeysListPage: FC = () => {
 
       <Link to="/keys/new" className="fixed bottom-6 right-6 contents">
         <Button iconOnly size="lg" className="fixed bottom-6 right-6 shadow-lg">
-          <Icon icon={PlusSignIcon} size={24} />
+          <Icon icon={PlusSignIcon} size="lg" />
         </Button>
       </Link>
     </Page>

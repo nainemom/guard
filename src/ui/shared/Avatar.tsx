@@ -1,24 +1,30 @@
-import { botttsNeutral } from '@dicebear/collection';
+import { shapes } from '@dicebear/collection';
 import { createAvatar } from '@dicebear/core';
 import { type FC, useMemo } from 'react';
+import { tv } from 'tailwind-variants';
+
+const avatar = tv({
+  base: 'rounded-lg overflow-hidden bg-surface-alt',
+});
 
 export const Avatar: FC<{
   size: number;
   seed: string;
-}> = ({ size, seed }) => {
-  const avatar = useMemo(() => {
-    return createAvatar(botttsNeutral, {
+  className?: string;
+}> = ({ size, seed, className }) => {
+  const img = useMemo(() => {
+    return createAvatar(shapes, {
       seed,
       size,
     }).toDataUri();
   }, [size, seed]);
   return (
     <img
-      src={avatar}
+      src={img}
       alt={seed}
       width={size}
       height={size}
-      className="rounded-full overflow-hidden bg-surface-alt"
+      className={avatar({ className })}
     />
   );
 };
