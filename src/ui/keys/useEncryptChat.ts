@@ -1,8 +1,7 @@
-import { useLiveQuery } from 'dexie-react-hooks';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type METHODS as CODEC_METHODS, decode, encode } from '@/codec';
 import { decrypt, encrypt, getPublicKey, parseKey } from '@/crypto';
-import { db, type Key, type Message } from '@/db';
+import { db, type Key, type Message, useTable } from '@/db';
 
 export type { Message };
 
@@ -10,9 +9,11 @@ export const useEncryptChat = (
   key: Key,
   codecMethods: typeof CODEC_METHODS,
 ) => {
-  const messages = useLiveQuery(
-    () => db.messages.where('keyId').equals(key.id).sortBy('updatedAt'),
-    [key.id],
+  const filter = useCallback((m: Message) => m.keyId === key.id, [key.id]);
+  const filtered = useTable('messages', filter);
+  const messages = useMemo(
+    () => [...filtered].sort((a, b) => a.updatedAt - b.updatedAt),
+    [filtered],
   );
   const [input, setInput] = useState('');
   const [codec, setCodec] = useState<keyof typeof CODEC_METHODS>('base64');
@@ -64,25 +65,25 @@ export const useEncryptChat = (
         }
 
         await delay;
-        await db.messages.add({
+        db.add('messages', {
           keyId: key.id,
           operation,
           codec,
           input: trimmedInput,
-          status: 'done',
+          status: 'done' as const,
           outputType: operation === 'decrypt' ? 'string' : codecMethod.output,
           output,
-        } as Message);
+        });
       } catch (e) {
         await delay;
-        await db.messages.add({
+        db.add('messages', {
           keyId: key.id,
           operation,
           codec,
           input: trimmedInput,
-          status: 'error',
+          status: 'error' as const,
           error: e instanceof Error ? e.message : `${operation} failed`,
-        } as Message);
+        });
       } finally {
         setIsProcessing(false);
       }
@@ -91,7 +92,7 @@ export const useEncryptChat = (
   );
 
   return {
-    messages: messages ?? [],
+    messages,
     input,
     setInput,
     codec,

@@ -7,26 +7,15 @@ import {
   PlusSignIcon,
   UserIcon,
 } from '@hugeicons/core-free-icons';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import { parseKey } from '@/crypto';
-import { db } from '@/db';
-import {
-  getLastSyncTime,
-  getUserProfile,
-  sync,
-  connect as syncConnect,
-  disconnect as syncDisconnect,
-  isConnected as syncIsConnected,
-  type UserProfile,
-} from '@/sync';
+import { db, useConnected, useLastSyncTime, useProfile, useTable } from '@/db';
 import {
   Avatar,
   Button,
   Icon,
   ListItem,
-  LoadingSpinner,
   Page,
   PageBody,
   PageHeader,
@@ -47,32 +36,32 @@ const formatRelativeTime = (timestamp: number): string => {
 };
 
 export const KeysListPage: FC = () => {
-  const keys = useLiveQuery(() => db.keys.toArray())?.sort(
-    (a, b) => a.updatedAt - b.updatedAt,
+  const allKeys = useTable('keys');
+  const keys = useMemo(
+    () => [...allKeys].sort((a, b) => a.updatedAt - b.updatedAt),
+    [allKeys],
   );
+  const connected = useConnected();
+  const profile = useProfile();
+  const lastSyncTime = useLastSyncTime();
   const [syncing, setSyncing] = useState(false);
-  const [connected, setConnected] = useState(syncIsConnected);
-  const [profile, setProfile] = useState<UserProfile | null>(getUserProfile);
   const [lastSyncLabel, setLastSyncLabel] = useState<string | null>(null);
   const toast = useToast();
 
   useEffect(() => {
     const update = () => {
-      const t = getLastSyncTime();
-      setLastSyncLabel(t ? formatRelativeTime(t) : null);
+      setLastSyncLabel(lastSyncTime ? formatRelativeTime(lastSyncTime) : null);
     };
     update();
     const interval = setInterval(update, 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [lastSyncTime]);
 
   const handleConnect = useCallback(
     async (close: () => void) => {
       try {
         setSyncing(true);
-        await syncConnect();
-        setConnected(true);
-        setProfile(getUserProfile());
+        await db.connect();
         toast.show('Connected to Google Drive');
         close();
       } catch {
@@ -85,10 +74,8 @@ export const KeysListPage: FC = () => {
   );
 
   const handleDisconnect = useCallback(
-    (close: () => void) => {
-      syncDisconnect();
-      setConnected(false);
-      setProfile(null);
+    async (close: () => void) => {
+      await db.disconnect();
       toast.show('Disconnected from Google Drive');
       close();
     },
@@ -98,7 +85,7 @@ export const KeysListPage: FC = () => {
   const handleSync = useCallback(async () => {
     try {
       setSyncing(true);
-      await sync();
+      await db.sync();
       toast.show('Synced with Google Drive');
     } catch {
       toast.show('Sync failed');
@@ -236,9 +223,7 @@ export const KeysListPage: FC = () => {
       />
 
       <PageBody>
-        {!keys ? (
-          <LoadingSpinner />
-        ) : keys.length === 0 ? (
+        {keys.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 px-6 pb-16 max-w-96 mx-auto text-center">
             <div className="rounded-full bg-border-light p-5 mb-4">
               <Icon icon={Key01Icon} className="text-text-muted" size={40} />

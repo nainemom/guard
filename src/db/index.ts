@@ -1,6 +1,9 @@
-import Dexie, { type EntityTable } from 'dexie';
+import { create } from 'zustand';
+import { shallow } from 'zustand/shallow';
+import * as gdrive from './gdrive';
 
-/** Every table must extend this to be syncable. */
+// --- Base types ---
+
 export interface BaseEntity {
   id: string;
   updatedAt: number;
@@ -22,42 +25,219 @@ export interface Message extends BaseEntity {
   error?: string;
 }
 
-const db = new Dexie('guard', {
-  autoOpen: true,
-}) as Dexie & {
-  keys: EntityTable<Key, 'id', Pick<Key, 'name' | 'value'>>;
-  messages: EntityTable<
-    Message,
-    'id',
-    Pick<Message, 'keyId' | 'operation' | 'codec' | 'input'>
-  >;
-};
+export type { UserProfile } from './gdrive';
 
-db.version(1).stores({
-  keys: '&id, name, value, updatedAt',
-  messages: '&id, keyId, updatedAt',
-});
+// --- Table registry ---
+// To add a new table: 1) define its interface above  2) add it to Tables  3) add it to emptyTables
 
-// Generic hooks for all tables: auto-fill BaseEntity fields
-for (const table of db.tables) {
-  table.hook('creating', (_primaryKey, obj) => {
-    obj.id ??= crypto.randomUUID();
-    obj.updatedAt ??= Date.now();
-  });
-
-  table.hook('updating', (modifications: Partial<BaseEntity>) => {
-    if (modifications.updatedAt === undefined) {
-      return { updatedAt: Date.now() };
-    }
-    return {};
-  });
+interface Tables {
+  keys: Key;
+  messages: Message;
 }
 
-// Cascade delete messages when a key is deleted
-db.keys.hook('deleting', (primaryKey) => {
-  db.messages.where('keyId').equals(primaryKey).delete();
+type TableName = keyof Tables;
+
+const emptyTables = (): { [K in TableName]: Tables[K][] } => ({
+  keys: [],
+  messages: [],
 });
 
-export const dbReady = db.open();
+/** When a row is deleted, cascade-delete rows in dependent tables
+ *  where `foreignKey` matches the deleted row's id. */
+const CASCADE_DELETES: Partial<
+  Record<TableName, { table: TableName; foreignKey: string }[]>
+> = {
+  keys: [{ table: 'messages', foreignKey: 'keyId' }],
+};
 
-export { db };
+// --- Store ---
+
+interface StoreState {
+  tables: { [K in TableName]: Tables[K][] };
+  connected: boolean;
+  profile: gdrive.UserProfile | null;
+  lastSyncTime: number | null;
+}
+
+const store = create<StoreState>(() => ({
+  tables: emptyTables(),
+  connected: gdrive.isConnected(),
+  profile: gdrive.getUserProfile(),
+  lastSyncTime: null,
+}));
+
+// --- GDrive I/O ---
+
+type GDriveData = {
+  tables: Partial<{ [K in TableName]: Tables[K][] }>;
+};
+
+let isSaving = false;
+let saveQueued = false;
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+const scheduleSave = () => {
+  if (isSaving) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 2000);
+};
+
+const save = async () => {
+  if (!gdrive.isConnected()) return;
+  if (isSaving) {
+    saveQueued = true;
+    return;
+  }
+
+  isSaving = true;
+  try {
+    const { tables } = store.getState();
+    await gdrive.write(JSON.stringify({ tables } satisfies GDriveData));
+    store.setState({ lastSyncTime: Date.now() });
+  } catch (e) {
+    console.error('[db]', e);
+  } finally {
+    isSaving = false;
+    if (saveQueued) {
+      saveQueued = false;
+      save();
+    }
+  }
+};
+
+const load = async () => {
+  const raw = await gdrive.read();
+  const data: GDriveData = raw ? JSON.parse(raw) : { tables: {} };
+
+  const tables = emptyTables() as Record<TableName, BaseEntity[]>;
+  for (const name of Object.keys(tables) as TableName[]) {
+    const remote = data.tables[name];
+    if (remote) {
+      tables[name] = remote;
+    }
+  }
+
+  store.setState({
+    tables: tables as StoreState['tables'],
+    lastSyncTime: Date.now(),
+  });
+};
+
+// --- Actions ---
+
+export const db = {
+  add: <K extends TableName>(
+    table: K,
+    item: Omit<Tables[K], 'id' | 'updatedAt'>,
+  ): Tables[K] => {
+    const row = {
+      ...item,
+      id: crypto.randomUUID(),
+      updatedAt: Date.now(),
+    } as Tables[K];
+
+    store.setState((state) => ({
+      tables: { ...state.tables, [table]: [...state.tables[table], row] },
+    }));
+    scheduleSave();
+    return row;
+  },
+
+  update: <K extends TableName>(
+    table: K,
+    id: string,
+    changes: Partial<Omit<Tables[K], 'id'>>,
+  ): void => {
+    store.setState((state) => ({
+      tables: {
+        ...state.tables,
+        [table]: state.tables[table].map((row) =>
+          row.id === id ? { ...row, ...changes, updatedAt: Date.now() } : row,
+        ),
+      },
+    }));
+    scheduleSave();
+  },
+
+  remove: (table: TableName, id: string): void => {
+    store.setState((state) => {
+      const tables = { ...state.tables } as Record<TableName, BaseEntity[]>;
+      tables[table] = tables[table].filter((r) => r.id !== id);
+
+      const cascades = CASCADE_DELETES[table];
+      if (cascades) {
+        for (const { table: dep, foreignKey } of cascades) {
+          tables[dep] = tables[dep].filter(
+            (r) => (r as Record<string, unknown>)[foreignKey] !== id,
+          );
+        }
+      }
+
+      return { tables: tables as StoreState['tables'] };
+    });
+    scheduleSave();
+  },
+
+  connect: async (): Promise<void> => {
+    await gdrive.connect();
+    await load();
+    store.setState({ connected: true, profile: gdrive.getUserProfile() });
+  },
+
+  disconnect: async (): Promise<void> => {
+    gdrive.disconnect();
+    store.setState({
+      tables: emptyTables(),
+      connected: false,
+      profile: null,
+      lastSyncTime: null,
+    });
+  },
+
+  sync: save,
+};
+
+// --- Hooks ---
+
+/**
+ * Subscribe to all rows in a table. Re-renders when rows are added, removed, or updated.
+ * Pass an optional `filter` to subscribe only to matching rows — the component
+ * won't re-render when unrelated rows in the same table change.
+ */
+export function useTable<K extends TableName>(
+  name: K,
+  filter?: (row: Tables[K]) => boolean,
+): Tables[K][] {
+  return store(
+    (state) => {
+      const rows = state.tables[name];
+      return filter ? rows.filter(filter) : rows;
+    },
+    filter ? shallow : undefined,
+  );
+}
+
+/**
+ * Subscribe to a single row by id. Only re-renders when that specific
+ * row's fields change, not when other rows in the table change.
+ */
+export function useRow<K extends TableName>(
+  name: K,
+  id: string | undefined,
+): Tables[K] | undefined {
+  return store((state) =>
+    id ? state.tables[name].find((r) => r.id === id) : undefined,
+  );
+}
+
+export const useConnected = () => store((s) => s.connected);
+export const useProfile = () => store((s) => s.profile);
+export const useLastSyncTime = () => store((s) => s.lastSyncTime);
+
+// --- Initialization ---
+
+export const initDb = async (): Promise<void> => {
+  if (gdrive.isConnected()) {
+    await load();
+  }
+};

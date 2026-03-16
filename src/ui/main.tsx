@@ -3,13 +3,14 @@ import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { Redirect, Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
-import { dbReady } from '@/db';
-import { initAutoSync } from '@/sync';
+import { initDb } from '@/db';
 import { KeyCreatePage } from './keys/KeyCreatePage';
 import { KeyDetailsPage } from './keys/KeyDetailsPage';
 import { KeysListPage } from './keys/KeysListPage';
 import { InstallPrompt, ToastProvider } from './shared';
 import './main.css';
+
+const dbReady = initDb();
 
 const DbGate: FC<{ children: ReactNode }> = ({ children }) => {
   use(dbReady);
@@ -57,8 +58,6 @@ console.log(
   '%cThis app is fully local. All data stays on your device.\nNetwork access to external origins is blocked by CSP and Service Worker.',
   'font-family:system-ui;color:green;font-size:0.9rem',
 );
-
-initAutoSync();
 
 if ('serviceWorker' in navigator) {
   const { getSerwist } = await import('virtual:serwist');

@@ -83,8 +83,7 @@ export const KeyCreatePage: FC = () => {
     setIsLoading(true);
     try {
       const privateKey = await generatePrivateKey(method);
-      await db.keys.add({ name: name.trim(), value: privateKey });
-      await sleep(2000);
+      db.add('keys', { name: name.trim(), value: privateKey });
       navigate('/keys');
     } finally {
       setIsLoading(false);
@@ -101,7 +100,7 @@ export const KeyCreatePage: FC = () => {
     }
     setIsLoading(true);
     try {
-      await db.keys.add({ name: name.trim(), value: keyValue.trim() });
+      db.add('keys', { name: name.trim(), value: keyValue.trim() });
       await sleep(500);
       navigate('/keys');
     } finally {

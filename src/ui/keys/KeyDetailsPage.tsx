@@ -4,18 +4,16 @@ import {
   Share01Icon,
   SquareLock01Icon,
 } from '@hugeicons/core-free-icons';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { METHODS as CODEC_METHODS } from '@/codec';
 import { getPublicKey, parseKey } from '@/crypto';
-import { db, type Key } from '@/db';
+import { db, type Key, useRow } from '@/db';
 import {
   Button,
   ChatBubble,
   Icon,
   Input,
-  LoadingSpinner,
   Menu,
   Page,
   PageBody,
@@ -84,10 +82,7 @@ export const KeyDetailsPage: FC = () => {
   const [, params] = useRoute('/keys/:id');
   const [, navigate] = useLocation();
   const keyId = params?.id;
-  const key = useLiveQuery(
-    () => (keyId ? db.keys.get(keyId) : undefined),
-    [keyId],
-  );
+  const key = useRow('keys', keyId);
 
   const { share } = useShare();
   const [publicKey, setPublicKey] = useState<string>();
@@ -100,10 +95,10 @@ export const KeyDetailsPage: FC = () => {
     }
   }, [key]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!key || !keyId) return;
     if (!confirm(`Delete "${key.name}"? This cannot be undone.`)) return;
-    await db.keys.delete(keyId);
+    db.remove('keys', keyId);
     navigate('/keys');
   }, [key, keyId, navigate]);
 
@@ -148,16 +143,7 @@ export const KeyDetailsPage: FC = () => {
 
   if (!keyId) return null;
 
-  if (key === undefined) {
-    return (
-      <Page>
-        <PageHeader backTo="/keys" title="Key Details" />
-        <LoadingSpinner />
-      </Page>
-    );
-  }
-
-  if (key === null) {
+  if (!key) {
     return (
       <Page>
         <PageHeader backTo="/keys" title="Key Details" />

@@ -5,8 +5,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { type FC, useCallback, useRef, useState } from 'react';
 import { parseKey } from '@/crypto';
-import type { Key } from '@/db';
-import { db } from '@/db';
+import { db, type Key } from '@/db';
 import { Avatar, Button, Chip, Icon } from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
 
@@ -23,10 +22,10 @@ export const KeyInfoCard: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
     requestAnimationFrame(() => inputRef.current?.focus());
   }, [keyRecord.name]);
 
-  const save = useCallback(async () => {
+  const save = useCallback(() => {
     const trimmed = draft.trim();
     if (trimmed && trimmed !== keyRecord.name) {
-      await db.keys.update(keyRecord.id, { name: trimmed });
+      db.update('keys', keyRecord.id, { name: trimmed });
     }
     setEditing(false);
   }, [keyRecord.id, keyRecord.name, draft]);
