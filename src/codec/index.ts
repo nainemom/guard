@@ -2,12 +2,12 @@ import { base64 } from './methods/base64';
 import { randomImage } from './methods/images';
 import { emoji, persianEveryday } from './methods/texts';
 
-export type { MethodHandler } from './types';
+export type { MethodCategory, MethodHandler } from './types';
 
 export const METHODS = {
-  persianEveryday,
-  emoji,
   base64,
+  emoji,
+  persianEveryday,
   randomImage,
 };
 

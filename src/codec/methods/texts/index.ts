@@ -6,6 +6,7 @@ export const emoji = createSteganographyHandler(emojiCollection, {
   id: 'emoji',
   name: 'Emoji',
   description: 'Encode text using emojies',
+  category: 'text',
 });
 
 export const persianEveryday = createSteganographyHandler(
@@ -14,5 +15,6 @@ export const persianEveryday = createSteganographyHandler(
     id: 'persian-everyday',
     name: 'Persian Everyday',
     description: 'Encode text using persian sentences',
+    category: 'text',
   },
 );
