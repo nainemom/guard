@@ -88,7 +88,12 @@ export const KeyDetailsPage: FC = () => {
   const keyId = resolved?.keyId;
   const isSaved = resolved?.isSaved ?? false;
 
-  const parsed = key ? parseKey(key.value) : null;
+  let parsed = null;
+  try {
+    parsed = key ? parseKey(key.value) : null;
+  } catch {
+    // invalid key format
+  }
   const isAsymmetric = parsed?.method.type === 'asymmetric';
 
   useEffect(() => {
@@ -123,7 +128,28 @@ export const KeyDetailsPage: FC = () => {
     setEditing(false);
   }, [key, isSaved, draft]);
 
-  if (!key || !parsed) return null;
+  if (!key || !parsed) {
+    return (
+      <Page>
+        <PageHeader
+          backTo="/keys"
+          title={key && isSaved ? key.name : 'Invalid Key'}
+          after={
+            key && isSaved ? (
+              <Button variant="ghost" iconOnly onClick={handleDelete}>
+                <Icon icon={Delete01Icon} size="lg" className="text-error" />
+              </Button>
+            ) : undefined
+          }
+        />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <p className="text-text-muted text-sm text-center">
+            This key has an invalid or unsupported format.
+          </p>
+        </div>
+      </Page>
+    );
+  }
 
   return (
     <Page>
