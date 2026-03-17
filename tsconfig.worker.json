@@ -19,7 +19,12 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* Import Aliases */
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["src/sw.ts"]
+  "include": ["src/sw.ts", "src/worker.ts"]
 }

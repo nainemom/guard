@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { decode, encode } from '@/codec';
-import { decrypt, encrypt, getPublicKey, parseKey } from '@/crypto';
+import { parseKey } from '@/crypto';
 import type { Key } from '@/db';
+import { type CodecMethod, workerDecrypt, workerEncrypt } from '@/worker-api';
 
 export const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`;
@@ -77,7 +77,7 @@ export const useEncrypt = (key: Key) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const parsed = parseKey(key.value);
-  const codec = (key.codec ?? 'base64') as Parameters<typeof encode>[1];
+  const codec = (key.codec ?? 'base64') as CodecMethod;
   const canDecrypt =
     parsed.method.type === 'symmetric' || parsed.type === 'private';
 
@@ -118,12 +118,7 @@ export const useEncrypt = (key: Key) => {
         contentBytes = new TextEncoder().encode(plain.text);
       }
 
-      const encryptKey =
-        parsed.method.type === 'asymmetric' && parsed.type === 'private'
-          ? await getPublicKey(key.value)
-          : key.value;
-      const encrypted = await encrypt(contentBytes, encryptKey);
-      const encoded = await encode(encrypted, codec);
+      const encoded = await workerEncrypt(contentBytes, key.value, codec);
 
       if (encoded instanceof File) {
         setCipherState({ text: '', file: encoded, error: null });
@@ -139,7 +134,7 @@ export const useEncrypt = (key: Key) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [hasPlainInput, isProcessing, plain, parsed, key.value, codec]);
+  }, [hasPlainInput, isProcessing, plain, key.value, codec]);
 
   const doDecrypt = useCallback(async () => {
     if (!hasCipherInput || isProcessing) return;
@@ -148,8 +143,7 @@ export const useEncrypt = (key: Key) => {
 
     try {
       const decodeInput = cipher.file ?? cipher.text;
-      const decoded = await decode(decodeInput, codec);
-      const decrypted = await decrypt(decoded, key.value);
+      const decrypted = await workerDecrypt(decodeInput, key.value, codec);
 
       const unpacked = unpackFile(decrypted);
       if (unpacked) {
