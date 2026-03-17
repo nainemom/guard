@@ -16,7 +16,7 @@ import {
   type MethodCategory as CryptoMethodCategory,
   generatePrivateKey,
 } from '@/crypto';
-import { buildKeyId, db } from '@/db';
+import { buildKeyId, db, encodeKeyParams } from '@/db';
 import {
   Button,
   Icon,
@@ -71,15 +71,20 @@ export const KeyCreatePage: FC = () => {
     async (data: FormValues) => {
       const value = await generatePrivateKey(data.method);
       const [, keyType, keyData] = value.split(':');
-      const id = buildKeyId(data.codec, data.method, keyType, keyData);
+      const params = {
+        codec: data.codec,
+        method: data.method,
+        type: keyType,
+        value: keyData,
+      };
       db.add('keys', {
-        id,
+        id: buildKeyId(params),
         name: data.name.trim(),
         value,
         codec: data.codec,
         method: data.method,
       });
-      navigate('/keys');
+      navigate(`/keys/${encodeKeyParams(params)}`);
     },
     [navigate],
   );

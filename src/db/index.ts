@@ -1,3 +1,4 @@
+import { base58 } from '@scure/base';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import * as gdrive from './gdrive';
@@ -18,26 +19,26 @@ export interface Key extends BaseEntity {
 
 export type { UserProfile } from './gdrive';
 
-export const buildKeyId = (
-  codec: string,
-  method: string,
-  type: string,
-  value: string,
-) => {
-  const params = new URLSearchParams({ codec, method, type, value });
-  params.sort();
-  return params.toString();
+export interface KeyParams {
+  codec: string;
+  method: string;
+  type: string;
+  value: string;
+}
+
+export const encodeKeyParams = (params: KeyParams): string =>
+  base58.encode(new TextEncoder().encode(JSON.stringify(params)));
+
+export const decodeKeyParams = (encoded: string): KeyParams | null => {
+  try {
+    return JSON.parse(new TextDecoder().decode(base58.decode(encoded)));
+  } catch {
+    return null;
+  }
 };
 
-export const parseKeyId = (id: string) => {
-  const params = new URLSearchParams(id);
-  return {
-    codec: params.get('codec') ?? '',
-    method: params.get('method') ?? '',
-    type: params.get('type') ?? '',
-    value: params.get('value') ?? '',
-  };
-};
+export const buildKeyId = (params: KeyParams): string =>
+  encodeKeyParams(params);
 
 // --- Table registry ---
 // To add a new table: 1) define its interface above  2) add it to Tables  3) add it to emptyTables
@@ -133,7 +134,12 @@ const load = async () => {
     if (!key.codec) key.codec = 'base64';
     const [method, keyType, keyData] = key.value.split(':');
     if (!key.method) key.method = method;
-    key.id = buildKeyId(key.codec, key.method, keyType, keyData);
+    key.id = buildKeyId({
+      codec: key.codec,
+      method: key.method,
+      type: keyType,
+      value: keyData,
+    });
   }
 
   store.setState({

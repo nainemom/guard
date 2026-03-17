@@ -6,17 +6,18 @@ import {
   Share01Icon,
   Tick01Icon,
 } from '@hugeicons/core-free-icons';
-import {
-  type FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from 'react';
-import { useLocation } from 'wouter';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useRoute } from 'wouter';
 import { getPublicKey, parseKey } from '@/crypto';
-import { buildKeyId, db, type Key, useRow } from '@/db';
+import {
+  buildKeyId,
+  db,
+  decodeKeyParams,
+  encodeKeyParams,
+  type Key,
+  type KeyParams,
+  useRow,
+} from '@/db';
 import {
   Avatar,
   Button,
@@ -31,64 +32,54 @@ import { TranslateWorkspace } from './TranslateWorkspace';
 
 // --- Helpers ---
 
-const keyShareUrl = (
-  codec: string,
-  method: string,
-  type: string,
-  value: string,
-) => {
+const keyPath = (params: KeyParams) => `/keys/${encodeKeyParams(params)}`;
+
+const keyShareUrl = (params: KeyParams) => {
   const base = `${window.location.origin}${window.location.pathname}`;
-  const params = new URLSearchParams({ codec, method, type, value });
-  params.sort();
-  return `${base}#/keys/details?${params}`;
+  return `${base}#${keyPath(params)}`;
+};
+
+const keyParamsFromValue = (codec: string, keyValue: string): KeyParams => {
+  const [method, type, value] = keyValue.split(':');
+  return { codec, method, type, value };
 };
 
 // --- Hook ---
 
-const subscribeHash = (cb: () => void) => {
-  addEventListener('hashchange', cb);
-  return () => removeEventListener('hashchange', cb);
-};
-const getHash = () => location.hash;
-
-const useKeyFromHash = ():
+const useKeyFromRoute = ():
   | { keyId: string; keyRecord: Key; isSaved: boolean }
   | undefined => {
-  const rawHash = useSyncExternalStore(subscribeHash, getHash);
-  const hash = rawHash.replace(/^#?\/?/, '');
-  const idx = hash.indexOf('?');
-  const p = idx !== -1 ? new URLSearchParams(hash.slice(idx)) : null;
-  const codec = p?.get('codec') ?? '';
-  const method = p?.get('method') ?? '';
-  const type = p?.get('type') ?? '';
-  const value = p?.get('value') ?? '';
-  const valid = !!(codec && method && type && value);
-  const keyId = valid ? buildKeyId(codec, method, type, value) : '';
+  const [match, params] = useRoute('/keys/:key');
+  const decoded = useMemo(
+    () => (match && params?.key ? decodeKeyParams(params.key) : null),
+    [match, params?.key],
+  );
+  const keyId = decoded ? buildKeyId(decoded) : '';
   const saved = useRow('keys', keyId || undefined);
 
   return useMemo(() => {
-    if (!valid) return undefined;
+    if (!decoded) return undefined;
     if (saved) return { keyId, keyRecord: saved, isSaved: true };
     return {
       keyId,
       keyRecord: {
         id: keyId,
         name: '',
-        value: `${method}:${type}:${value}`,
-        codec,
-        method,
+        value: `${decoded.method}:${decoded.type}:${decoded.value}`,
+        codec: decoded.codec,
+        method: decoded.method,
         updatedAt: Date.now(),
       },
       isSaved: false,
     };
-  }, [valid, keyId, saved, codec, method, type, value]);
+  }, [decoded, keyId, saved]);
 };
 
 // --- Page ---
 
 export const KeyDetailsPage: FC = () => {
   const [, navigate] = useLocation();
-  const resolved = useKeyFromHash();
+  const resolved = useKeyFromRoute();
   const { share } = useShare();
   const [publicKey, setPublicKey] = useState<string>();
 
@@ -113,8 +104,7 @@ export const KeyDetailsPage: FC = () => {
 
   const handleShare = useCallback(
     (keyValue: string, codec: string) => {
-      const [method, type, data] = keyValue.split(':');
-      share({ text: keyShareUrl(codec, method, type, data) });
+      share({ text: keyShareUrl(keyParamsFromValue(codec, keyValue)) });
     },
     [share],
   );

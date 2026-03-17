@@ -11,7 +11,14 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import { METHODS as CODEC_METHODS } from '@/codec';
 import { parseKey } from '@/crypto';
-import { db, useConnected, useLastSyncTime, useProfile, useTable } from '@/db';
+import {
+  db,
+  encodeKeyParams,
+  useConnected,
+  useLastSyncTime,
+  useProfile,
+  useTable,
+} from '@/db';
 import {
   Avatar,
   Button,
@@ -230,40 +237,40 @@ export const KeysListPage: FC = () => {
           <div className="divide-y divide-border-light">
             {keys.map((key) => {
               const parsed = parseKey(key.value);
+              const [, keyType, keyData] = key.value.split(':');
+              const keyPath = `/keys/${encodeKeyParams({ codec: key.codec, method: key.method, type: keyType, value: keyData })}`;
               return (
-                <ListItem
-                  key={key.id}
-                  before={<Avatar size={48} seed={key.name} />}
-                  after={
-                    <>
-                      <KeyTypeChip
-                        value={
-                          parsed.method.type === 'asymmetric'
-                            ? parsed.type === 'public'
-                              ? 'asymmetric-public'
-                              : 'asymmetric'
-                            : 'symmetric'
-                        }
-                      />
-                      <Icon
-                        icon={ArrowRight01Icon}
-                        className="text-text-muted"
-                      />
-                    </>
-                  }
-                  onClick={() => {
-                    location.hash = `/keys/details?${key.id}`;
-                  }}
-                >
-                  <p className="font-medium truncate text-text">{key.name}</p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <Chip>{parsed.method.name}</Chip>
-                    <Chip>
-                      {CODEC_METHODS[key.codec as keyof typeof CODEC_METHODS]
-                        ?.name ?? key.codec}
-                    </Chip>
-                  </div>
-                </ListItem>
+                <Link key={key.id} to={keyPath} asChild>
+                  <ListItem
+                    before={<Avatar size={48} seed={key.name} />}
+                    after={
+                      <>
+                        <KeyTypeChip
+                          value={
+                            parsed.method.type === 'asymmetric'
+                              ? parsed.type === 'public'
+                                ? 'asymmetric-public'
+                                : 'asymmetric'
+                              : 'symmetric'
+                          }
+                        />
+                        <Icon
+                          icon={ArrowRight01Icon}
+                          className="text-text-muted"
+                        />
+                      </>
+                    }
+                  >
+                    <p className="font-medium truncate text-text">{key.name}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Chip>{parsed.method.name}</Chip>
+                      <Chip>
+                        {CODEC_METHODS[key.codec as keyof typeof CODEC_METHODS]
+                          ?.name ?? key.codec}
+                      </Chip>
+                    </div>
+                  </ListItem>
+                </Link>
               );
             })}
           </div>
