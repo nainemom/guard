@@ -13,9 +13,31 @@ export interface Key extends BaseEntity {
   name: string;
   value: string;
   codec: string;
+  method: string;
 }
 
 export type { UserProfile } from './gdrive';
+
+export const buildKeyId = (
+  codec: string,
+  method: string,
+  type: string,
+  value: string,
+) => {
+  const params = new URLSearchParams({ codec, method, type, value });
+  params.sort();
+  return params.toString();
+};
+
+export const parseKeyId = (id: string) => {
+  const params = new URLSearchParams(id);
+  return {
+    codec: params.get('codec') ?? '',
+    method: params.get('method') ?? '',
+    type: params.get('type') ?? '',
+    value: params.get('value') ?? '',
+  };
+};
 
 // --- Table registry ---
 // To add a new table: 1) define its interface above  2) add it to Tables  3) add it to emptyTables
@@ -105,9 +127,13 @@ const load = async () => {
     }
   }
 
-  // Migrate old keys without codec
+  // Migrate old keys
   for (const row of tables.keys) {
-    if (!(row as Key).codec) (row as Key).codec = 'base64';
+    const key = row as Key;
+    if (!key.codec) key.codec = 'base64';
+    const [method, keyType, keyData] = key.value.split(':');
+    if (!key.method) key.method = method;
+    key.id = buildKeyId(key.codec, key.method, keyType, keyData);
   }
 
   store.setState({
@@ -121,17 +147,24 @@ const load = async () => {
 export const db = {
   add: <K extends TableName>(
     table: K,
-    item: Omit<Tables[K], 'id' | 'updatedAt'>,
+    item: Omit<Tables[K], 'updatedAt'>,
   ): Tables[K] => {
     const row = {
       ...item,
-      id: crypto.randomUUID(),
       updatedAt: Date.now(),
     } as Tables[K];
 
-    store.setState((state) => ({
-      tables: { ...state.tables, [table]: [...state.tables[table], row] },
-    }));
+    store.setState((state) => {
+      const existing = state.tables[table].some((r) => r.id === row.id);
+      return {
+        tables: {
+          ...state.tables,
+          [table]: existing
+            ? state.tables[table].map((r) => (r.id === row.id ? row : r))
+            : [...state.tables[table], row],
+        },
+      };
+    });
     scheduleSave();
     return row;
   },
