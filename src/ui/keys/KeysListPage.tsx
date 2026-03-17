@@ -9,11 +9,13 @@ import {
 } from '@hugeicons/core-free-icons';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
+import { METHODS as CODEC_METHODS } from '@/codec';
 import { parseKey } from '@/crypto';
 import { db, useConnected, useLastSyncTime, useProfile, useTable } from '@/db';
 import {
   Avatar,
   Button,
+  Chip,
   Icon,
   ListItem,
   Page,
@@ -38,7 +40,7 @@ const formatRelativeTime = (timestamp: number): string => {
 export const KeysListPage: FC = () => {
   const allKeys = useTable('keys');
   const keys = useMemo(
-    () => [...allKeys].sort((a, b) => a.updatedAt - b.updatedAt),
+    () => [...allKeys].sort((a, b) => b.updatedAt - a.updatedAt),
     [allKeys],
   );
   const connected = useConnected();
@@ -143,39 +145,32 @@ export const KeysListPage: FC = () => {
                       </div>
                     </div>
                   )}
-                  <button
-                    type="button"
-                    disabled={syncing}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt disabled:opacity-40 disabled:cursor-default"
-                    onClick={handleSync}
-                  >
-                    <span className="shrink-0">
-                      {syncing ? (
+                  <ListItem
+                    size="sm"
+                    before={
+                      syncing ? (
                         <Icon icon={Loading03Icon} className="animate-spin" />
                       ) : (
                         <Icon icon={CloudIcon} />
-                      )}
-                    </span>
-                    <div className="flex flex-col">
-                      <span>Sync now</span>
-                      {lastSyncLabel && (
-                        <span className="text-xs text-text-muted">
-                          Last synced {lastSyncLabel}
-                        </span>
-                      )}
-                    </div>
-                  </button>
+                      )
+                    }
+                    onClick={handleSync}
+                  >
+                    <p className="text-sm">Sync now</p>
+                    {lastSyncLabel && (
+                      <p className="text-xs text-text-muted">
+                        Last synced {lastSyncLabel}
+                      </p>
+                    )}
+                  </ListItem>
                   <div className="my-1 border-t border-border-light" />
-                  <button
-                    type="button"
-                    className="flex items-center gap-3 w-full px-3 py-2 text-sm text-error text-start transition-colors cursor-pointer hover:bg-surface-alt"
+                  <ListItem
+                    size="sm"
+                    before={<Icon icon={CloudOffIcon} className="text-error" />}
                     onClick={() => handleDisconnect(close)}
                   >
-                    <span className="shrink-0">
-                      <Icon icon={CloudOffIcon} />
-                    </span>
-                    <span>Disconnect</span>
-                  </button>
+                    <span className="text-sm text-error">Disconnect</span>
+                  </ListItem>
                 </div>
               ) : (
                 <div className="min-w-64 p-4 flex flex-col items-center text-center gap-3">
@@ -236,41 +231,51 @@ export const KeysListPage: FC = () => {
             {keys.map((key) => {
               const parsed = parseKey(key.value);
               return (
-                <Link key={key.id} to={`/keys/${key.id}`} asChild>
-                  <ListItem
-                    before={<Avatar size={48} seed={key.name} />}
-                    after={
-                      <>
-                        <KeyTypeChip
-                          value={
-                            parsed.method.type === 'asymmetric'
-                              ? parsed.type === 'public'
-                                ? 'lock'
-                                : 'key+lock'
-                              : 'key'
-                          }
-                        />
-                        <Icon
-                          icon={ArrowRight01Icon}
-                          className="text-text-muted"
-                        />
-                      </>
-                    }
-                  >
-                    <p className="font-medium truncate text-text">{key.name}</p>
-                    <p className="text-sm text-text-secondary">
-                      {parsed.method.name}
-                    </p>
-                  </ListItem>
-                </Link>
+                <ListItem
+                  key={key.id}
+                  before={<Avatar size={48} seed={key.name} />}
+                  after={
+                    <>
+                      <KeyTypeChip
+                        value={
+                          parsed.method.type === 'asymmetric'
+                            ? parsed.type === 'public'
+                              ? 'asymmetric-public'
+                              : 'asymmetric'
+                            : 'symmetric'
+                        }
+                      />
+                      <Icon
+                        icon={ArrowRight01Icon}
+                        className="text-text-muted"
+                      />
+                    </>
+                  }
+                  onClick={() => {
+                    location.hash = `/keys/details?${key.id}`;
+                  }}
+                >
+                  <p className="font-medium truncate text-text">{key.name}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Chip>{parsed.method.name}</Chip>
+                    <Chip>
+                      {CODEC_METHODS[key.codec as keyof typeof CODEC_METHODS]
+                        ?.name ?? key.codec}
+                    </Chip>
+                  </div>
+                </ListItem>
               );
             })}
           </div>
         )}
       </PageBody>
 
-      <Link to="/keys/new" className="fixed bottom-6 right-6 contents">
-        <Button iconOnly size="lg" className="fixed bottom-6 right-6 shadow-lg">
+      <Link to="/keys/new" asChild>
+        <Button
+          iconOnly
+          size="lg"
+          className="fixed bottom-6 right-6 shadow-lg rounded-full"
+        >
           <Icon icon={PlusSignIcon} size="lg" />
         </Button>
       </Link>
