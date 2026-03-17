@@ -1,23 +1,20 @@
 import { base58 } from '@scure/base';
-import { useMemo } from 'react';
+import Dexie, { type EntityTable } from 'dexie';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { create } from 'zustand';
 import * as gdrive from './gdrive';
 
-// --- Base types ---
+// --- Types ---
 
-export interface BaseEntity {
+export interface Key {
   id: string;
-  updatedAt: number;
-}
-
-export interface Key extends BaseEntity {
   name: string;
   value: string;
   codec: string;
   method: string;
+  updatedAt: number;
+  syncedAt: number | null;
 }
-
-export type { UserProfile } from './gdrive';
 
 export interface KeyParams {
   codec: string;
@@ -40,227 +37,195 @@ export const decodeKeyParams = (encoded: string): KeyParams | null => {
 export const buildKeyId = (params: KeyParams): string =>
   encodeKeyParams(params);
 
-// --- Table registry ---
-// To add a new table: 1) define its interface above  2) add it to Tables  3) add it to emptyTables
+// --- Dexie Database ---
 
-interface Tables {
-  keys: Key;
-}
+const localDb = new Dexie('guard') as Dexie & {
+  keys: EntityTable<Key, 'id'>;
+  meta: EntityTable<{ key: string; value: string | number | null }, 'key'>;
+};
 
-type TableName = keyof Tables;
-
-const emptyTables = (): { [K in TableName]: Tables[K][] } => ({
-  keys: [],
+localDb.version(1).stores({
+  keys: 'id',
+  meta: 'key',
 });
 
-// --- Store ---
+// --- GDrive state (zustand, non-persistent) ---
 
-interface StoreState {
-  tables: { [K in TableName]: Tables[K][] };
+interface SyncState {
   connected: boolean;
-  profile: gdrive.UserProfile | null;
-  lastSyncTime: number | null;
+  syncing: boolean;
 }
 
-const store = create<StoreState>(() => ({
-  tables: emptyTables(),
+const syncStore = create<SyncState>(() => ({
   connected: gdrive.isConnected(),
-  profile: gdrive.getUserProfile(),
-  lastSyncTime: null,
+  syncing: false,
 }));
 
-// --- GDrive I/O ---
+const refreshConnectionState = () => {
+  syncStore.setState({ connected: gdrive.isConnected() });
+};
+
+// --- Migration helper for remote data ---
+
+const migrateKey = (raw: unknown): Key => {
+  const key = raw as Key;
+  if (!key.codec) key.codec = 'base64';
+  const [method, keyType, keyData] = key.value.split(':');
+  if (!key.method) key.method = method;
+  key.id = buildKeyId({
+    codec: key.codec,
+    method: key.method,
+    type: keyType,
+    value: keyData,
+  });
+  key.syncedAt = key.syncedAt ?? null;
+  return key;
+};
+
+// --- GDrive sync ---
 
 type GDriveData = {
-  tables: Partial<{ [K in TableName]: Tables[K][] }>;
+  keys: Key[];
 };
 
-let isSaving = false;
-let saveQueued = false;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
-
-const scheduleSave = () => {
-  if (isSaving) return;
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(save, 2000);
-};
-
-const syncConnectionState = () => {
-  store.setState({
-    connected: gdrive.isConnected(),
-    profile: gdrive.getUserProfile(),
-  });
-};
-
-const save = async () => {
-  if (!gdrive.isConnected()) return;
-  if (isSaving) {
-    saveQueued = true;
-    return;
-  }
-
-  isSaving = true;
-  try {
-    const { tables } = store.getState();
-    await gdrive.write(JSON.stringify({ tables } satisfies GDriveData));
-    store.setState({ lastSyncTime: Date.now() });
-  } catch (e) {
-    console.error('[db]', e);
-    syncConnectionState();
-  } finally {
-    isSaving = false;
-    if (saveQueued) {
-      saveQueued = false;
-      save();
-    }
-  }
-};
-
-const load = async () => {
+const pull = async () => {
   const raw = await gdrive.read();
-  const data: GDriveData = raw ? JSON.parse(raw) : { tables: {} };
+  if (!raw) return;
+  const data: GDriveData = JSON.parse(raw);
+  const remoteKeys = (data.keys ?? []).map(migrateKey);
 
-  const tables = emptyTables() as Record<TableName, BaseEntity[]>;
-  for (const name of Object.keys(tables) as TableName[]) {
-    const remote = data.tables[name];
-    if (remote) {
-      tables[name] = remote;
+  const now = Date.now();
+  await localDb.transaction('rw', localDb.keys, async () => {
+    for (const remote of remoteKeys) {
+      const local = await localDb.keys.get(remote.id);
+      if (!local || remote.updatedAt >= local.updatedAt) {
+        await localDb.keys.put({ ...remote, syncedAt: now });
+      }
     }
-  }
-
-  // Migrate old keys
-  for (const row of tables.keys) {
-    const key = row as Key;
-    if (!key.codec) key.codec = 'base64';
-    const [method, keyType, keyData] = key.value.split(':');
-    if (!key.method) key.method = method;
-    key.id = buildKeyId({
-      codec: key.codec,
-      method: key.method,
-      type: keyType,
-      value: keyData,
-    });
-  }
-
-  store.setState({
-    tables: tables as StoreState['tables'],
-    lastSyncTime: Date.now(),
   });
+
+  await localDb.meta.put({ key: 'lastSyncTime', value: now });
+};
+
+const push = async () => {
+  const keys = await localDb.keys.toArray();
+  await gdrive.write(JSON.stringify({ keys } satisfies GDriveData));
+
+  const now = Date.now();
+  await localDb.transaction('rw', localDb.keys, async () => {
+    for (const key of keys) {
+      await localDb.keys.update(key.id, { syncedAt: now });
+    }
+  });
+
+  await localDb.meta.put({ key: 'lastSyncTime', value: now });
 };
 
 // --- Actions ---
 
 export const db = {
-  add: <K extends TableName>(
-    table: K,
-    item: Omit<Tables[K], 'updatedAt'>,
-  ): Tables[K] => {
-    const row = {
-      ...item,
-      updatedAt: Date.now(),
-    } as Tables[K];
-
-    store.setState((state) => {
-      const existing = state.tables[table].some((r) => r.id === row.id);
-      return {
-        tables: {
-          ...state.tables,
-          [table]: existing
-            ? state.tables[table].map((r) => (r.id === row.id ? row : r))
-            : [...state.tables[table], row],
-        },
-      };
-    });
-    scheduleSave();
+  add: async (item: Omit<Key, 'updatedAt' | 'syncedAt'>): Promise<Key> => {
+    const row: Key = { ...item, updatedAt: Date.now(), syncedAt: null };
+    await localDb.keys.put(row);
     return row;
   },
 
-  update: <K extends TableName>(
-    table: K,
+  update: async (
     id: string,
-    changes: Partial<Omit<Tables[K], 'id'>>,
-  ): void => {
-    store.setState((state) => ({
-      tables: {
-        ...state.tables,
-        [table]: state.tables[table].map((row) =>
-          row.id === id ? { ...row, ...changes, updatedAt: Date.now() } : row,
-        ),
-      },
-    }));
-    scheduleSave();
+    changes: Partial<Omit<Key, 'id'>>,
+  ): Promise<void> => {
+    await localDb.keys.update(id, {
+      ...changes,
+      updatedAt: Date.now(),
+      syncedAt: null,
+    });
   },
 
-  remove: (table: TableName, id: string): void => {
-    store.setState((state) => ({
-      tables: {
-        ...state.tables,
-        [table]: state.tables[table].filter((r) => r.id !== id),
-      },
-    }));
-    scheduleSave();
+  remove: async (id: string): Promise<void> => {
+    await localDb.keys.delete(id);
   },
 
   connect: async (): Promise<void> => {
     await gdrive.connect();
-    await load();
-    store.setState({ connected: true, profile: gdrive.getUserProfile() });
+    syncStore.setState({ connected: true });
+    await pull();
   },
 
-  disconnect: async (): Promise<void> => {
+  disconnect: (): void => {
     gdrive.disconnect();
-    store.setState({
-      tables: emptyTables(),
-      connected: false,
-      profile: null,
-      lastSyncTime: null,
-    });
+    syncStore.setState({ connected: false });
   },
 
-  sync: save,
+  pull: async (): Promise<void> => {
+    syncStore.setState({ syncing: true });
+    try {
+      await pull();
+    } finally {
+      syncStore.setState({ syncing: false });
+      refreshConnectionState();
+    }
+  },
+
+  push: async (): Promise<void> => {
+    syncStore.setState({ syncing: true });
+    try {
+      await push();
+    } finally {
+      syncStore.setState({ syncing: false });
+      refreshConnectionState();
+    }
+  },
+
+  sync: async (): Promise<void> => {
+    syncStore.setState({ syncing: true });
+    try {
+      await pull();
+      await push();
+    } finally {
+      syncStore.setState({ syncing: false });
+      refreshConnectionState();
+    }
+  },
 };
 
 // --- Hooks ---
 
-/**
- * Subscribe to all rows in a table. Re-renders when rows are added, removed, or updated.
- * Pass an optional `filter` to narrow the result — filtering is memoized so the
- * component only recomputes when the underlying table data changes.
- */
-export function useTable<K extends TableName>(
-  name: K,
-  filter?: (row: Tables[K]) => boolean,
-): Tables[K][] {
-  const rows = store((state) => state.tables[name]);
-  return useMemo(() => (filter ? rows.filter(filter) : rows), [rows, filter]);
+export function useKeys(): Key[] {
+  return useLiveQuery(() => localDb.keys.toArray(), []) ?? [];
 }
 
-/**
- * Subscribe to a single row by id. Only re-renders when that specific
- * row's fields change, not when other rows in the table change.
- */
-export function useRow<K extends TableName>(
-  name: K,
-  id: string | undefined,
-): Tables[K] | undefined {
-  return store((state) =>
-    id ? state.tables[name].find((r) => r.id === id) : undefined,
+export function useKey(id: string | undefined): Key | undefined {
+  return useLiveQuery(() => (id ? localDb.keys.get(id) : undefined), [id]);
+}
+
+export function useLastSyncTime(): number | null {
+  const meta = useLiveQuery(() => localDb.meta.get('lastSyncTime'), []);
+  return (meta?.value as number) ?? null;
+}
+
+export function useDirtyCount(): number {
+  return (
+    useLiveQuery(
+      () =>
+        localDb.keys
+          .filter((k) => k.syncedAt === null || k.updatedAt > k.syncedAt)
+          .count(),
+      [],
+    ) ?? 0
   );
 }
 
-export const useConnected = () => store((s) => s.connected);
-export const useProfile = () => store((s) => s.profile);
-export const useLastSyncTime = () => store((s) => s.lastSyncTime);
+export const useConnected = () => syncStore((s) => s.connected);
+export const useSyncing = () => syncStore((s) => s.syncing);
 
 // --- Initialization ---
 
 export const initDb = async (): Promise<void> => {
   if (gdrive.isConnected()) {
     try {
-      await load();
+      await pull();
     } catch {
-      // Token expired or network error — start with empty data
-      syncConnectionState();
+      refreshConnectionState();
     }
   }
 };
