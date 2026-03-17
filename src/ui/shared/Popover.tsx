@@ -13,7 +13,7 @@ import { tv } from 'tailwind-variants';
 const CLOSE_DURATION = 120;
 
 const panel = tv({
-  base: 'absolute end-0 top-full mt-1 z-50 rounded-lg border border-border bg-surface shadow-lg origin-top-right',
+  base: 'absolute end-0 top-full mt-1 z-50 rounded-lg border border-border bg-surface shadow-lg origin-top-right overflow-hidden',
   variants: {
     closing: {
       // Duration must match CLOSE_DURATION
@@ -24,7 +24,7 @@ const panel = tv({
 });
 
 export const Popover: FC<{
-  trigger: ReactElement;
+  trigger: ReactElement<{ onClick?: () => void }>;
   children: (close: () => void) => ReactNode;
 }> = ({ trigger, children }) => {
   const [open, setOpen] = useState(false);

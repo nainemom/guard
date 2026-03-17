@@ -3,11 +3,21 @@ import { tv } from 'tailwind-variants';
 
 const listItem = tv({
   base: [
-    'flex items-center gap-3 p-3 min-h-18 w-full h-auto',
+    'flex items-center w-full h-auto',
     '*:shrink-0',
     'outline-none bg-surface transition-colors',
     'cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface',
   ],
+  variants: {
+    size: {
+      sm: 'gap-2 px-3 py-1.5 min-h-10',
+      md: 'gap-3 p-3 min-h-14',
+      lg: 'gap-3 p-3 min-h-18',
+    },
+  },
+  defaultVariants: {
+    size: 'lg',
+  },
 });
 
 export const ListItem: FC<{
@@ -15,10 +25,15 @@ export const ListItem: FC<{
   children?: ReactNode;
   before?: ReactNode;
   after?: ReactNode;
+  size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
-}> = ({ before, children, after, className, onClick }) => {
+}> = ({ before, children, after, className, size, onClick }) => {
   return (
-    <button type="button" className={listItem({ className })} onClick={onClick}>
+    <button
+      type="button"
+      className={listItem({ size, className })}
+      onClick={onClick}
+    >
       {before}
       <div className="min-w-0 grow text-start flex-1">{children}</div>
       {after}

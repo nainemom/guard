@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, FC } from 'react';
 import { tv } from 'tailwind-variants';
 
 const button = tv({
-  base: 'inline-flex items-center justify-center gap-2 font-medium cursor-pointer disabled:opacity-40 transition-colors outline-none border rounded-lg',
+  base: 'inline-flex items-center justify-center gap-2 font-medium cursor-pointer disabled:opacity-40 disabled:pointer-events-none transition-colors outline-none border rounded-lg',
   variants: {
     variant: {
       primary:
@@ -15,6 +15,8 @@ const button = tv({
         'bg-transparent border-transparent hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-transparent text-text-secondary',
       error_ghost:
         'bg-transparent border-transparent hover:bg-error/10 focus-visible:bg-error/10 active:bg-error/20 text-error',
+      primary_ghost:
+        'bg-transparent border-transparent hover:bg-primary/10 focus-visible:bg-primary/10 active:bg-primary/20 text-primary',
       outline:
         'bg-transparent border-border hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-transparent text-text-secondary',
     },
@@ -24,15 +26,18 @@ const button = tv({
     },
     size: {
       sm: 'h-6',
+      base: 'h-8',
       md: 'h-10',
       lg: 'h-14',
     },
   },
   compoundVariants: [
     { iconOnly: true, size: 'sm', class: 'w-6' },
+    { iconOnly: true, size: 'base', class: 'w-8' },
     { iconOnly: true, size: 'md', class: 'w-10' },
     { iconOnly: true, size: 'lg', class: 'w-14' },
     { iconOnly: false, size: 'sm', class: 'px-2 text-xs' },
+    { iconOnly: false, size: 'base', class: 'px-2.5 text-sm' },
     { iconOnly: false, size: 'md', class: 'px-3 text-sm' },
     { iconOnly: false, size: 'lg', class: 'px-4 text-sm' },
   ],
@@ -50,10 +55,11 @@ export const Button: FC<
       | 'success'
       | 'error'
       | 'ghost'
+      | 'primary_ghost'
       | 'outline'
       | 'error_ghost';
     iconOnly?: boolean;
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'base' | 'md' | 'lg';
   }
 > = ({ variant, iconOnly, size, className, ...props }) => (
   <button
