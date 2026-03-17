@@ -70,8 +70,8 @@
     animation: 180ms ease both vt-enter;
   }
   * {
-    scrollbar-width: none;
-    -webkit-scrollbar-width: none;
+    scrollbar-width: thin;
+    -webkit-scrollbar-width: thin;
   }
   *:not(input):not(textarea) {
     @apply select-none;

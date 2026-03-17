@@ -55,132 +55,156 @@ const unpackFile = (
   }
 };
 
-export interface Result {
-  operation: 'encrypt' | 'decrypt';
-  inputLabel: string;
-  inputType: 'text' | 'file';
-  inputFile?: File;
-  output?: string;
-  outputFile?: File;
-  error?: string;
+export interface PanelState {
+  text: string;
+  file: File | null;
+  error: string | null;
 }
 
+const emptyPanel: PanelState = { text: '', file: null, error: null };
+
 export const useEncrypt = (key: Key) => {
-  const [input, setInput] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [plain, setPlainState] = useState<PanelState>({
+    text: '',
+    file: null,
+    error: null,
+  });
+  const [cipher, setCipherState] = useState<PanelState>({
+    text: '',
+    file: null,
+    error: null,
+  });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<Result | null>(null);
 
   const parsed = parseKey(key.value);
   const codec = (key.codec ?? 'base64') as Parameters<typeof encode>[1];
   const canDecrypt =
     parsed.method.type === 'symmetric' || parsed.type === 'private';
 
-  const hasInput = !!input || !!file;
+  const hasPlainInput = !!plain.text || !!plain.file;
+  const hasCipherInput = !!cipher.text || !!cipher.file;
 
-  const attachFile = useCallback((f: File | null) => {
-    setFile(f);
-    if (f) setInput('');
+  const setPlainText = useCallback((text: string) => {
+    setPlainState({ text, file: null, error: null });
+    setCipherState(emptyPanel);
   }, []);
 
-  const updateInput = useCallback((value: string) => {
-    setInput(value);
-    if (value) setFile(null);
+  const setPlainFile = useCallback((file: File | null) => {
+    setPlainState({ text: '', file, error: null });
+    setCipherState(emptyPanel);
   }, []);
 
-  const submit = useCallback(
-    async (operation: 'encrypt' | 'decrypt') => {
-      if (!hasInput || isProcessing) return;
+  const setCipherText = useCallback((text: string) => {
+    setCipherState({ text, file: null, error: null });
+    setPlainState(emptyPanel);
+  }, []);
 
-      const currentFile = file;
-      const currentInput = input;
-      const inputLabel = currentFile
-        ? `${currentFile.name} (${formatFileSize(currentFile.size)})`
-        : currentInput;
-      const inputType = currentFile ? ('file' as const) : ('text' as const);
+  const setCipherFile = useCallback((file: File | null) => {
+    setCipherState({ text: '', file, error: null });
+    setPlainState(emptyPanel);
+  }, []);
 
-      setInput('');
-      setFile(null);
-      setIsProcessing(true);
+  const doEncrypt = useCallback(async () => {
+    if (!hasPlainInput || isProcessing) return;
+    setIsProcessing(true);
+    setCipherState({ text: '', file: null, error: null });
 
-      try {
-        let output: string | undefined;
-        let outputFile: File | undefined;
-
-        if (operation === 'encrypt') {
-          let contentBytes: Uint8Array;
-          if (currentFile) {
-            const raw = new Uint8Array(await currentFile.arrayBuffer());
-            contentBytes = packFile(currentFile, raw);
-          } else {
-            contentBytes = new TextEncoder().encode(currentInput);
-          }
-          const encryptKey =
-            parsed.method.type === 'asymmetric' && parsed.type === 'private'
-              ? await getPublicKey(key.value)
-              : key.value;
-          const encrypted = await encrypt(contentBytes, encryptKey);
-          const encoded = await encode(encrypted, codec);
-          if (encoded instanceof File) {
-            outputFile = encoded;
-          } else {
-            output = String(encoded);
-          }
-        } else {
-          const decodeInput = currentFile ?? currentInput;
-          const decoded = await decode(decodeInput, codec);
-          const decrypted = await decrypt(decoded, key.value);
-
-          const unpacked = unpackFile(decrypted);
-          if (unpacked) {
-            outputFile = new File([unpacked.content], unpacked.name, {
-              type: unpacked.type,
-            });
-            if (isValidUtf8Text(unpacked.content)) {
-              output = new TextDecoder().decode(unpacked.content);
-            }
-          } else {
-            if (isValidUtf8Text(decrypted)) {
-              output = new TextDecoder().decode(decrypted);
-            }
-            outputFile = new File([decrypted], `decrypted_${Date.now()}`, {
-              type: 'application/octet-stream',
-            });
-          }
-        }
-
-        setResult({
-          operation,
-          inputLabel,
-          inputType,
-          inputFile: currentFile ?? undefined,
-          output,
-          outputFile,
-        });
-      } catch (e) {
-        setResult({
-          operation,
-          inputLabel,
-          inputType,
-          inputFile: currentFile ?? undefined,
-          error: e instanceof Error ? e.message : `${operation} failed`,
-        });
-      } finally {
-        setIsProcessing(false);
+    try {
+      let contentBytes: Uint8Array;
+      if (plain.file) {
+        const raw = new Uint8Array(await plain.file.arrayBuffer());
+        contentBytes = packFile(plain.file, raw);
+      } else {
+        contentBytes = new TextEncoder().encode(plain.text);
       }
-    },
-    [hasInput, input, file, isProcessing, codec, parsed, key.value],
-  );
+
+      const encryptKey =
+        parsed.method.type === 'asymmetric' && parsed.type === 'private'
+          ? await getPublicKey(key.value)
+          : key.value;
+      const encrypted = await encrypt(contentBytes, encryptKey);
+      const encoded = await encode(encrypted, codec);
+
+      if (encoded instanceof File) {
+        setCipherState({ text: '', file: encoded, error: null });
+      } else {
+        setCipherState({ text: String(encoded), file: null, error: null });
+      }
+    } catch (e) {
+      setCipherState({
+        text: '',
+        file: null,
+        error: e instanceof Error ? e.message : 'Encryption failed',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [hasPlainInput, isProcessing, plain, parsed, key.value, codec]);
+
+  const doDecrypt = useCallback(async () => {
+    if (!hasCipherInput || isProcessing) return;
+    setIsProcessing(true);
+    setPlainState({ text: '', file: null, error: null });
+
+    try {
+      const decodeInput = cipher.file ?? cipher.text;
+      const decoded = await decode(decodeInput, codec);
+      const decrypted = await decrypt(decoded, key.value);
+
+      const unpacked = unpackFile(decrypted);
+      if (unpacked) {
+        const file = new File([unpacked.content as BlobPart], unpacked.name, {
+          type: unpacked.type,
+        });
+        const text = isValidUtf8Text(unpacked.content)
+          ? new TextDecoder().decode(unpacked.content)
+          : '';
+        setPlainState({ text, file, error: null });
+      } else {
+        if (isValidUtf8Text(decrypted)) {
+          setPlainState({
+            text: new TextDecoder().decode(decrypted),
+            file: null,
+            error: null,
+          });
+        } else {
+          setPlainState({
+            text: '',
+            file: new File([decrypted as BlobPart], `decrypted_${Date.now()}`, {
+              type: 'application/octet-stream',
+            }),
+            error: null,
+          });
+        }
+      }
+    } catch (e) {
+      setPlainState({
+        text: '',
+        file: null,
+        error: e instanceof Error ? e.message : 'Decryption failed',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [hasCipherInput, isProcessing, cipher, key.value, codec]);
+
+  const clearPlain = useCallback(() => setPlainState(emptyPanel), []);
+  const clearCipher = useCallback(() => setCipherState(emptyPanel), []);
 
   return {
-    input,
-    setInput: updateInput,
-    file,
-    attachFile,
+    plain,
+    cipher,
     isProcessing,
-    hasInput,
     canDecrypt,
-    submit,
-    result,
+    hasPlainInput,
+    hasCipherInput,
+    setPlainText,
+    setPlainFile,
+    setCipherText,
+    setCipherFile,
+    clearPlain,
+    clearCipher,
+    doEncrypt,
+    doDecrypt,
   };
 };

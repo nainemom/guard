@@ -39,7 +39,7 @@ createRoot(root).render(
           <Switch>
             <Route path="/keys" component={KeysListPage} />
             <Route path="/keys/new/:codec?/:key?" component={KeyCreatePage} />
-            <Route path="/keys/:id" component={KeyDetailsPage} />
+            <Route path={/^\/keys\/details\?/} component={KeyDetailsPage} />
             <Route path="/">
               <Redirect to="/keys" />
             </Route>

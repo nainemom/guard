@@ -1,220 +1,108 @@
 import {
-  Alert01Icon,
-  Attachment01Icon,
   Cancel01Icon,
   Delete01Icon,
-  Download04Icon,
-  File01Icon,
-  Key01Icon,
+  Edit04Icon,
   MoreVerticalIcon,
   Share01Icon,
-  SquareLock01Icon,
+  Tick01Icon,
 } from '@hugeicons/core-free-icons';
-import { type FC, useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useRoute } from 'wouter';
-import { METHODS as CODEC_METHODS } from '@/codec';
-import { getPublicKey, parseKey } from '@/crypto';
-import { db, type Key, useRow } from '@/db';
 import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import { useLocation } from 'wouter';
+import { getPublicKey, parseKey } from '@/crypto';
+import { buildKeyId, db, type Key, useRow } from '@/db';
+import {
+  Avatar,
   Button,
-  ButtonGroup,
   Icon,
-  Input,
+  ListItem,
   Page,
-  PageBody,
   PageHeader,
-  PageToolbar,
   Popover,
-  shareIcon,
   useShare,
 } from '../shared';
-import { KeyInfoCard } from './KeyInfoCard';
-import { formatFileSize, type Result, useEncrypt } from './useEncryptChat';
+import { TranslateWorkspace } from './TranslateWorkspace';
 
-const importUrl = (codec: string, keyStr: string) => {
-  const base = `${window.location.origin}${window.location.pathname}`;
-  return `${base}#/keys/new/${codec}/${encodeURIComponent(keyStr)}`;
-};
+// --- Helpers ---
 
-const shareResult = (
-  result: Result,
-  share: (
-    data: { text: string } | { file: Uint8Array; fileName: string },
-  ) => void,
+const keyShareUrl = (
+  codec: string,
+  method: string,
+  type: string,
+  value: string,
 ) => {
-  if (result.outputFile) {
-    result.outputFile
-      .arrayBuffer()
-      .then((buf) =>
-        share({ file: new Uint8Array(buf), fileName: result.outputFile?.name }),
-      );
-  } else if (result.output) {
-    share({ text: result.output });
-  }
+  const base = `${window.location.origin}${window.location.pathname}`;
+  const params = new URLSearchParams({ codec, method, type, value });
+  params.sort();
+  return `${base}#/keys/details?${params}`;
 };
 
-const FilePreview: FC<{ file: File }> = ({ file }) => {
-  const [src, setSrc] = useState<string>();
+// --- Hook ---
 
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setSrc(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+const subscribeHash = (cb: () => void) => {
+  addEventListener('hashchange', cb);
+  return () => removeEventListener('hashchange', cb);
+};
+const getHash = () => location.hash;
 
-  if (!src) return null;
+const useKeyFromHash = ():
+  | { keyId: string; keyRecord: Key; isSaved: boolean }
+  | undefined => {
+  const rawHash = useSyncExternalStore(subscribeHash, getHash);
+  const hash = rawHash.replace(/^#?\/?/, '');
+  const idx = hash.indexOf('?');
+  const p = idx !== -1 ? new URLSearchParams(hash.slice(idx)) : null;
+  const codec = p?.get('codec') ?? '';
+  const method = p?.get('method') ?? '';
+  const type = p?.get('type') ?? '';
+  const value = p?.get('value') ?? '';
+  const valid = !!(codec && method && type && value);
+  const keyId = valid ? buildKeyId(codec, method, type, value) : '';
+  const saved = useRow('keys', keyId || undefined);
 
-  if (file.type.startsWith('image/')) {
-    return (
-      <img
-        src={src}
-        alt={file.name}
-        className="rounded-lg max-w-full max-h-48 object-contain"
-      />
-    );
-  }
-
-  if (file.type.startsWith('audio/')) {
-    return (
-      // biome-ignore lint/a11y/useMediaCaption: encrypted audio has no captions
-      <audio src={src} controls className="w-full" />
-    );
-  }
-
-  return null;
+  return useMemo(() => {
+    if (!valid) return undefined;
+    if (saved) return { keyId, keyRecord: saved, isSaved: true };
+    return {
+      keyId,
+      keyRecord: {
+        id: keyId,
+        name: '',
+        value: `${method}:${type}:${value}`,
+        codec,
+        method,
+        updatedAt: Date.now(),
+      },
+      isSaved: false,
+    };
+  }, [valid, keyId, saved, codec, method, type, value]);
 };
 
-const ResultCard: FC<{
-  result: Result;
-  codecName: string;
-  onShare: () => void;
-}> = ({ result, codecName, onShare }) => {
-  const isEncrypt = result.operation === 'encrypt';
-
-  return (
-    <div className="flex flex-col gap-4 mt-4">
-      {/* Input */}
-      <div>
-        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2 px-1">
-          {result.inputType === 'file' ? 'Your file' : 'Your text'}
-        </h3>
-        <div className="rounded-xl border border-border p-3">
-          {result.inputFile ? (
-            <div className="flex flex-col gap-2">
-              <FilePreview file={result.inputFile} />
-              <div className="flex items-center gap-2 text-text">
-                <Icon
-                  icon={File01Icon}
-                  size="sm"
-                  className="text-text-muted shrink-0"
-                />
-                <span className="text-sm truncate flex-1">
-                  {result.inputFile.name}
-                </span>
-                <span className="text-xs text-text-muted shrink-0">
-                  {formatFileSize(result.inputFile.size)}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p
-              dir="auto"
-              className="text-sm wrap-anywhere text-text whitespace-pre-wrap line-clamp-3"
-            >
-              {result.inputLabel}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Operation label */}
-      <div className="flex items-center gap-2 px-1">
-        <Icon
-          icon={isEncrypt ? SquareLock01Icon : Key01Icon}
-          size="sm"
-          className="text-primary"
-        />
-        <span className="text-xs font-medium text-primary">
-          {isEncrypt ? 'Encrypted' : 'Decrypted'} with {codecName}
-        </span>
-      </div>
-
-      {/* Output */}
-      <div>
-        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2 px-1">
-          Result
-        </h3>
-        {result.error ? (
-          <div className="rounded-xl border border-error/20 bg-error-light p-3 flex items-start gap-2">
-            <Icon
-              icon={Alert01Icon}
-              size="sm"
-              className="text-error shrink-0 mt-0.5"
-            />
-            <p className="text-sm text-error">{result.error}</p>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex flex-col gap-2">
-            {result.output ? (
-              <p
-                dir="auto"
-                className="text-sm wrap-anywhere select-all text-text whitespace-pre-wrap font-mono"
-              >
-                {result.output}
-              </p>
-            ) : result.outputFile ? (
-              <div className="flex flex-col gap-2">
-                <FilePreview file={result.outputFile} />
-                <div className="flex items-center gap-2 text-text">
-                  <Icon
-                    icon={File01Icon}
-                    size="sm"
-                    className="text-primary shrink-0"
-                  />
-                  <span className="text-sm truncate flex-1">
-                    {result.outputFile.name}
-                  </span>
-                  <span className="text-xs text-text-muted shrink-0">
-                    {formatFileSize(result.outputFile.size)}
-                  </span>
-                </div>
-              </div>
-            ) : null}
-            <div className="flex justify-end gap-1">
-              {result.outputFile && (
-                <Button variant="ghost" iconOnly size="sm" onClick={onShare}>
-                  <Icon icon={Download04Icon} size="sm" />
-                </Button>
-              )}
-              {result.output && (
-                <Button variant="ghost" iconOnly size="sm" onClick={onShare}>
-                  <Icon icon={shareIcon} size="sm" />
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+// --- Page ---
 
 export const KeyDetailsPage: FC = () => {
-  const [, params] = useRoute('/keys/:id');
   const [, navigate] = useLocation();
-  const keyId = params?.id;
-  const key = useRow('keys', keyId);
-
+  const resolved = useKeyFromHash();
   const { share } = useShare();
   const [publicKey, setPublicKey] = useState<string>();
 
+  const key = resolved?.keyRecord;
+  const keyId = resolved?.keyId;
+  const isSaved = resolved?.isSaved ?? false;
+
+  const parsed = key ? parseKey(key.value) : null;
+  const isAsymmetric = parsed?.method.type === 'asymmetric';
+
   useEffect(() => {
-    if (!key) return;
-    const parsed = parseKey(key.value);
-    if (parsed.method.type === 'asymmetric') {
-      getPublicKey(key.value).then(setPublicKey);
-    }
-  }, [key]);
+    if (!key || !isAsymmetric) return;
+    getPublicKey(key.value).then(setPublicKey);
+  }, [key, isAsymmetric]);
 
   const handleDelete = useCallback(() => {
     if (!key || !keyId) return;
@@ -223,215 +111,151 @@ export const KeyDetailsPage: FC = () => {
     navigate('/keys');
   }, [key, keyId, navigate]);
 
-  const parsed = key ? parseKey(key.value) : null;
-  const isAsymmetric = parsed?.method.type === 'asymmetric';
-  const codec = key?.codec ?? 'base64';
+  const handleShare = useCallback(
+    (keyValue: string, codec: string) => {
+      const [method, type, data] = keyValue.split(':');
+      share({ text: keyShareUrl(codec, method, type, data) });
+    },
+    [share],
+  );
 
-  if (!keyId) return null;
+  const [editing, setEditing] = useState(!isSaved);
+  const [draft, setDraft] = useState(key?.name ?? '');
 
-  if (!key) {
-    return (
-      <Page>
-        <PageHeader backTo="/keys" title="Key Details" />
-        <div className="px-4">
-          <p className="text-text-secondary text-center mt-12">
-            Key not found.
-          </p>
-        </div>
-      </Page>
-    );
-  }
+  const handleSaveName = useCallback(() => {
+    if (!key || !draft.trim()) return;
+    if (isSaved) {
+      db.update('keys', key.id, { name: draft.trim() });
+    } else {
+      db.add('keys', { ...key, name: draft.trim() });
+    }
+    setEditing(false);
+  }, [key, isSaved, draft]);
+
+  if (!key || !parsed) return null;
 
   return (
     <Page>
-      <PageHeader
-        backTo="/keys"
-        title={key.name}
-        after={
-          <Popover
-            trigger={
-              <Button variant="ghost" iconOnly>
-                <Icon icon={MoreVerticalIcon} size="lg" />
-              </Button>
-            }
-          >
-            {(close) => (
-              <div className="min-w-64">
-                {isAsymmetric && (
-                  <button
-                    type="button"
-                    disabled={!publicKey}
-                    className="flex items-center gap-3 w-full px-3 py-2 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt disabled:opacity-40 disabled:cursor-default"
-                    onClick={() => {
-                      close();
-                      if (publicKey)
-                        share({ text: importUrl(codec, publicKey) });
-                    }}
-                  >
-                    <Icon icon={Share01Icon} className="shrink-0" />
-                    <div className="flex flex-col">
-                      <span>Share Lock</span>
-                      <span className="text-xs text-text-muted">
-                        Others can encrypt messages for you
-                      </span>
-                    </div>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="flex items-center gap-3 w-full px-3 py-2 text-sm text-text text-start transition-colors cursor-pointer hover:bg-surface-alt"
-                  onClick={() => {
-                    close();
-                    share({ text: importUrl(codec, key.value) });
-                  }}
-                >
-                  <Icon icon={Share01Icon} className="shrink-0" />
-                  <div className="flex flex-col">
-                    <span>Share Key</span>
-                    <span className="text-xs text-text-muted">
-                      Anyone with this can encrypt and decrypt
-                    </span>
-                  </div>
-                </button>
-                <div className="my-1 border-t border-border-light" />
-                <button
-                  type="button"
-                  className="flex items-center gap-3 w-full px-3 py-2 text-sm text-error text-start transition-colors cursor-pointer hover:bg-surface-alt"
-                  onClick={() => {
-                    close();
-                    handleDelete();
-                  }}
-                >
-                  <Icon icon={Delete01Icon} className="shrink-0" />
-                  <span>Delete</span>
-                </button>
-              </div>
-            )}
-          </Popover>
-        }
-      />
-      <KeyDetailsContent keyRecord={key} />
-    </Page>
-  );
-};
-
-const KeyDetailsContent: FC<{ keyRecord: Key }> = ({ keyRecord }) => {
-  const { share } = useShare();
-  const enc = useEncrypt(keyRecord);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const codecName =
-    CODEC_METHODS[keyRecord.codec as keyof typeof CODEC_METHODS]?.name ??
-    keyRecord.codec;
-
-  const handleFilePick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const f = e.target.files?.[0];
-      if (f) enc.attachFile(f);
-      e.target.value = '';
-    },
-    [enc.attachFile],
-  );
-
-  return (
-    <>
-      <PageBody className="px-4 pb-4">
-        <KeyInfoCard keyRecord={keyRecord} />
-
-        {enc.result ? (
-          <ResultCard
-            result={enc.result}
-            codecName={codecName}
-            onShare={() => enc.result && shareResult(enc.result, share)}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-text-muted text-sm">
-              Enter text or attach a file to encrypt or decrypt
-            </p>
-          </div>
-        )}
-      </PageBody>
-
-      <PageToolbar className="bg-surface">
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-
-        <div className="flex items-start gap-3 p-3">
-          {enc.file ? (
-            <div className="flex items-center gap-2 px-3 h-10 rounded-xl bg-surface-alt border border-border flex-1 min-w-0">
-              <Icon
-                icon={File01Icon}
-                size="sm"
-                className="text-text-muted shrink-0"
-              />
-              <span className="text-sm text-text truncate flex-1">
-                {enc.file.name}
-              </span>
-              <button
-                type="button"
-                className="shrink-0 text-text-muted hover:text-text transition-colors cursor-pointer"
-                onClick={() => enc.attachFile(null)}
-              >
-                <Icon icon={Cancel01Icon} size="sm" />
-              </button>
-            </div>
-          ) : (
+      {editing ? (
+        <PageHeader
+          title=""
+          before={
             <>
               <Button
                 variant="ghost"
                 iconOnly
-                onClick={handleFilePick}
-                className="shrink-0"
+                className="-ms-2"
+                onClick={() => setEditing(false)}
               >
-                <Icon icon={Attachment01Icon} />
+                <Icon icon={Cancel01Icon} size="lg" />
               </Button>
-              <Input
-                multiline
-                autoGrow={120}
-                rows={1}
-                className="flex-1 rounded-xl"
-                placeholder="Type your message..."
-                value={enc.input}
-                onInput={(e) => enc.setInput(e.currentTarget.value)}
+              <input
+                type="text"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    enc.submit('encrypt');
-                  }
+                  if (e.key === 'Enter' && draft.trim()) handleSaveName();
+                  if (e.key === 'Escape') setEditing(false);
                 }}
+                placeholder="Enter key name..."
+                // biome-ignore lint/a11y/noAutofocus: intentional focus on edit mode
+                autoFocus
+                className="text-lg font-semibold text-text bg-transparent outline-none min-w-0 flex-1 placeholder:text-text-muted placeholder:font-normal"
               />
             </>
-          )}
-          <ButtonGroup>
-            {enc.canDecrypt && (
-              <Button
-                iconOnly
-                variant="success"
-                disabled={!enc.hasInput || enc.isProcessing}
-                onClick={() => enc.submit('decrypt')}
-              >
-                <Icon icon={Key01Icon} size="lg" />
-              </Button>
-            )}
+          }
+          after={
             <Button
+              variant="primary_ghost"
               iconOnly
-              disabled={!enc.hasInput || enc.isProcessing}
-              onClick={() => enc.submit('encrypt')}
+              disabled={!draft.trim()}
+              onClick={handleSaveName}
             >
-              <Icon icon={SquareLock01Icon} size="lg" />
+              <Icon icon={Tick01Icon} size="lg" />
             </Button>
-          </ButtonGroup>
-        </div>
-      </PageToolbar>
-    </>
+          }
+        />
+      ) : (
+        <PageHeader
+          backTo="/keys"
+          before={<Avatar size={32} seed={isSaved ? key.name : 'unsaved'} />}
+          title={isSaved ? key.name : 'Unsaved'}
+          after={
+            <Popover
+              trigger={
+                <Button variant="ghost" iconOnly>
+                  <Icon icon={MoreVerticalIcon} size="lg" />
+                </Button>
+              }
+            >
+              {(close) => (
+                <div className="min-w-48">
+                  <ListItem
+                    size="sm"
+                    before={<Icon icon={Edit04Icon} size="sm" />}
+                    onClick={() => {
+                      close();
+                      setDraft(isSaved ? key.name : '');
+                      setEditing(true);
+                    }}
+                  >
+                    <span className="text-sm">
+                      {isSaved ? 'Rename' : 'Save with name'}
+                    </span>
+                  </ListItem>
+                  {isAsymmetric && (
+                    <ListItem
+                      size="sm"
+                      before={<Icon icon={Share01Icon} size="sm" />}
+                      onClick={() => {
+                        close();
+                        if (publicKey) handleShare(publicKey, key.codec);
+                      }}
+                    >
+                      <span className="text-sm">Share public</span>
+                    </ListItem>
+                  )}
+                  <ListItem
+                    size="sm"
+                    before={<Icon icon={Share01Icon} size="sm" />}
+                    onClick={() => {
+                      close();
+                      handleShare(key.value, key.codec);
+                    }}
+                  >
+                    <span className="text-sm">
+                      {isAsymmetric ? 'Share private' : 'Share'}
+                    </span>
+                  </ListItem>
+                  {isSaved && (
+                    <>
+                      <div className="my-1 border-t border-border-light" />
+                      <ListItem
+                        size="sm"
+                        before={
+                          <Icon
+                            icon={Delete01Icon}
+                            size="sm"
+                            className="text-error"
+                          />
+                        }
+                        onClick={() => {
+                          close();
+                          handleDelete();
+                        }}
+                      >
+                        <span className="text-sm text-error">Delete</span>
+                      </ListItem>
+                    </>
+                  )}
+                </div>
+              )}
+            </Popover>
+          }
+        />
+      )}
+
+      <TranslateWorkspace keyRecord={key} parsed={parsed} />
+    </Page>
   );
 };

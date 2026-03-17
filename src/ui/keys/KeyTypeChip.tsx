@@ -4,18 +4,20 @@ import { Chip, Icon } from '../shared';
 
 export const KeyTypeChip: FC<
   Omit<ComponentProps<typeof Chip>, 'children'> & {
-    value: 'key' | 'key+lock' | 'lock';
+    value: 'asymmetric' | 'symmetric' | 'asymmetric-public';
   }
 > = ({ value, ...props }) => (
   <Chip {...props}>
-    {value === 'lock' && <Icon icon={SquareLock01Icon} size="sm" />}
-    {value === 'key+lock' && (
+    {value === 'asymmetric-public' && (
+      <Icon icon={SquareLock01Icon} size="sm" />
+    )}
+    {value === 'asymmetric' && (
       <>
         <Icon icon={LockKeyIcon} size="sm" />
         <span>{'+'}</span>
         <Icon icon={SquareLock01Icon} size="sm" />
       </>
     )}
-    {value === 'key' && <Icon icon={LockKeyIcon} size="sm" />}
+    {value === 'symmetric' && <Icon icon={LockKeyIcon} size="sm" />}
   </Chip>
 );
