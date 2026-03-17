@@ -5,13 +5,20 @@ import { tv } from 'tailwind-variants';
 
 const avatar = tv({
   base: 'rounded-lg overflow-hidden bg-surface-alt',
+  variants: {
+    gray: {
+      true: 'grayscale-100',
+      false: '',
+    },
+  },
 });
 
 export const Avatar: FC<{
   size: number;
   seed: string;
   className?: string;
-}> = ({ size, seed, className }) => {
+  gray?: boolean;
+}> = ({ size, seed, className, gray }) => {
   const img = useMemo(() => {
     return createAvatar(shapes, {
       seed,
@@ -24,7 +31,8 @@ export const Avatar: FC<{
       alt={seed}
       width={size}
       height={size}
-      className={avatar({ className })}
+      style={{ width: size, height: size }}
+      className={avatar({ className, gray })}
     />
   );
 };

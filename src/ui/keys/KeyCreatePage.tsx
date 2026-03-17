@@ -16,7 +16,7 @@ import {
   type MethodCategory as CryptoMethodCategory,
   generatePrivateKey,
 } from '@/crypto';
-import { buildKeyId, db, encodeKeyParams } from '@/db';
+import { buildKeyId, db } from '@/db';
 import {
   Button,
   Icon,
@@ -77,14 +77,14 @@ export const KeyCreatePage: FC = () => {
         type: keyType,
         value: keyData,
       };
-      db.add('keys', {
+      await db.add({
         id: buildKeyId(params),
         name: data.name.trim(),
         value,
         codec: data.codec,
         method: data.method,
       });
-      navigate(`/keys/${encodeKeyParams(params)}`);
+      navigate('/keys');
     },
     [navigate],
   );

@@ -16,7 +16,7 @@ import {
   encodeKeyParams,
   type Key,
   type KeyParams,
-  useRow,
+  useKey,
 } from '@/db';
 import {
   Avatar,
@@ -55,7 +55,7 @@ const useKeyFromRoute = ():
     [match, params?.key],
   );
   const keyId = decoded ? buildKeyId(decoded) : '';
-  const saved = useRow('keys', keyId || undefined);
+  const saved = useKey(keyId || undefined);
 
   return useMemo(() => {
     if (!decoded) return undefined;
@@ -69,6 +69,7 @@ const useKeyFromRoute = ():
         codec: decoded.codec,
         method: decoded.method,
         updatedAt: Date.now(),
+        syncedAt: null,
       },
       isSaved: false,
     };
@@ -98,7 +99,7 @@ export const KeyDetailsPage: FC = () => {
   const handleDelete = useCallback(() => {
     if (!key || !keyId) return;
     if (!confirm(`Delete "${key.name}"? This cannot be undone.`)) return;
-    db.remove('keys', keyId);
+    db.remove(keyId);
     navigate('/keys');
   }, [key, keyId, navigate]);
 
@@ -109,15 +110,15 @@ export const KeyDetailsPage: FC = () => {
     [share],
   );
 
-  const [editing, setEditing] = useState(!isSaved);
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(key?.name ?? '');
 
   const handleSaveName = useCallback(() => {
     if (!key || !draft.trim()) return;
     if (isSaved) {
-      db.update('keys', key.id, { name: draft.trim() });
+      db.update(key.id, { name: draft.trim() });
     } else {
-      db.add('keys', { ...key, name: draft.trim() });
+      db.add({ ...key, name: draft.trim() });
     }
     setEditing(false);
   }, [key, isSaved, draft]);
@@ -168,7 +169,13 @@ export const KeyDetailsPage: FC = () => {
       ) : (
         <PageHeader
           backTo="/keys"
-          before={<Avatar size={32} seed={isSaved ? key.name : 'unsaved'} />}
+          before={
+            <Avatar
+              size={32}
+              seed={isSaved ? key.name : 'unsaved'}
+              gray={!key.syncedAt || key.syncedAt < key.updatedAt}
+            />
+          }
           title={isSaved ? key.name : 'Unsaved'}
           after={
             <Popover

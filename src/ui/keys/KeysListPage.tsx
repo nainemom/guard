@@ -1,11 +1,11 @@
 import {
   ArrowRight01Icon,
+  CloudDownloadIcon,
   CloudIcon,
-  CloudOffIcon,
+  CloudUploadIcon,
   Key01Icon,
   Loading03Icon,
   PlusSignIcon,
-  UserIcon,
 } from '@hugeicons/core-free-icons';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
@@ -15,9 +15,10 @@ import {
   db,
   encodeKeyParams,
   useConnected,
+  useDirtyCount,
+  useKeys,
   useLastSyncTime,
-  useProfile,
-  useTable,
+  useSyncing,
 } from '@/db';
 import {
   Avatar,
@@ -45,15 +46,15 @@ const formatRelativeTime = (timestamp: number): string => {
 };
 
 export const KeysListPage: FC = () => {
-  const allKeys = useTable('keys');
+  const allKeys = useKeys();
   const keys = useMemo(
     () => [...allKeys].sort((a, b) => b.updatedAt - a.updatedAt),
     [allKeys],
   );
   const connected = useConnected();
-  const profile = useProfile();
   const lastSyncTime = useLastSyncTime();
-  const [syncing, setSyncing] = useState(false);
+  const syncing = useSyncing();
+  const dirtyCount = useDirtyCount();
   const [lastSyncLabel, setLastSyncLabel] = useState<string | null>(null);
   const toast = useToast();
 
@@ -66,155 +67,77 @@ export const KeysListPage: FC = () => {
     return () => clearInterval(interval);
   }, [lastSyncTime]);
 
-  const handleConnect = useCallback(
-    async (close: () => void) => {
-      try {
-        setSyncing(true);
-        await db.connect();
-        toast.show('Connected to Google Drive');
-        close();
-      } catch {
-        toast.show('Connection failed');
-      } finally {
-        setSyncing(false);
-      }
-    },
-    [toast],
-  );
-
-  const handleDisconnect = useCallback(
-    async (close: () => void) => {
-      await db.disconnect();
-      toast.show('Disconnected from Google Drive');
-      close();
-    },
-    [toast],
-  );
-
-  const handleSync = useCallback(async () => {
+  const handleBackup = useCallback(async () => {
     try {
-      setSyncing(true);
-      await db.sync();
-      toast.show('Synced with Google Drive');
+      if (!connected) await db.connect();
+      await db.push();
+      toast.show('Backed up to Google Drive');
     } catch {
-      toast.show('Sync failed');
-    } finally {
-      setSyncing(false);
+      toast.show('Backup failed');
     }
-  }, [toast]);
+  }, [connected, toast]);
+
+  const handleRestore = useCallback(async () => {
+    try {
+      if (!connected) await db.connect();
+      await db.pull();
+      toast.show('Restored from Google Drive');
+    } catch {
+      toast.show('Restore failed');
+    }
+  }, [connected, toast]);
 
   return (
     <Page>
       <PageHeader
         title="Guard"
-        subtitle="List of your keys"
         after={
           <Popover
             trigger={
-              connected && profile ? (
-                <img
-                  src={profile.picture}
-                  alt={profile.name}
-                  referrerPolicy="no-referrer"
-                  className="size-9 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-primary transition-all"
-                />
-              ) : (
-                <button
-                  type="button"
-                  className="size-9 rounded-full bg-surface-alt border border-border-light flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
-                >
+              <button
+                type="button"
+                className="size-9 rounded-full bg-surface-alt border border-border-light flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative"
+              >
+                {syncing ? (
                   <Icon
-                    icon={connected ? CloudIcon : UserIcon}
-                    className="text-text-muted"
+                    icon={Loading03Icon}
+                    className="text-text-muted animate-spin"
                   />
-                </button>
-              )
+                ) : (
+                  <Icon icon={CloudIcon} className="text-text-muted" />
+                )}
+                {dirtyCount > 0 && !syncing && (
+                  <span className="absolute -top-0.5 -end-0.5 size-2.5 rounded-full bg-primary" />
+                )}
+              </button>
             }
           >
-            {(close) =>
-              connected ? (
-                <div className="min-w-64">
-                  {profile && (
-                    <div className="flex items-center gap-3 px-4 py-3 border-b border-border-light">
-                      <img
-                        src={profile.picture}
-                        alt={profile.name}
-                        referrerPolicy="no-referrer"
-                        className="size-10 rounded-full"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-text">
-                          {profile.name}
-                        </span>
-                        <span className="text-xs text-text-muted">
-                          Google Drive
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <ListItem
-                    size="sm"
-                    before={
-                      syncing ? (
-                        <Icon icon={Loading03Icon} className="animate-spin" />
-                      ) : (
-                        <Icon icon={CloudIcon} />
-                      )
-                    }
-                    onClick={handleSync}
-                  >
-                    <p className="text-sm">Sync now</p>
-                    {lastSyncLabel && (
-                      <p className="text-xs text-text-muted">
-                        Last synced {lastSyncLabel}
-                      </p>
-                    )}
-                  </ListItem>
-                  <div className="my-1 border-t border-border-light" />
-                  <ListItem
-                    size="sm"
-                    before={<Icon icon={CloudOffIcon} className="text-error" />}
-                    onClick={() => handleDisconnect(close)}
-                  >
-                    <span className="text-sm text-error">Disconnect</span>
-                  </ListItem>
+            {() => (
+              <div className="min-w-52">
+                <div className="px-3 py-2 border-b border-border-light">
+                  <p className="text-xs text-text-muted">
+                    {lastSyncLabel
+                      ? `Last sync ${lastSyncLabel}`
+                      : 'Never synced'}
+                    {dirtyCount > 0 && ` · ${dirtyCount} unsaved`}
+                  </p>
                 </div>
-              ) : (
-                <div className="min-w-64 p-4 flex flex-col items-center text-center gap-3">
-                  <div className="rounded-full bg-border-light p-3">
-                    <Icon
-                      icon={UserIcon}
-                      size="lg"
-                      className="text-text-muted"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-text">
-                      Not connected
-                    </p>
-                    <p className="text-xs text-text-muted mt-1">
-                      Sign in to sync your keys across devices
-                    </p>
-                  </div>
-                  <Button
-                    className="w-full"
-                    disabled={syncing}
-                    onClick={() => handleConnect(close)}
-                  >
-                    {syncing ? (
-                      <Icon
-                        icon={Loading03Icon}
-                        size="sm"
-                        className="animate-spin"
-                      />
-                    ) : (
-                      <Icon icon={CloudIcon} size="sm" />
-                    )}
-                    Connect Google Drive
-                  </Button>
-                </div>
-              )
-            }
+                <ListItem
+                  size="sm"
+                  before={<Icon icon={CloudUploadIcon} size="sm" />}
+                  onClick={handleBackup}
+                >
+                  <span className="text-sm">Backup to Drive</span>
+                </ListItem>
+                <ListItem
+                  size="sm"
+                  before={<Icon icon={CloudDownloadIcon} size="sm" />}
+                  onClick={handleRestore}
+                >
+                  <span className="text-sm">Restore from Drive</span>
+                </ListItem>
+              </div>
+            )}
           </Popover>
         }
       />
@@ -242,7 +165,13 @@ export const KeysListPage: FC = () => {
               return (
                 <Link key={key.id} to={keyPath} asChild>
                   <ListItem
-                    before={<Avatar size={48} seed={key.name} />}
+                    before={
+                      <Avatar
+                        size={48}
+                        seed={key.name}
+                        gray={!key.syncedAt || key.syncedAt < key.updatedAt}
+                      />
+                    }
                     after={
                       <>
                         <KeyTypeChip
