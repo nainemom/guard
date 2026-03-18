@@ -80,15 +80,15 @@ export const sync = async () => {
     }
   }
 
-  // Cancel previous replications to clear persisted checkpoints
-  for (const rep of replications) {
-    await rep.cancel();
-  }
-
   isSyncing = true;
 
+  // Unique identifier per sync cycle — avoids stale checkpoints from previous runs
+  const syncId = String(Date.now());
   replications = Object.values(database.collections).map((collection) =>
-    replicateGDrive(collection as RxCollection),
+    replicateGDrive(
+      collection as RxCollection,
+      `gdrive-${collection.name}-${syncId}`,
+    ),
   );
 
   for (const rep of replications) {
