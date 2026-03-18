@@ -95,11 +95,28 @@ export const sync = async () => {
     rep.start();
   }
 
-  await Promise.all(replications.map((rep) => rep.awaitInitialReplication()));
+  try {
+    await Promise.all(
+      replications.map(
+        (rep) =>
+          new Promise<void>((resolve, reject) => {
+            const sub = rep.error$.subscribe((err) => {
+              sub.unsubscribe();
+              reject(err);
+            });
+            rep.awaitInitialReplication().then(() => {
+              sub.unsubscribe();
+              resolve();
+            });
+          }),
+      ),
+    );
 
-  isSyncing = false;
-  lastSyncTime = Date.now();
-  localStorage.setItem(SYNC_TIME_KEY, String(lastSyncTime));
-  hasLocalChanges = false;
-  notifySyncListeners();
+    lastSyncTime = Date.now();
+    localStorage.setItem(SYNC_TIME_KEY, String(lastSyncTime));
+    hasLocalChanges = false;
+  } finally {
+    isSyncing = false;
+    notifySyncListeners();
+  }
 };
