@@ -16,7 +16,7 @@ export const db = () => {
 
 const SYNC_TIME_KEY = 'guard-last-sync-time';
 
-let replications: RxReplicationState<any, any>[] = [];
+let replications: RxReplicationState<unknown, unknown>[] = [];
 let lastSyncTime: number | null = (() => {
   const v = localStorage.getItem(SYNC_TIME_KEY);
   return v ? Number(v) : null;

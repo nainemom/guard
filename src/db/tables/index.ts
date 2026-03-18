@@ -1,4 +1,4 @@
-import type { RxCollection } from '../lib';
+import type { CollectionConfig, RxCollection } from '../lib';
 import * as keys from './keys';
 
 export type Collections = {
@@ -6,10 +6,7 @@ export type Collections = {
 };
 
 export const definitions: {
-  [K in keyof Collections]: {
-    schema: any;
-    migrationStrategies?: Record<number, (doc: any) => any>;
-  };
+  [K in keyof Collections]: CollectionConfig;
 } = {
   keys: { schema: keys.schema },
 };

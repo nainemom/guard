@@ -3,6 +3,7 @@ import {
   createRxDatabase,
   type RxCollection,
   type RxDatabase,
+  type RxJsonSchema,
   toTypedRxJsonSchema,
 } from 'rxdb';
 import { RxDBCleanupPlugin } from 'rxdb/plugins/cleanup';
@@ -17,14 +18,17 @@ addRxPlugin(RxDBCleanupPlugin);
 export { toTypedRxJsonSchema };
 export type { RxCollection };
 
+export interface CollectionConfig {
+  schema: RxJsonSchema<Record<string, unknown>>;
+  migrationStrategies?: Record<
+    number,
+    (doc: Record<string, unknown>) => Record<string, unknown>
+  >;
+}
+
 export const createDatabase = async <T extends Record<string, RxCollection>>(
   name: string,
-  collections: {
-    [K in keyof T]: {
-      schema: any;
-      migrationStrategies?: Record<number, (doc: any) => any>;
-    };
-  },
+  collections: { [K in keyof T]: CollectionConfig },
 ): Promise<RxDatabase<T>> => {
   const db = await createRxDatabase<T>({
     name,
@@ -35,7 +39,8 @@ export const createDatabase = async <T extends Record<string, RxCollection>>(
     },
   });
 
-  await db.addCollections(collections as any);
+  // biome-ignore lint/suspicious/noExplicitAny: RxDB's addCollections type requires exact internal types that can't be satisfied externally
+  await db.addCollections(collections as Record<string, any>);
 
   return db;
 };

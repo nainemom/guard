@@ -151,9 +151,11 @@ const writeFile = async (
 export const replicateGDrive = (
   collection: RxCollection,
   replicationIdentifier = `gdrive-${collection.name}`,
-): RxReplicationState<any, any> => {
+): RxReplicationState<unknown, unknown> => {
   const filename = `guard-sync-${collection.name}.json`;
   const primaryPath = collection.schema.primaryPath;
+
+  type Doc = Record<string, unknown>;
 
   return replicateRxCollection({
     collection,
@@ -169,7 +171,7 @@ export const replicateGDrive = (
         const token = await auth();
         const result = await readFile(token, filename);
 
-        const docs: any[] = result.data ? JSON.parse(result.data) : [];
+        const docs: Doc[] = result.data ? JSON.parse(result.data) : [];
         return {
           documents: docs,
           checkpoint: docs.length ? Date.now() : undefined,
@@ -183,7 +185,7 @@ export const replicateGDrive = (
         const result = await readFile(token, filename);
 
         const remote = new Map(
-          (result.data ? (JSON.parse(result.data) as any[]) : []).map((d) => [
+          (result.data ? (JSON.parse(result.data) as Doc[]) : []).map((d) => [
             d[primaryPath],
             d,
           ]),
