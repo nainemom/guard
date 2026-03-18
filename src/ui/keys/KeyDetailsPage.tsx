@@ -17,7 +17,6 @@ import {
   type KeyParams,
   useDb,
   useRxQuery,
-  useSync,
 } from '@/db';
 import {
   Avatar,
@@ -89,7 +88,6 @@ export const KeyDetailsPage: FC = () => {
   const resolved = useKeyFromRoute();
   const { share } = useShare();
   const [publicKey, setPublicKey] = useState<string>();
-  const { lastSyncTime } = useSync();
 
   const key = resolved?.keyRecord;
   const keyValue = resolved?.keyValue;
@@ -204,16 +202,7 @@ export const KeyDetailsPage: FC = () => {
       ) : (
         <PageHeader
           backTo="/keys"
-          before={
-            <Avatar
-              size={32}
-              seed={isSaved ? key.name : 'unsaved'}
-              gray={
-                !lastSyncTime ||
-                (isSaved && (key as any)._data?._meta.lwt > lastSyncTime)
-              }
-            />
-          }
+          before={<Avatar size={32} seed={isSaved ? key.name : ''} />}
           title={isSaved ? key.name : 'Unsaved'}
           after={
             <Popover

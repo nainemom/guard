@@ -14,8 +14,13 @@ export const db = () => {
 
 // ─── Sync ────────────────────────────────────────────────
 
+const SYNC_TIME_KEY = 'guard-last-sync-time';
+
 let replications: RxReplicationState<any, any>[] = [];
-let lastSyncTime: number | null = null;
+let lastSyncTime: number | null = (() => {
+  const v = localStorage.getItem(SYNC_TIME_KEY);
+  return v ? Number(v) : null;
+})();
 let hasLocalChanges = false;
 let isSyncing = false;
 let changeSubsSetUp = false;
@@ -39,6 +44,25 @@ export const subscribeSyncState = (cb: () => void) => {
 };
 
 export const getSyncState = () => syncStateSnapshot;
+
+// Check if any doc was written after lastSyncTime
+const detectLocalChanges = async () => {
+  if (!lastSyncTime) return;
+  const database = await db();
+  for (const collection of Object.values(database.collections)) {
+    const docs = await (collection as RxCollection).find().exec();
+    for (const doc of docs) {
+      if (doc._data._meta.lwt > lastSyncTime) {
+        hasLocalChanges = true;
+        notifySyncListeners();
+        return;
+      }
+    }
+  }
+};
+
+// Run on module load — detect changes that happened before this session
+detectLocalChanges();
 
 export const sync = async () => {
   const database = await db();
@@ -75,6 +99,7 @@ export const sync = async () => {
 
   isSyncing = false;
   lastSyncTime = Date.now();
+  localStorage.setItem(SYNC_TIME_KEY, String(lastSyncTime));
   hasLocalChanges = false;
   notifySyncListeners();
 };

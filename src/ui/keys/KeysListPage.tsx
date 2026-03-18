@@ -31,7 +31,7 @@ export const KeysListPage: FC = () => {
     () => [...keys].sort((a, b) => b._data._meta.lwt - a._data._meta.lwt),
     [keys],
   );
-  const { sync, syncing, lastSyncTime } = useSync();
+  const { sync, syncing, hasLocalChanges } = useSync();
   const toast = useToast();
 
   const handleSync = useCallback(async () => {
@@ -53,11 +53,15 @@ export const KeysListPage: FC = () => {
             iconOnly
             disabled={syncing}
             onClick={handleSync}
+            className="relative"
           >
             {syncing ? (
               <Icon icon={Loading03Icon} className="animate-spin" size="lg" />
             ) : (
               <Icon icon={CloudIcon} size="lg" />
+            )}
+            {hasLocalChanges && !syncing && (
+              <span className="absolute top-1 right-1 size-2 rounded-full bg-primary" />
             )}
           </Button>
         }
@@ -83,14 +87,10 @@ export const KeysListPage: FC = () => {
               const parsed = parseKey(key.value);
               const [, keyType, keyData] = key.value.split(':');
               const keyPath = `/keys/${encodeKeyParams({ codec: key.codec, method: parsed.method.id, type: keyType, value: keyData })}`;
-              const isUnsynced =
-                !lastSyncTime || key._data._meta.lwt > lastSyncTime;
               return (
                 <Link key={key.value} to={keyPath} asChild>
                   <ListItem
-                    before={
-                      <Avatar size={48} seed={key.name} gray={isUnsynced} />
-                    }
+                    before={<Avatar size={48} seed={key.name} />}
                     after={
                       <>
                         <KeyTypeChip
