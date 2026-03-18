@@ -1,19 +1,17 @@
-import { type FC, type ReactNode, Suspense, use } from 'react';
+import { type FC, type ReactNode, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { Redirect, Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
-import { initDb } from '@/db';
+import { useDb } from '@/db';
 import { KeyCreatePage } from './keys/KeyCreatePage';
 import { KeyDetailsPage } from './keys/KeyDetailsPage';
 import { KeysListPage } from './keys/KeysListPage';
 import { InstallPrompt, ToastProvider } from './shared';
 import './main.css';
 
-const dbReady = initDb();
-
 const DbGate: FC<{ children: ReactNode }> = ({ children }) => {
-  use(dbReady);
+  useDb();
   return children;
 };
 

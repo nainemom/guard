@@ -9,7 +9,7 @@ import { type FC, useCallback, useMemo } from 'react';
 import { Link } from 'wouter';
 import { METHODS as CODEC_METHODS } from '@/codec';
 import { parseKey } from '@/crypto';
-import { db, encodeKeyParams, useConnected, useKeys, useSyncing } from '@/db';
+import { encodeKeyParams, useRxQuery, useSync } from '@/db';
 import {
   Avatar,
   Button,
@@ -24,24 +24,24 @@ import {
 import { KeyTypeChip } from './KeyTypeChip';
 
 export const KeysListPage: FC = () => {
-  const allKeys = useKeys();
-  const keys = useMemo(
-    () => [...allKeys].sort((a, b) => b.updatedAt - a.updatedAt),
-    [allKeys],
+  const { data: keys, loading } = useRxQuery(
+    useCallback((db) => db.keys.find(), []),
   );
-  const connected = useConnected();
-  const syncing = useSyncing();
+  const sortedKeys = useMemo(
+    () => [...keys].sort((a, b) => b._data._meta.lwt - a._data._meta.lwt),
+    [keys],
+  );
+  const { sync, syncing, lastSyncTime } = useSync();
   const toast = useToast();
 
   const handleSync = useCallback(async () => {
     try {
-      if (!connected) await db.connect();
-      await db.sync();
+      await sync();
       toast.show('Synced with Google Drive');
     } catch {
       toast.show('Sync failed');
     }
-  }, [connected, toast]);
+  }, [sync, toast]);
 
   return (
     <Page>
@@ -64,7 +64,7 @@ export const KeysListPage: FC = () => {
       />
 
       <PageBody>
-        {keys.length === 0 ? (
+        {!loading && sortedKeys.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 px-6 pb-16 max-w-96 mx-auto text-center">
             <div className="rounded-full bg-border-light p-5 mb-4">
               <Icon icon={Key01Icon} className="text-text-muted" size="xl" />
@@ -79,19 +79,17 @@ export const KeysListPage: FC = () => {
           </div>
         ) : (
           <div className="divide-y divide-border-light">
-            {keys.map((key) => {
+            {sortedKeys.map((key) => {
               const parsed = parseKey(key.value);
               const [, keyType, keyData] = key.value.split(':');
-              const keyPath = `/keys/${encodeKeyParams({ codec: key.codec, method: key.method, type: keyType, value: keyData })}`;
+              const keyPath = `/keys/${encodeKeyParams({ codec: key.codec, method: parsed.method.id, type: keyType, value: keyData })}`;
+              const isUnsynced =
+                !lastSyncTime || key._data._meta.lwt > lastSyncTime;
               return (
-                <Link key={key.id} to={keyPath} asChild>
+                <Link key={key.value} to={keyPath} asChild>
                   <ListItem
                     before={
-                      <Avatar
-                        size={48}
-                        seed={key.name}
-                        gray={!key.syncedAt || key.syncedAt < key.updatedAt}
-                      />
+                      <Avatar size={48} seed={key.name} gray={isUnsynced} />
                     }
                     after={
                       <>

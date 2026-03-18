@@ -16,7 +16,7 @@ import {
   type MethodCategory as CryptoMethodCategory,
   generatePrivateKey,
 } from '@/crypto';
-import { buildKeyId, db } from '@/db';
+import { useDb } from '@/db';
 import {
   Button,
   Icon,
@@ -49,6 +49,7 @@ interface FormValues {
 
 export const KeyCreatePage: FC = () => {
   const [, navigate] = useLocation();
+  const database = useDb();
 
   const {
     register,
@@ -70,23 +71,14 @@ export const KeyCreatePage: FC = () => {
   const onSubmit = useCallback(
     async (data: FormValues) => {
       const value = await generatePrivateKey(data.method);
-      const [, keyType, keyData] = value.split(':');
-      const params = {
-        codec: data.codec,
-        method: data.method,
-        type: keyType,
-        value: keyData,
-      };
-      await db.add({
-        id: buildKeyId(params),
-        name: data.name.trim(),
+      await database.keys.insert({
         value,
         codec: data.codec,
-        method: data.method,
+        name: data.name.trim(),
       });
       navigate('/keys');
     },
-    [navigate],
+    [database, navigate],
   );
 
   return (

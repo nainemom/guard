@@ -10,13 +10,14 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { getPublicKey, parseKey } from '@/crypto';
 import {
-  buildKeyId,
-  db,
+  buildKeyValue,
   decodeKeyParams,
   encodeKeyParams,
   type Key,
   type KeyParams,
-  useKey,
+  useDb,
+  useRxQuery,
+  useSync,
 } from '@/db';
 import {
   Avatar,
@@ -47,45 +48,51 @@ const keyParamsFromValue = (codec: string, keyValue: string): KeyParams => {
 // --- Hook ---
 
 const useKeyFromRoute = ():
-  | { keyId: string; keyRecord: Key; isSaved: boolean }
+  | { keyValue: string; keyRecord: Key; isSaved: boolean }
   | undefined => {
   const [match, params] = useRoute('/keys/:key');
   const decoded = useMemo(
     () => (match && params?.key ? decodeKeyParams(params.key) : null),
     [match, params?.key],
   );
-  const keyId = decoded ? buildKeyId(decoded) : '';
-  const saved = useKey(keyId || undefined);
+  const fullValue = decoded ? buildKeyValue(decoded) : '';
+
+  const { data: results } = useRxQuery(
+    useCallback(
+      (db) => db.keys.find({ selector: { value: fullValue || '__none__' } }),
+      [fullValue],
+    ),
+  );
+  const saved = results[0] ?? null;
 
   return useMemo(() => {
     if (!decoded) return undefined;
-    if (saved) return { keyId, keyRecord: saved, isSaved: true };
+    if (saved)
+      return { keyValue: saved.value, keyRecord: saved, isSaved: true };
     return {
-      keyId,
+      keyValue: fullValue,
       keyRecord: {
-        id: keyId,
-        name: '',
-        value: `${decoded.method}:${decoded.type}:${decoded.value}`,
+        value: fullValue,
         codec: decoded.codec,
-        method: decoded.method,
-        updatedAt: Date.now(),
-        syncedAt: null,
-      },
+        name: '',
+      } as Key,
       isSaved: false,
     };
-  }, [decoded, keyId, saved]);
+  }, [decoded, fullValue, saved]);
 };
 
 // --- Page ---
 
 export const KeyDetailsPage: FC = () => {
   const [, navigate] = useLocation();
+  const database = useDb();
   const resolved = useKeyFromRoute();
   const { share } = useShare();
   const [publicKey, setPublicKey] = useState<string>();
+  const { lastSyncTime } = useSync();
 
   const key = resolved?.keyRecord;
-  const keyId = resolved?.keyId;
+  const keyValue = resolved?.keyValue;
   const isSaved = resolved?.isSaved ?? false;
 
   let parsed = null;
@@ -101,16 +108,17 @@ export const KeyDetailsPage: FC = () => {
     getPublicKey(key.value).then(setPublicKey);
   }, [key, isAsymmetric]);
 
-  const handleDelete = useCallback(() => {
-    if (!key || !keyId) return;
+  const handleDelete = useCallback(async () => {
+    if (!key || !keyValue) return;
     if (!confirm(`Delete "${key.name}"? This cannot be undone.`)) return;
-    db.remove(keyId);
+    const doc = await database.keys.findOne(keyValue).exec();
+    await doc?.remove();
     navigate('/keys');
-  }, [key, keyId, navigate]);
+  }, [key, keyValue, database, navigate]);
 
   const handleShare = useCallback(
-    (keyValue: string, codec: string) => {
-      share({ text: keyShareUrl(keyParamsFromValue(codec, keyValue)) });
+    (kv: string, codec: string) => {
+      share({ text: keyShareUrl(keyParamsFromValue(codec, kv)) });
     },
     [share],
   );
@@ -118,15 +126,16 @@ export const KeyDetailsPage: FC = () => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(key?.name ?? '');
 
-  const handleSaveName = useCallback(() => {
+  const handleSaveName = useCallback(async () => {
     if (!key || !draft.trim()) return;
     if (isSaved) {
-      db.update(key.id, { name: draft.trim() });
+      const doc = await database.keys.findOne(key.value).exec();
+      await doc?.patch({ name: draft.trim() });
     } else {
-      db.add({ ...key, name: draft.trim() });
+      await database.keys.insert({ ...key, name: draft.trim() });
     }
     setEditing(false);
-  }, [key, isSaved, draft]);
+  }, [key, isSaved, draft, database]);
 
   if (!key || !parsed) {
     return (
@@ -199,7 +208,10 @@ export const KeyDetailsPage: FC = () => {
             <Avatar
               size={32}
               seed={isSaved ? key.name : 'unsaved'}
-              gray={!key.syncedAt || key.syncedAt < key.updatedAt}
+              gray={
+                !lastSyncTime ||
+                (isSaved && (key as any)._data?._meta.lwt > lastSyncTime)
+              }
             />
           }
           title={isSaved ? key.name : 'Unsaved'}
