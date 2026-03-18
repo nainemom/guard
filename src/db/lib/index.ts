@@ -26,6 +26,11 @@ export interface CollectionConfig {
   >;
 }
 
+let skipTimestamps = false;
+export const setSkipTimestamps = (v: boolean) => {
+  skipTimestamps = v;
+};
+
 export const createDatabase = async <T extends Record<string, RxCollection>>(
   name: string,
   collections: { [K in keyof T]: CollectionConfig },
@@ -41,6 +46,15 @@ export const createDatabase = async <T extends Record<string, RxCollection>>(
 
   // biome-ignore lint/suspicious/noExplicitAny: RxDB's addCollections type requires exact internal types that can't be satisfied externally
   await db.addCollections(collections as Record<string, any>);
+
+  for (const collection of Object.values(db.collections) as RxCollection[]) {
+    collection.preInsert((data: Record<string, unknown>) => {
+      data.updatedAt ??= Date.now();
+    }, false);
+    collection.preSave((data: Record<string, unknown>) => {
+      if (!skipTimestamps) data.updatedAt = Date.now();
+    }, false);
+  }
 
   return db;
 };

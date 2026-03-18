@@ -74,6 +74,7 @@ const useKeyFromRoute = ():
         value: fullValue,
         codec: decoded.codec,
         name: '',
+        updatedAt: Date.now(),
       } as Key,
       isSaved: false,
     };

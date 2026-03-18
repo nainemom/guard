@@ -10,8 +10,9 @@ export const schema = toTypedRxJsonSchema({
     value: { type: 'string', maxLength: 512 },
     codec: { type: 'string' },
     name: { type: 'string' },
+    updatedAt: { type: 'number' },
   },
-  required: ['value', 'codec', 'name'],
+  required: ['value', 'codec', 'name', 'updatedAt'],
 } as const);
 
 export type Key = ExtractDocumentTypeFromTypedRxJsonSchema<typeof schema>;

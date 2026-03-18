@@ -75,6 +75,7 @@ export const KeyCreatePage: FC = () => {
         value,
         codec: data.codec,
         name: data.name.trim(),
+        updatedAt: Date.now(),
       });
       navigate('/keys');
     },

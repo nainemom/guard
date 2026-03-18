@@ -1,11 +1,5 @@
 /// <reference path="./gis.d.ts" />
 
-import type { RxCollection } from 'rxdb';
-import {
-  type RxReplicationState,
-  replicateRxCollection,
-} from 'rxdb/plugins/replication';
-
 // ─── Google Drive API ────────────────────────────────────
 
 const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
@@ -76,7 +70,7 @@ const apiFetch = async (
   return res;
 };
 
-const readFile = async (
+export const readFile = async (
   token: string,
   filename: string,
 ): Promise<{
@@ -108,7 +102,7 @@ const readFile = async (
   };
 };
 
-const writeFile = async (
+export const writeFile = async (
   token: string,
   content: string,
   filename: string,
@@ -144,65 +138,4 @@ const writeFile = async (
     );
     if (!res.ok) throw new Error(`Drive API error: ${res.status}`);
   }
-};
-
-// ─── RxDB Replication ────────────────────────────────────
-
-export const replicateGDrive = (
-  collection: RxCollection,
-  replicationIdentifier = `gdrive-${collection.name}`,
-): RxReplicationState<unknown, unknown> => {
-  const filename = `guard-sync-${collection.name}.json`;
-  const primaryPath = collection.schema.primaryPath;
-
-  type Doc = Record<string, unknown>;
-
-  return replicateRxCollection({
-    collection,
-    replicationIdentifier,
-    live: false,
-    autoStart: false,
-    retryTime: 30_000,
-
-    pull: {
-      async handler(checkpoint) {
-        if (checkpoint) return { documents: [], checkpoint };
-
-        const token = await auth();
-        const result = await readFile(token, filename);
-
-        const docs: Doc[] = result.data ? JSON.parse(result.data) : [];
-        return {
-          documents: docs,
-          checkpoint: docs.length ? Date.now() : undefined,
-        };
-      },
-    },
-
-    push: {
-      async handler(changeRows) {
-        const token = await auth();
-        const result = await readFile(token, filename);
-
-        const remote = new Map(
-          (result.data ? (JSON.parse(result.data) as Doc[]) : []).map((d) => [
-            d[primaryPath],
-            d,
-          ]),
-        );
-        for (const { newDocumentState } of changeRows) {
-          remote.set(newDocumentState[primaryPath], newDocumentState);
-        }
-
-        await writeFile(
-          token,
-          JSON.stringify([...remote.values()]),
-          filename,
-          result.fileId,
-          result.etag,
-        );
-        return [];
-      },
-    },
-  });
 };
