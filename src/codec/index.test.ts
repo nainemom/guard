@@ -26,7 +26,7 @@ const vectorFiles = import.meta.glob<Snapshots>('./snapshot/*.json', {
 });
 
 for (const method of Object.keys(METHODS) as (keyof typeof METHODS)[]) {
-  describe(method, () => {
+  describe(`${method}`, () => {
     const snapshots = vectorFiles[`./snapshot/${method}.json`];
 
     it('has snapshot file', () => {
@@ -43,12 +43,12 @@ for (const method of Object.keys(METHODS) as (keyof typeof METHODS)[]) {
         const input = encoded.startsWith('data:')
           ? dataUrlToFile(encoded)
           : encoded;
-        expect(await decode(input, method)).toEqual(bytes);
+        expect(await decode(method, input)).toEqual(bytes);
       });
 
       it(`encodes then decodes ${size} bytes`, async () => {
-        const enc = await encode(bytes, method);
-        expect(await decode(enc, method)).toEqual(bytes);
+        const enc = await encode(method, bytes);
+        expect(await decode(method, enc)).toEqual(bytes);
       });
     }
   });
