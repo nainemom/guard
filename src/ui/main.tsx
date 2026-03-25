@@ -1,19 +1,13 @@
-import { type FC, type ReactNode, Suspense } from 'react';
+import { Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { Redirect, Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
-import { useDb } from '@/db';
 import { KeyCreatePage } from './keys/KeyCreatePage';
 import { KeyDetailsPage } from './keys/KeyDetailsPage';
 import { KeysListPage } from './keys/KeysListPage';
 import { InstallPrompt, ToastProvider } from './shared';
 import './main.css';
-
-const DbGate: FC<{ children: ReactNode }> = ({ children }) => {
-  useDb();
-  return children;
-};
 
 const root = document.querySelector<HTMLElement>('#app') as HTMLElement;
 
@@ -21,29 +15,30 @@ createRoot(root).render(
   <Suspense>
     <ToastProvider>
       <InstallPrompt />
-      <DbGate>
-        <Router
-          hook={useHashLocation}
-          aroundNav={(nav, to, opts) => {
-            if (!document.startViewTransition) {
-              nav(to, opts);
-              return;
-            }
-            document.startViewTransition(() => {
-              flushSync(() => nav(to, opts));
-            });
-          }}
-        >
-          <Switch>
-            <Route path="/keys" component={KeysListPage} />
-            <Route path="/keys/new/:codec?/:key?" component={KeyCreatePage} />
-            <Route path="/keys/:key" component={KeyDetailsPage} />
-            <Route path="/">
-              <Redirect to="/keys" />
-            </Route>
-          </Switch>
-        </Router>
-      </DbGate>
+      <Router
+        hook={useHashLocation}
+        aroundNav={(nav, to, opts) => {
+          if (!document.startViewTransition) {
+            nav(to, opts);
+            return;
+          }
+          document.startViewTransition(() => {
+            flushSync(() => nav(to, opts));
+          });
+        }}
+      >
+        <Switch>
+          <Route path="/keys" component={KeysListPage} />
+          <Route path="/keys/new" component={KeyCreatePage} />
+          <Route
+            path="/keys/:codec/:method/:type/:value"
+            component={KeyDetailsPage}
+          />
+          <Route path="/">
+            <Redirect to="/keys" />
+          </Route>
+        </Switch>
+      </Router>
     </ToastProvider>
   </Suspense>,
 );
