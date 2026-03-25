@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { parseKey } from '@/crypto';
-import type { Key } from '@/db';
-import { type CodecMethod, workerDecrypt, workerEncrypt } from '@/worker-api';
+import { METHODS as CRYPTO_METHODS, decrypt, encrypt } from '@/crypto';
+import type { ParsedKeyValue } from '@/db';
+import { decode, encode } from '../../codec';
 
 export const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`;
@@ -63,7 +63,7 @@ export interface PanelState {
 
 const emptyPanel: PanelState = { text: '', file: null, error: null };
 
-export const useEncrypt = (key: Key) => {
+export const useEncrypt = (parsed: ParsedKeyValue) => {
   const [plain, setPlainState] = useState<PanelState>({
     text: '',
     file: null,
@@ -76,10 +76,9 @@ export const useEncrypt = (key: Key) => {
   });
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const parsed = parseKey(key.value);
-  const codec = (key.codec ?? 'base64') as CodecMethod;
   const canDecrypt =
-    parsed.method.type === 'symmetric' || parsed.type === 'private';
+    CRYPTO_METHODS[parsed.method].type === 'symmetric' ||
+    parsed.type === 'private';
 
   const hasPlainInput = !!plain.text || !!plain.file;
   const hasCipherInput = !!cipher.text || !!cipher.file;
@@ -118,7 +117,10 @@ export const useEncrypt = (key: Key) => {
         contentBytes = new TextEncoder().encode(plain.text);
       }
 
-      const encoded = await workerEncrypt(contentBytes, key.value, codec);
+      const encoded = await encode(
+        parsed.codec,
+        await encrypt(parsed.method, contentBytes, parsed.value),
+      );
 
       if (encoded instanceof File) {
         setCipherState({ text: '', file: encoded, error: null });
@@ -134,7 +136,7 @@ export const useEncrypt = (key: Key) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [hasPlainInput, isProcessing, plain, key.value, codec]);
+  }, [hasPlainInput, isProcessing, plain, parsed]);
 
   const doDecrypt = useCallback(async () => {
     if (!hasCipherInput || isProcessing) return;
@@ -143,7 +145,11 @@ export const useEncrypt = (key: Key) => {
 
     try {
       const decodeInput = cipher.file ?? cipher.text;
-      const decrypted = await workerDecrypt(decodeInput, key.value, codec);
+      const decrypted = await decrypt(
+        parsed.method,
+        await decode(parsed.codec, decodeInput),
+        parsed.value,
+      );
 
       const unpacked = unpackFile(decrypted);
       if (unpacked) {
@@ -180,7 +186,7 @@ export const useEncrypt = (key: Key) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [hasCipherInput, isProcessing, cipher, key.value, codec]);
+  }, [hasCipherInput, isProcessing, cipher, parsed]);
 
   const clearPlain = useCallback(() => setPlainState(emptyPanel), []);
   const clearCipher = useCallback(() => setCipherState(emptyPanel), []);

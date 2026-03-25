@@ -3,21 +3,18 @@ import {
   Delete01Icon,
   Edit04Icon,
   MoreVerticalIcon,
-  Share01Icon,
   Tick01Icon,
 } from '@hugeicons/core-free-icons';
-import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { type FC, useCallback, useMemo, useState } from 'react';
+import { useAsync } from 'react-use';
 import { useLocation, useRoute } from 'wouter';
-import { getPublicKey, parseKey } from '@/crypto';
 import {
-  buildKeyValue,
-  decodeKeyParams,
-  encodeKeyParams,
-  type Key,
-  type KeyParams,
-  useDb,
-  useRxQuery,
-} from '@/db';
+  METHODS as CRYPTO_METHODS,
+  getPublicKey,
+  type KeyType,
+} from '@/crypto';
+import { buildKeyValue, db, type ParsedKeyValue, parseKeyValue } from '@/db';
 import {
   Avatar,
   Button,
@@ -28,136 +25,113 @@ import {
   Popover,
   useShare,
 } from '../shared';
+import { KeyTypeChip } from './KeyTypeChip';
 import { TranslateWorkspace } from './TranslateWorkspace';
 
 // --- Helpers ---
 
-const keyPath = (params: KeyParams) => `/keys/${encodeKeyParams(params)}`;
+const keyPath = (parsed: ParsedKeyValue) => `/keys/${buildKeyValue(parsed)}`;
 
-const keyShareUrl = (params: KeyParams) => {
+const keyShareUrl = (params: ParsedKeyValue) => {
   const base = `${window.location.origin}${window.location.pathname}`;
   return `${base}#${keyPath(params)}`;
 };
 
-const keyParamsFromValue = (codec: string, keyValue: string): KeyParams => {
-  const [method, type, value] = keyValue.split(':');
-  return { codec, method, type, value };
-};
-
 // --- Hook ---
-
-const useKeyFromRoute = ():
-  | { keyValue: string; keyRecord: Key; isSaved: boolean }
-  | undefined => {
-  const [match, params] = useRoute('/keys/:key');
-  const decoded = useMemo(
-    () => (match && params?.key ? decodeKeyParams(params.key) : null),
-    [match, params?.key],
+const useParsedKeyValue = () => {
+  const [match, params] = useRoute('/keys/:codec/:method/:type/:value');
+  const parsed = useMemo(
+    () =>
+      match && params?.value
+        ? parseKeyValue(
+            `${params.codec}/${params.method}/${params.type}/${params.value}`,
+          )
+        : null,
+    [match, params?.value, params.codec, params.method, params.type],
   );
-  const fullValue = decoded ? buildKeyValue(decoded) : '';
+  if (!parsed) throw new Error('Unexpected Error!');
+  const builded = buildKeyValue(parsed);
 
-  const { data: results } = useRxQuery(
-    useCallback(
-      (db) => db.keys.find({ selector: { value: fullValue || '__none__' } }),
-      [fullValue],
-    ),
+  const results = useLiveQuery(
+    () => db.keys.where('value').equals(builded).toArray(),
+    [builded],
   );
-  const saved = results[0] ?? null;
 
-  return useMemo(() => {
-    if (!decoded) return undefined;
-    if (saved)
-      return { keyValue: saved.value, keyRecord: saved, isSaved: true };
-    return {
-      keyValue: fullValue,
-      keyRecord: {
-        value: fullValue,
-        codec: decoded.codec,
-        name: '',
-        updatedAt: Date.now(),
-      } as Key,
-      isSaved: false,
-    };
-  }, [decoded, fullValue, saved]);
+  const saved = results?.[0];
+
+  return useMemo(
+    () => ({
+      saved,
+      parsed,
+      builded,
+    }),
+    [builded, saved, parsed],
+  );
 };
 
 // --- Page ---
 
 export const KeyDetailsPage: FC = () => {
   const [, navigate] = useLocation();
-  const database = useDb();
-  const resolved = useKeyFromRoute();
+  const { saved, parsed, builded } = useParsedKeyValue();
+
   const { share } = useShare();
-  const [publicKey, setPublicKey] = useState<string>();
 
-  const key = resolved?.keyRecord;
-  const keyValue = resolved?.keyValue;
-  const isSaved = resolved?.isSaved ?? false;
-
-  let parsed = null;
-  try {
-    parsed = key ? parseKey(key.value) : null;
-  } catch {
-    // invalid key format
-  }
-  const isAsymmetric = parsed?.method.type === 'asymmetric';
-
-  useEffect(() => {
-    if (!key || !isAsymmetric) return;
-    getPublicKey(key.value).then(setPublicKey);
-  }, [key, isAsymmetric]);
+  const publicKey = useAsync(() => {
+    const content = parsed.value;
+    if (
+      CRYPTO_METHODS[parsed.method].type === 'asymmetric' &&
+      parsed.type === 'private'
+    ) {
+      return getPublicKey(parsed.method, content);
+    }
+    return Promise.resolve(null);
+  }, [parsed.value, parsed.method, parsed.type]);
 
   const handleDelete = useCallback(async () => {
-    if (!key || !keyValue) return;
-    if (!confirm(`Delete "${key.name}"? This cannot be undone.`)) return;
-    const doc = await database.keys.findOne(keyValue).exec();
-    await doc?.remove();
+    if (!saved) return;
+    if (!confirm(`Delete "${saved.name}"? This cannot be undone.`)) return;
+    await db.keys.delete(saved.value as never);
     navigate('/keys');
-  }, [key, keyValue, database, navigate]);
+  }, [saved, navigate]);
 
   const handleShare = useCallback(
-    (kv: string, codec: string) => {
-      share({ text: keyShareUrl(keyParamsFromValue(codec, kv)) });
+    (type: KeyType) => {
+      if (type === 'private') {
+        return share({ text: keyShareUrl(parsed) });
+      }
+      if (!publicKey.value) throw new Error('Unexpected Error!');
+      return share({
+        text: keyShareUrl({
+          ...parsed,
+          type: 'public',
+          value: publicKey.value,
+        }),
+      });
     },
-    [share],
+    [share, publicKey.value, parsed],
   );
 
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(key?.name ?? '');
+  const [draft, setDraft] = useState(saved?.name ?? '');
 
   const handleSaveName = useCallback(async () => {
-    if (!key || !draft.trim()) return;
-    if (isSaved) {
-      const doc = await database.keys.findOne(key.value).exec();
-      await doc?.patch({ name: draft.trim() });
+    if (!saved || !draft.trim()) return;
+    if (saved) {
+      await db.keys.update(saved, {
+        name: draft.trim(),
+        updatedAt: Date.now(),
+      });
     } else {
-      await database.keys.insert({ ...key, name: draft.trim() });
+      await db.keys.add({
+        value: builded,
+        name: draft.trim(),
+        isDeleted: false,
+        updatedAt: Date.now(),
+      });
     }
     setEditing(false);
-  }, [key, isSaved, draft, database]);
-
-  if (!key || !parsed) {
-    return (
-      <Page>
-        <PageHeader
-          backTo="/keys"
-          title={key && isSaved ? key.name : 'Invalid Key'}
-          after={
-            key && isSaved ? (
-              <Button variant="ghost" iconOnly onClick={handleDelete}>
-                <Icon icon={Delete01Icon} size="lg" className="text-error" />
-              </Button>
-            ) : undefined
-          }
-        />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <p className="text-text-muted text-sm text-center">
-            This key has an invalid or unsupported format.
-          </p>
-        </div>
-      </Page>
-    );
-  }
+  }, [builded, saved, draft]);
 
   return (
     <Page>
@@ -203,8 +177,8 @@ export const KeyDetailsPage: FC = () => {
       ) : (
         <PageHeader
           backTo="/keys"
-          before={<Avatar size={32} seed={isSaved ? key.name : ''} />}
-          title={isSaved ? key.name : 'Unsaved'}
+          before={<Avatar size={32} seed={saved ? saved.name : ''} />}
+          title={saved ? saved.name : 'Unsaved'}
           after={
             <Popover
               trigger={
@@ -214,45 +188,49 @@ export const KeyDetailsPage: FC = () => {
               }
             >
               {(close) => (
-                <div className="min-w-48">
+                <div className="min-w-64">
                   <ListItem
                     size="sm"
                     before={<Icon icon={Edit04Icon} size="sm" />}
                     onClick={() => {
                       close();
-                      setDraft(isSaved ? key.name : '');
+                      setDraft(saved?.name ?? '');
                       setEditing(true);
                     }}
                   >
                     <span className="text-sm">
-                      {isSaved ? 'Rename' : 'Save with name'}
+                      {saved ? 'Rename' : 'Save with name'}
                     </span>
                   </ListItem>
-                  {isAsymmetric && (
-                    <ListItem
-                      size="sm"
-                      before={<Icon icon={Share01Icon} size="sm" />}
-                      onClick={() => {
-                        close();
-                        if (publicKey) handleShare(publicKey, key.codec);
-                      }}
-                    >
-                      <span className="text-sm">Share public</span>
-                    </ListItem>
-                  )}
+                  <div className="my-1 border-t border-border-light" />
                   <ListItem
                     size="sm"
-                    before={<Icon icon={Share01Icon} size="sm" />}
+                    after={<KeyTypeChip value="asymmetric-public" />}
+                    disabled={!publicKey.value}
                     onClick={() => {
                       close();
-                      handleShare(key.value, key.codec);
+                      handleShare('public');
                     }}
                   >
-                    <span className="text-sm">
-                      {isAsymmetric ? 'Share private' : 'Share'}
-                    </span>
+                    <p className="text-sm mb-1">Share Lock</p>
+                    <p className="text-xs text-text-secondary">
+                      Can encrypt only
+                    </p>
                   </ListItem>
-                  {isSaved && (
+                  <ListItem
+                    size="sm"
+                    after={<KeyTypeChip value="symmetric" />}
+                    onClick={() => {
+                      close();
+                      handleShare('private');
+                    }}
+                  >
+                    <p className="text-sm mb-1">Share Key</p>
+                    <p className="text-xs text-text-secondary">
+                      Can encrypt/decrypt
+                    </p>
+                  </ListItem>
+                  {saved && (
                     <>
                       <div className="my-1 border-t border-border-light" />
                       <ListItem
@@ -280,7 +258,7 @@ export const KeyDetailsPage: FC = () => {
         />
       )}
 
-      <TranslateWorkspace keyRecord={key} parsed={parsed} />
+      <TranslateWorkspace parsed={parsed} />
     </Page>
   );
 };

@@ -6,18 +6,17 @@ import {
 } from '@hugeicons/core-free-icons';
 import { type FC, useCallback, useRef } from 'react';
 import { METHODS as CODEC_METHODS } from '@/codec';
-import type { parseKey } from '@/crypto';
-import type { Key } from '@/db';
+import { METHODS as CRYPTO_METHODS } from '@/crypto';
+import type { ParsedKeyValue } from '@/db';
 import { Button, Chip, Icon, shareIcon, useShare } from '../shared';
 import { Panel } from './Panel';
 import { type PanelState, useEncrypt } from './useEncryptChat';
 
 export const TranslateWorkspace: FC<{
-  keyRecord: Key;
-  parsed: ReturnType<typeof parseKey>;
-}> = ({ keyRecord, parsed }) => {
+  parsed: ParsedKeyValue;
+}> = ({ parsed }) => {
   const { share } = useShare();
-  const enc = useEncrypt(keyRecord);
+  const enc = useEncrypt(parsed);
   const plainFileRef = useRef<HTMLInputElement>(null);
   const cipherFileRef = useRef<HTMLInputElement>(null);
 
@@ -36,10 +35,8 @@ export const TranslateWorkspace: FC<{
     [share],
   );
 
-  const methodName = parsed.method.name;
-  const codecName =
-    CODEC_METHODS[keyRecord.codec as keyof typeof CODEC_METHODS]?.name ??
-    keyRecord.codec;
+  const methodName = CRYPTO_METHODS[parsed.method].name;
+  const codecName = CODEC_METHODS[parsed.codec].name;
 
   const plainHasOutput =
     !!(enc.plain.text || enc.plain.file) && !enc.plain.error;

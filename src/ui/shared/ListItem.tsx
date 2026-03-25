@@ -6,6 +6,7 @@ const listItem = tv({
     'flex items-center w-full h-auto',
     '*:shrink-0',
     'outline-none bg-surface transition-colors',
+    'disabled:opacity-40 disabled:pointer-events-none',
     'cursor-pointer hover:bg-surface-alt focus-visible:bg-surface-alt active:bg-surface',
   ],
   variants: {
@@ -27,12 +28,14 @@ export const ListItem: FC<{
   after?: ReactNode;
   size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
-}> = ({ before, children, after, className, size, onClick }) => {
+  disabled?: boolean;
+}> = ({ before, children, after, className, size, onClick, disabled }) => {
   return (
     <button
       type="button"
       className={listItem({ size, className })}
       onClick={onClick}
+      disabled={disabled}
     >
       {before}
       <div className="min-w-0 grow text-start flex-1">{children}</div>

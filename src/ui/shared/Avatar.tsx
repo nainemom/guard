@@ -1,4 +1,4 @@
-import { shapes } from '@dicebear/collection';
+import { initials } from '@dicebear/collection';
 import { createAvatar } from '@dicebear/core';
 import { type FC, useMemo } from 'react';
 import { tv } from 'tailwind-variants';
@@ -20,7 +20,7 @@ export const Avatar: FC<{
   gray?: boolean;
 }> = ({ size, seed, className, gray }) => {
   const img = useMemo(() => {
-    return createAvatar(shapes, {
+    return createAvatar(initials, {
       seed,
       size,
     }).toDataUri();

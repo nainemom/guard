@@ -5,11 +5,12 @@ import {
   Loading03Icon,
   PlusSignIcon,
 } from '@hugeicons/core-free-icons';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { type FC, useCallback, useMemo } from 'react';
 import { Link } from 'wouter';
 import { METHODS as CODEC_METHODS } from '@/codec';
-import { parseKey } from '@/crypto';
-import { encodeKeyParams, useRxQuery, useSync } from '@/db';
+import { METHODS as CRYPTO_METHODS } from '@/crypto';
+import { db, parseKeyValue } from '@/db';
 import {
   Avatar,
   Button,
@@ -23,25 +24,31 @@ import {
 } from '../shared';
 import { KeyTypeChip } from './KeyTypeChip';
 
+const FAKE_SYNCING_STATE = false;
+
 export const KeysListPage: FC = () => {
-  const { data: keys, loading } = useRxQuery(
-    useCallback((db) => db.keys.find(), []),
+  const keys = useLiveQuery(
+    () =>
+      db.keys.toArray().then((rows) => rows.filter((row) => !row.isDeleted)),
+    [],
   );
+
+  const loading = keys === undefined;
   const sortedKeys = useMemo(
-    () => [...keys].sort((a, b) => b._data._meta.lwt - a._data._meta.lwt),
+    () => [...(keys ?? [])].sort((a, b) => b.updatedAt - a.updatedAt),
     [keys],
   );
-  const { sync, syncing, hasLocalChanges } = useSync();
+  // const { sync, syncing, hasLocalChanges } = useSync();
   const toast = useToast();
 
   const handleSync = useCallback(async () => {
     try {
-      await sync();
+      // await sync();
       toast.show('Synced with Google Drive');
     } catch {
       toast.show('Sync failed');
     }
-  }, [sync, toast]);
+  }, [/*sync,*/ toast]);
 
   return (
     <Page>
@@ -51,18 +58,18 @@ export const KeysListPage: FC = () => {
           <Button
             variant="ghost"
             iconOnly
-            disabled={syncing}
+            disabled={FAKE_SYNCING_STATE}
             onClick={handleSync}
             className="relative"
           >
-            {syncing ? (
+            {FAKE_SYNCING_STATE ? (
               <Icon icon={Loading03Icon} className="animate-spin" size="lg" />
             ) : (
               <Icon icon={CloudIcon} size="lg" />
             )}
-            {hasLocalChanges && !syncing && (
+            {/* {hasLocalChanges && !syncing && (
               <span className="absolute top-1 right-1 size-2 rounded-full bg-primary" />
-            )}
+            )} */}
           </Button>
         }
       />
@@ -84,9 +91,8 @@ export const KeysListPage: FC = () => {
         ) : (
           <div className="divide-y divide-border-light">
             {sortedKeys.map((key) => {
-              const parsed = parseKey(key.value);
-              const [, keyType, keyData] = key.value.split(':');
-              const keyPath = `/keys/${encodeKeyParams({ codec: key.codec, method: parsed.method.id, type: keyType, value: keyData })}`;
+              const parsed = parseKeyValue(key.value);
+              const keyPath = `/keys/${key.value}`;
               return (
                 <Link key={key.value} to={keyPath} asChild>
                   <ListItem
@@ -95,7 +101,7 @@ export const KeysListPage: FC = () => {
                       <>
                         <KeyTypeChip
                           value={
-                            parsed.method.type === 'asymmetric'
+                            CRYPTO_METHODS[parsed.method].type === 'asymmetric'
                               ? parsed.type === 'public'
                                 ? 'asymmetric-public'
                                 : 'asymmetric'
@@ -111,11 +117,8 @@ export const KeysListPage: FC = () => {
                   >
                     <p className="font-medium truncate text-text">{key.name}</p>
                     <div className="flex items-center gap-1 mt-0.5">
-                      <Chip>{parsed.method.name}</Chip>
-                      <Chip>
-                        {CODEC_METHODS[key.codec as keyof typeof CODEC_METHODS]
-                          ?.name ?? key.codec}
-                      </Chip>
+                      <Chip>{CRYPTO_METHODS[parsed.method].name}</Chip>
+                      <Chip>{CODEC_METHODS[parsed.codec].name}</Chip>
                     </div>
                   </ListItem>
                 </Link>

@@ -16,7 +16,7 @@ import {
   type MethodCategory as CryptoMethodCategory,
   generatePrivateKey,
 } from '@/crypto';
-import { useDb } from '@/db';
+import { buildKeyValue, db } from '@/db';
 import {
   Button,
   Icon,
@@ -49,7 +49,6 @@ interface FormValues {
 
 export const KeyCreatePage: FC = () => {
   const [, navigate] = useLocation();
-  const database = useDb();
 
   const {
     register,
@@ -61,25 +60,31 @@ export const KeyCreatePage: FC = () => {
     defaultValues: {
       name: '',
       method: 'aes-256-gcm',
-      codec: 'base64',
+      codec: 'base-64',
     },
   });
 
   const method = watch('method');
-  const codec = watch('codec');
+  const codec = watch('codec') as keyof typeof CODEC_METHODS;
 
   const onSubmit = useCallback(
     async (data: FormValues) => {
-      const value = await generatePrivateKey(data.method);
-      await database.keys.insert({
+      const privateKey = await generatePrivateKey(data.method);
+      const value = buildKeyValue({
+        codec: data.codec as keyof typeof CODEC_METHODS,
+        method: data.method,
+        type: 'private',
+        value: privateKey,
+      });
+      await db.keys.add({
         value,
-        codec: data.codec,
         name: data.name.trim(),
         updatedAt: Date.now(),
+        isDeleted: false,
       });
       navigate('/keys');
     },
-    [database, navigate],
+    [navigate],
   );
 
   return (
