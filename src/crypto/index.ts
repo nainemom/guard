@@ -1,4 +1,3 @@
-import { base58 } from '@scure/base';
 import { aes256Gcm } from './methods/aes-gcm';
 import {
   ecdhP256,
@@ -12,9 +11,9 @@ import { mlKem512, mlKem768, mlKem1024 } from './methods/ml-kem';
 import { rsa2048, rsa4096 } from './methods/rsa';
 import { salsa20 } from './methods/salsa20';
 import { xchacha20 } from './methods/xchacha20';
-import type { KeyType, MethodHandler } from './types';
+import type { MethodHandler } from './types';
 
-export const METHODS = {
+export const METHODS: Record<string, MethodHandler> = {
   [aes256Gcm.id]: aes256Gcm,
   [ecdhX25519.id]: ecdhX25519,
   [ecdhX448.id]: ecdhX448,
@@ -31,54 +30,24 @@ export const METHODS = {
   [salsa20.id]: salsa20,
 };
 
-export function parseKey(key: string): {
-  method: MethodHandler;
-  type: KeyType;
-  data: Uint8Array;
-} {
-  const [methodId, keyType, encodedData] = key.split(':');
-  if (!methodId || !keyType || !key) throw new Error('Invalid key format');
-  if (!['public', 'private'].includes(keyType))
-    throw new Error(`Unknown key type: ${methodId}`);
-  const method = METHODS[methodId];
-  if (!method) throw new Error(`Unknown method: ${methodId}`);
-  const data = base58.decode(encodedData);
-  return { method, type: keyType as KeyType, data };
-}
+export const generatePrivateKey = (methodId: string) =>
+  METHODS[methodId].generatePrivateKey();
 
-function formatKey(
-  method: MethodHandler,
-  keyType: KeyType,
-  data: Uint8Array,
-): string {
-  return `${method.id}:${keyType}:${base58.encode(data)}`;
-}
+export const getPublicKey = (
+  methodId: string,
+  privateKey: Uint8Array<ArrayBufferLike>,
+) => METHODS[methodId].getPublicKey(privateKey);
 
-export async function generatePrivateKey(methodId: string) {
-  const method = METHODS[methodId];
-  if (!method) throw new Error(`Unknown method: ${methodId}`);
-  const privateKey = await method.generatePrivateKey();
-  return formatKey(method, 'private', privateKey);
-}
+export const encrypt = (
+  methodId: string,
+  content: Uint8Array,
+  publicKey: Uint8Array<ArrayBufferLike>,
+) => METHODS[methodId].encrypt(content, publicKey);
 
-export async function getPublicKey(privateKey: string): Promise<string> {
-  const { method, data } = parseKey(privateKey);
-  const pubBytes = await method.getPublicKey(data);
-  return formatKey(method, 'public', pubBytes);
-}
-
-export async function encrypt(content: Uint8Array, publicKey: string) {
-  const { method, data } = parseKey(publicKey);
-  const encrypted = await method.encrypt(content, data);
-  return encrypted;
-}
-
-export async function decrypt(
-  encryptedContent: Uint8Array,
-  privateKey: string,
-): Promise<Uint8Array> {
-  const { method, data: keyData } = parseKey(privateKey);
-  return method.decrypt(encryptedContent, keyData);
-}
+export const decrypt = (
+  methodId: string,
+  content: Uint8Array,
+  privateKey: Uint8Array<ArrayBufferLike>,
+) => METHODS[methodId].decrypt(content, privateKey);
 
 export * from './types';
