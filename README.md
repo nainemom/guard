@@ -77,7 +77,7 @@ Guard is a fully offline Progressive Web App. After the first visit, the service
 
 ```bash
 # Install dependencies
-npm install
+npm i
 
 # Start dev server (port 6480)
 npm run dev
