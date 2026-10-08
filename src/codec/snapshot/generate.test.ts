@@ -35,7 +35,7 @@ it('generates codec snapshots', async () => {
     const vectors: Record<string, { original: string; encoded: string }> = {};
     for (const size of sizes) {
       const original = generateBytes(size);
-      const encoded = await encode(original, method);
+      const encoded = await encode(method, original);
       vectors[`${size}`] = {
         original: new TextDecoder().decode(original),
         encoded:
