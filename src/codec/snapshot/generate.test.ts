@@ -26,7 +26,7 @@ const sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
 
 it('generates codec snapshots', async () => {
   for (const method of Object.keys(METHODS) as (keyof typeof METHODS)[]) {
-    const exists = await commands.snapshotExists(method);
+    const exists = await commands.snapshotExists(method.toString());
     if (exists) {
       console.log(`skipped ${method} (already exists)`);
       continue;
@@ -45,7 +45,10 @@ it('generates codec snapshots', async () => {
       };
     }
 
-    await commands.writeSnapshot(method, JSON.stringify(vectors, null, 2));
+    await commands.writeSnapshot(
+      method.toString(),
+      JSON.stringify(vectors, null, 2),
+    );
     console.log(`wrote ${method}`);
   }
 }, 120_000);
